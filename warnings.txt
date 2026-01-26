@@ -1,0 +1,13 @@
+  Determining projects to restore...
+  All projects are up-to-date for restore.
+  Prova.Generators -> /Users/digvijay/source/github/gUnit/src/Prova.Generators/bin/Debug/netstandard2.0/Prova.Generators.dll
+  Prova.Core -> /Users/digvijay/source/github/gUnit/src/Prova.Core/bin/Debug/net10.0/Prova.Core.dll
+  Prova.Skugga.Demo -> /Users/digvijay/source/github/gUnit/samples/Prova.Skugga.Demo/bin/Debug/net10.0/Prova.Skugga.Demo.dll
+  Prova.Core.Tests -> /Users/digvijay/source/github/gUnit/tests/Prova.Core.Tests/bin/Debug/net10.0/Prova.Core.Tests.dll
+  Prova.Demo -> /Users/digvijay/source/github/gUnit/samples/Prova.Demo/bin/Debug/net10.0/Prova.Demo.dll
+
+Build succeeded.
+    0 Warning(s)
+    0 Error(s)
+
+Time Elapsed 00:00:19.33

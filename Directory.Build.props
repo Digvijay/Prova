@@ -1,0 +1,30 @@
+<Project>
+  <PropertyGroup>
+    <Authors>Digvijay Chauhan</Authors>
+    <Company>Digvijay Chauhan</Company>
+    <Product>Prova</Product>
+    <Version>0.1.0</Version>
+    <Copyright>Copyright © 2026 Digvijay Chauhan</Copyright>
+    <PackageLicenseExpression>MIT</PackageLicenseExpression>
+    <RepositoryUrl>https://github.com/Digvijay/Prova</RepositoryUrl>
+    <RepositoryType>git</RepositoryType>
+    <PackageTags>testing;unit-test;source-generator;compile-time;aot;native-aot;zero-reflection;xunit-compatible</PackageTags>
+    
+    <!-- Build Configuration -->
+    <LangVersion>latest</LangVersion>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <TreatWarningsAsErrors>false</TreatWarningsAsErrors>
+    
+    <!-- AOT Compatibility -->
+    <IsAotCompatible Condition="'$(TargetFrameworkIdentifier)' == '.NETCoreApp'">true</IsAotCompatible>
+    
+    <!-- Enable high quality analysis -->
+    <AnalysisLevel>latest</AnalysisLevel>
+    <AnalysisMode>Recommended</AnalysisMode>
+    <EnforceCodeStyleInBuild>true</EnforceCodeStyleInBuild>
+    
+    <!-- Deterministic Builds -->
+    <Deterministic>true</Deterministic>
+  </PropertyGroup>
+</Project>

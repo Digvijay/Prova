@@ -1,0 +1,13 @@
+<Solution>
+  <Folder Name="/src/">
+    <Project Path="src/Prova.Core/Prova.Core.csproj" />
+    <Project Path="src/Prova.Generators/Prova.Generators.csproj" />
+  </Folder>
+  <Folder Name="/tests/">
+    <Project Path="tests/Prova.Core.Tests/Prova.Core.Tests.csproj" />
+  </Folder>
+  <Folder Name="/samples/">
+    <Project Path="samples/Prova.Demo/Prova.Demo.csproj" />
+    <Project Path="samples/Prova.Skugga.Demo/Prova.Skugga.Demo.csproj" />
+  </Folder>
+</Solution>
