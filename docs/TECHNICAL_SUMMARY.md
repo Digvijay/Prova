@@ -3,7 +3,7 @@
 **Target Audience:** Architects, Framework Authors, Performance Engineers.
 
 > [!CAUTION]
-> **Project Scope**: Prova is a standalone **reference implementation** and an **experimental research project**. It is intended to showcase the potential of Roslyn-based testing architectures. It is **not** associated with Microsoft Corporation and is **not** an implementation of the Microsoft Testing Platform (MTP).
+> **Project Scope**: Prova is a standalone **reference implementation** and an **experimental research project**. It is intended to showcase the potential of Roslyn-based testing architectures. It is not associated with Microsoft Corporation but provides a **Hybrid MTP Adapter** for compatibility with the modern .NET testing ecosystem.
 
 ## Core Philosophy: "Compile-Time is the new Runtime"
 
@@ -60,6 +60,7 @@ public static async Task RunAllAsync()
     
     // Class A
     classTasks.Add(Task.Run(async () => {
+         // Isolation: Fixtures are currently created per-test for AOT safety
          var fixture = new DatabaseFixture();
          await fixture.InitializeAsync();
          

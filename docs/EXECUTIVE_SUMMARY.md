@@ -2,7 +2,7 @@
 *A Standalone Reference Implementation for Native AOT Testing*
 
 > [!CAUTION]
-> **Independent Project Notice**: Prova is a community-driven **Experimental Research Project**. It is a standalone reference implementation for AOT-native testing and is **not** an official Microsoft Testing Platform (MTP) project or product.
+> **Independent Project Notice**: Prova is a community-driven **Experimental Research Project**. It is a standalone reference implementation for AOT-native testing. While independent of Microsoft, it provides **Hybrid MTP Compatibility** for modern ecosystem integration.
 
 ## The Mission
 **Prova** (Swedish: *Test*) is built to demonstrate the extreme capabilities of the modern .NET ecosystem, specifically the power of **Roslyn Source Generators**. It is a purely independent research initiative.

@@ -30,10 +30,11 @@ Why switch? Prova gives you the modern benefits of TUnit without the learning cu
 
 - **⚡ Zero Reflection / Native AOT**: Fully compatible with `PublishAot`. No runtime discovery cost. Start time: **0ms**.
 - **🏃 True Parallelism**: Test Classes run concurrently by default (`Task.WhenAll`), maximizing CPU usage.
+- **🔌 MTP Ready**: Fully supports the **Microsoft Testing Platform**. Works with `dotnet test` and TRX reporting.
 - **🧙‍♂️ Magic Documentation**: Your `/// <summary>` test comments are automatically extracted and displayed in the runner output.
 - **📦 xUnit Parity**: Don't rewrite your tests. Just change the runner.
   - `[Fact]`, `[Theory]`, `[InlineData]`, `[MemberData]`
-  - `IClassFixture<T>` (Singleton Fixtures)
+  - `IClassFixture<T>` (Isolated Fixtures)
   - `IAsyncLifetime` (Async Setup/Teardown)
   - `[Trait]` categories & filtering
   - Full `Assert` suite (`Equal`, `Throws`, `Contains`, `Single`, etc.)
@@ -85,8 +86,8 @@ Prova is part of the **Nordic Suite** of developer tools. It is designed to work
    dotnet run
    ```
 
-   **Option B: `dotnet test` (CI/CD)**
-   To use `dotnet test`, add a `global.json` to your solution root:
+   **Option B: `dotnet test` (CI/CD / MTP)**
+   Prova fully supports the **Microsoft Testing Platform**. To use `dotnet test`, add a `global.json` to your solution root:
    ```json
    {
        "test": {
@@ -99,11 +100,19 @@ Prova is part of the **Nordic Suite** of developer tools. It is designed to work
    dotnet test --project MyTestProject.csproj
    ```
 
-## ❓ Why `dotnet run`?
+## 🔌 Microsoft Testing Platform (MTP) Support
+
+Prova is a first-class citizen in the modern .NET testing ecosystem. By integrating the **Hybrid MTP Adapter**, Prova provides:
+- **Full `dotnet test` integration** via the `Microsoft.Testing.Platform` runner.
+- **TRX Report generation** for Azure DevOps, GitHub Actions, and Jenkins.
+- **In-process test execution** with zero reflection overhead.
+
+Check out the [MTP Sample](samples/Prova.MtpSample) for a complete example.
 
 Prova tests compile into a **stand-alone Console Application**, not a Class Library.
 
 - **0ms Startup**: We control the entry point (`Main`). No VSTest adapter overhead. 
+- **MTP via `dotnet run`**: Get the full Microsoft Testing Platform experience (TRX, etc.) without leaving the fast `dotnet run` inner loop.
 - **Debuggable**: Just hit **F5**. It's just a console app!
 - **Cloud-Ready**: Compile to a single Native AOT binary and dropship it to any container.
 

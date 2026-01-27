@@ -91,6 +91,7 @@ namespace Prova.Generators.Emission
             sb.AppendLine("                 global::System.Console.WriteLine(\"            // [Focus] Mode Active: Only running focused tests.\");");
             sb.AppendLine("            }");
             sb.AppendLine();
+            sb.AppendLine("            var tasks = new global::System.Collections.Generic.List<global::System.Threading.Tasks.Task>();");
             sb.AppendLine("            foreach (var test in activeTests)");
             sb.AppendLine("            {");
             sb.AppendLine("                if (test.SkipReason != null)");
@@ -102,11 +103,14 @@ namespace Prova.Generators.Emission
             sb.AppendLine();
             sb.AppendLine("                if (filters.Any() && !filters.All(f => test.Traits.Contains(f))) continue;");
             sb.AppendLine();
-            sb.AppendLine("                if (await RunTestSafe(test.ExecuteDelegate, test.DisplayName, reporter, \"Captured Output\", test.Description, test.RetryCount))");
-            sb.AppendLine("                    global::System.Threading.Interlocked.Increment(ref passed);");
-            sb.AppendLine("                else");
-            sb.AppendLine("                    global::System.Threading.Interlocked.Increment(ref failed);");
+            sb.AppendLine("                tasks.Add(global::System.Threading.Tasks.Task.Run(async () => {");
+            sb.AppendLine("                    if (await RunTestSafe(test.ExecuteDelegate, test.DisplayName, reporter, \"Captured Output\", test.Description, test.RetryCount))");
+            sb.AppendLine("                        global::System.Threading.Interlocked.Increment(ref passed);");
+            sb.AppendLine("                    else");
+            sb.AppendLine("                        global::System.Threading.Interlocked.Increment(ref failed);");
+            sb.AppendLine("                }));");
             sb.AppendLine("            }");
+            sb.AppendLine("            await global::System.Threading.Tasks.Task.WhenAll(tasks);");
             sb.AppendLine();
             sb.AppendLine("            sw.Stop();");
             sb.AppendLine("            reporter.OnComplete(passed, failed, skipped, sw.Elapsed);");

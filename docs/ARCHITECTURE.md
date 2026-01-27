@@ -1,7 +1,7 @@
 # Prova Architecture
 
 > [!NOTE]
-> Prova is an **Experimental Research Prototype** for Native AOT testing. It is a standalone project independent of Microsoft and is **not** an MTP implementation.
+> Prova is an **Experimental Research Prototype** for Native AOT testing. It is a standalone project independent of Microsoft. While it is a custom runner, it supports the **Microsoft Testing Platform (MTP)** via a hybrid adapter.
 
 ## Directory Structure
 
@@ -54,6 +54,6 @@ Captures output *per test*.
 
 ### `IClassFixture<T>`
 Simple Dependency Injection.
-- **Singleton Scoped**: Created once per Test Class.
+- **Isolated Scope**: Currently created per-test for maximum AOT safety and parallel isolation.
 - **Injected**: Passed to the Test Class constructor.
-- **Lifecycle**: `InitializeAsync` -> Tests Run -> `DisposeAsync`.
+- **Lifecycle**: `InitializeAsync` -> Test Runs -> `DisposeAsync`.
