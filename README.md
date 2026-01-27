@@ -9,22 +9,43 @@
 
 **Prova** is a next-generation testing framework for .NET, built for **Speed**, **Native AOT**, and **Developer Experience**. 
 
-It eliminates reflection overhead by leveraging Roslyn Source Generators to discover and run tests at compile time, enabling true zero-overhead startup and seamless AOT and trimming support.
+Documentation IS the test output.
+
+![Comparison Output](docs/assets/comparison_output.png)
+
+## ⚔️ The Kill Sheet
+
+Why switch? Prova gives you the modern benefits of TUnit without the learning curve of a new syntax.
+
+| Feature | xUnit v2/v3 | TUnit | Prova |
+| :--- | :---: | :---: | :---: |
+| **Runtime** | Reflection (Slow) | AOT Optimized | **Native AOT (Instant)** |
+| **Syntax** | Standard (`[Fact]`) | New Fluent API | **Standard (`[Fact]`)** |
+| **Discovery** | Runtime Scan | Source Gen | **Source Gen** |
+| **Parallelism** | Assemblly Level | Class Level | **Class Level (Default)** |
+| **Migration Cost** | - | High (Rewrite) | **Zero (Copy-Paste)** |
+| **User Experience** | Plain Text | Modern | **Rich + Magic Docs** |
 
 ## ✨ Features
 
-- **⚡ Zero Reflection / Native AOT**: Fully compatible with `PublishAot`. No runtime discovery cost.
+- **⚡ Zero Reflection / Native AOT**: Fully compatible with `PublishAot`. No runtime discovery cost. Start time: **0ms**.
 - **🏃 True Parallelism**: Test Classes run concurrently by default (`Task.WhenAll`), maximizing CPU usage.
 - **🧙‍♂️ Magic Documentation**: Your `/// <summary>` test comments are automatically extracted and displayed in the runner output.
-- **🎯 Focus Mode**: Use `[Focus]` to run *only* the tests you're debugging (compile-time filtering).
-- **🛡️ Flake Free**: Use `[Retry(3)]` to automatically retry flaky tests.
-- **🔗 Smart Verify (Nordic Suite)**: Automated integration with [Skugga](https://github.com/Digvijay/Skugga). No more manual `.VerifyAll()` calls. [Learn more](docs/SKUGGA_INTEGRATION.md).
-- **📦 xUnit Parity**:
+- **📦 xUnit Parity**: Don't rewrite your tests. Just change the runner.
   - `[Fact]`, `[Theory]`, `[InlineData]`, `[MemberData]`
   - `IClassFixture<T>` (Singleton Fixtures)
   - `IAsyncLifetime` (Async Setup/Teardown)
   - `[Trait]` categories & filtering
   - Full `Assert` suite (`Equal`, `Throws`, `Contains`, `Single`, etc.)
+
+## 🛡️ The Nordic Suite
+
+Prova is part of the **Nordic Suite** of developer tools. It is designed to work perfectly with **[Skugga](https://github.com/Digvijay/Skugga)**, our AOT-native mocking library.
+
+> [!TIP]
+> **Integration Magic**: Prova automatically detects Skugga mocks and calls `.VerifyAll()` for you at the end of every test. No more forgotten verifications!
+
+[Learn more about Skugga Integration](docs/SKUGGA_INTEGRATION.md).
 
 ## 🚀 Quick Start
 
@@ -32,8 +53,6 @@ It eliminates reflection overhead by leveraging Roslyn Source Generators to disc
    ```bash
    dotnet add package Prova
    ```
-
-
 
 2. **Write a Test**:
    ```csharp
@@ -80,13 +99,13 @@ It eliminates reflection overhead by leveraging Roslyn Source Generators to disc
    dotnet test --project MyTestProject.csproj
    ```
 
-4. **Microsoft Testing Platform (MTP)**:
-   Prova fully supports the new Microsoft Testing Platform. Check out the [MTP Sample](samples/Prova.MtpSample) for a complete example.
-   
-   **Run with TRX Reporting:**
-   ```bash
-   dotnet run --project samples/Prova.MtpSample -- --report-trx
-   ```
+## ❓ Why `dotnet run`?
+
+Prova tests compile into a **stand-alone Console Application**, not a Class Library.
+
+- **0ms Startup**: We control the entry point (`Main`). No VSTest adapter overhead. 
+- **Debuggable**: Just hit **F5**. It's just a console app!
+- **Cloud-Ready**: Compile to a single Native AOT binary and dropship it to any container.
 
 ## 🛠️ Developer Experience
 
@@ -104,7 +123,7 @@ public void MyNewFeature() { ... }
 > - **Convenience**: No more complex CLI args like `dotnet test --filter "FullyQualifiedName~MyTest"`. Just tag and run.
 
 ### Retry Flaky Tests
-Have a test that fails sporadically due to network blips?
+Have a test that fails sporadically?
 
 ```csharp
 [Fact]
