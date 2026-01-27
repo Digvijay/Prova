@@ -1,5 +1,6 @@
 <Project>
   <PropertyGroup>
+    <IsTestProject>true</IsTestProject>
     <!-- Prova provides its own Main method via user code or generation, so disable MTP's auto-generated entry point -->
     <GenerateTestingPlatformEntryPoint>false</GenerateTestingPlatformEntryPoint>
   </PropertyGroup>
