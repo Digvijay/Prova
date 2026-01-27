@@ -215,6 +215,17 @@ namespace Prova.Generators.Analysis
                 }
             }
 
+            // Concurrency Control
+            int? maxParallel = null;
+            var parallelAttr = classSymbol.GetAttributes().FirstOrDefault(ad => ad.AttributeClass?.Name == "ParallelAttribute");
+            if (parallelAttr != null && parallelAttr.ConstructorArguments.Length > 0)
+            {
+                if (parallelAttr.ConstructorArguments[0].Value is int max)
+                {
+                    maxParallel = max;
+                }
+            }
+
             return new TestMethodModel(
                 symbol.ContainingType.ToDisplayString(),
                 symbol.Name,
@@ -233,7 +244,8 @@ namespace Prova.Generators.Analysis
                 memberData,
                 parameterTypes,
                 mockFields,
-                symbol.IsStatic
+                symbol.IsStatic,
+                maxParallel
             );
         }
 

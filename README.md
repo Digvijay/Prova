@@ -38,6 +38,10 @@ Why switch? Prova gives you the modern benefits of TUnit without the learning cu
   - `IAsyncLifetime` (Async Setup/Teardown)
   - `[Trait]` categories & filtering
   - Full `Assert` suite (`Equal`, `Throws`, `Contains`, `Single`, etc.)
+- **🛡️ Enterprise Ready**:
+  - **`[Retry(3)]`**: Automatic retry logic for flaky tests.
+  - **`[Parallel(max: 4)]`**: Explicit concurrency control to prevent thread pool choking.
+  - **`[Focus]`**: Exclusive execution mode (Jest-style `.only`).
 
 ## 🛡️ The Nordic Suite
 

@@ -20,6 +20,7 @@ namespace Prova.Generators.Models
         List<MemberDataModel> MemberData,
         List<string> ParameterTypes,
         List<string> MockFields, // New: Fields that need VerifyAll()
-        bool IsStatic
+        bool IsStatic,
+        int? MaxParallel
     );
 }

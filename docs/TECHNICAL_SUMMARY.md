@@ -92,6 +92,11 @@ Because we control the compilation:
 - **`[Focus]`**: We filter the test execution set at the entry point. When `[Focus]` is active, only the targeted tests are added to the execution graph, ensuring zero distractions and immediate feedback.
 - **Documentation**: We read the `SyntaxTree` XML trivia (`/// <summary>`) at compile-time and bake it directly into the runner. No XML parsing or reflection occurs at runtime.
 
+### 6. Concurrency Boundedness
+Prova implements a **Bounded Scheduler** via `SemaphoreSlim` in both the Console Runner and the MTP Adapter.
+- **Default**: `Environment.ProcessorCount`.
+- **Override**: Use `[Parallel(max: n)]` at the class level to specify a custom limit. Prova takes the minimum `max` found across all tests to ensure the most restrictive environment is honored.
+
 ### Summary for Infrastructure Teams
 
 Prova is designed to be embedded in high-performance CI/CD pipelines where:

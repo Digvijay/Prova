@@ -24,6 +24,9 @@ namespace Prova
         /// <summary>Gets the number of times to retry the test if it fails.</summary>
         public int RetryCount { get; init; }
 
+        /// <summary>Gets the maximum number of concurrent tests to run for the class or project.</summary>
+        public int? MaxParallel { get; init; }
+
         /// <summary>Gets the delegate used to execute the test logic.</summary>
         public required Func<Task> ExecuteDelegate { get; init; }
     }

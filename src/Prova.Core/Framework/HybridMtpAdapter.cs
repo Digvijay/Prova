@@ -76,8 +76,8 @@ namespace Prova
                 var messageBus = context.MessageBus;
 
                 // Bounded Parallelism (CRITICAL)
-                // Use ProcessorCount as default since RunSettings access has changed in 2.0.2
-                int maxParallel = Environment.ProcessorCount;
+                int? specMax = _tests.Select(t => t.MaxParallel).Where(m => m.HasValue).Min();
+                int maxParallel = specMax ?? Environment.ProcessorCount;
                 
                 using var semaphore = new SemaphoreSlim(maxParallel);
                 var tasks = new List<Task>();

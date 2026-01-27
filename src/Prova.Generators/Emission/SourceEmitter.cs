@@ -93,6 +93,12 @@ namespace Prova.Generators.Emission
             sb.AppendLine("            }");
             sb.AppendLine();
             sb.AppendLine("            var tasks = new global::System.Collections.Generic.List<global::System.Threading.Tasks.Task>();");
+            sb.AppendLine("            ");
+            sb.AppendLine("            // Bounded Parallelism (CRITICAL)");
+            sb.AppendLine("            int? globalMax = activeTests.Select(t => t.MaxParallel).Where(m => m.HasValue).Min();");
+            sb.AppendLine("            int maxParallel = globalMax ?? global::System.Environment.ProcessorCount;");
+            sb.AppendLine("            using var semaphore = new global::System.Threading.SemaphoreSlim(maxParallel);");
+            sb.AppendLine();
             sb.AppendLine("            foreach (var test in activeTests)");
             sb.AppendLine("            {");
             sb.AppendLine("                if (test.SkipReason != null)");
@@ -104,11 +110,16 @@ namespace Prova.Generators.Emission
             sb.AppendLine();
             sb.AppendLine("                if (filters.Any() && !filters.All(f => test.Traits.Contains(f))) continue;");
             sb.AppendLine();
+            sb.AppendLine("                await semaphore.WaitAsync();");
             sb.AppendLine("                tasks.Add(global::System.Threading.Tasks.Task.Run(async () => {");
-            sb.AppendLine("                    if (await RunTestSafe(test.ExecuteDelegate, test.DisplayName, reporter, \"Captured Output\", test.Description, test.RetryCount))");
-            sb.AppendLine("                        global::System.Threading.Interlocked.Increment(ref passed);");
-            sb.AppendLine("                    else");
-            sb.AppendLine("                        global::System.Threading.Interlocked.Increment(ref failed);");
+            sb.AppendLine("                    try {");
+            sb.AppendLine("                        if (await RunTestSafe(test.ExecuteDelegate, test.DisplayName, reporter, \"Captured Output\", test.Description, test.RetryCount))");
+            sb.AppendLine("                            global::System.Threading.Interlocked.Increment(ref passed);");
+            sb.AppendLine("                        else");
+            sb.AppendLine("                            global::System.Threading.Interlocked.Increment(ref failed);");
+            sb.AppendLine("                    } finally {");
+            sb.AppendLine("                        semaphore.Release();");
+            sb.AppendLine("                    }");
             sb.AppendLine("                }));");
             sb.AppendLine("            }");
             sb.AppendLine("            await global::System.Threading.Tasks.Task.WhenAll(tasks);");
@@ -216,6 +227,7 @@ namespace Prova.Generators.Emission
              sb.AppendLine($"                Description = {(method.Description == null ? "null" : $"\"{method.Description}\"")},");
              sb.AppendLine($"                SkipReason = {(method.SkipReason == null ? "null" : $"\"{method.SkipReason}\"")},");
              sb.AppendLine($"                RetryCount = {method.RetryCount},");
+             sb.AppendLine($"                MaxParallel = {(method.MaxParallel == null ? "null" : method.MaxParallel.Value.ToString(global::System.Globalization.CultureInfo.InvariantCulture))},");
              
              if (method.Traits.Count == 0 && !method.IsFocused)
              {

@@ -45,4 +45,23 @@ namespace Prova
             Text = text;
         }
     }
+
+    /// <summary>
+    /// Specifies the maximum number of concurrent tests to run for a class or project.
+    /// </summary>
+    [AttributeUsage(AttributeTargets.Class, AllowMultiple = false)]
+    public class ParallelAttribute : Attribute
+    {
+        /// <summary>Gets the maximum degree of parallelism.</summary>
+        public int Max { get; }
+
+        /// <summary>
+        /// Initializes a new instance of the <see cref="ParallelAttribute"/> class.
+        /// </summary>
+        /// <param name="max">The maximum number of concurrent tests.</param>
+        public ParallelAttribute(int max)
+        {
+            Max = max;
+        }
+    }
 }
