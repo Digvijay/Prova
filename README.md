@@ -1,6 +1,6 @@
 # Prova 🇸🇪
 
-![Build Status](https://img.shields.io/github/actions/workflow/status/Prova/Prova/ci.yml?branch=main)
+![Build Status](https://img.shields.io/github/actions/workflow/status/Digvijay/Prova/ci.yml?branch=master)
 ![License](https://img.shields.io/badge/license-MIT-blue.svg)
 ![NuGet](https://img.shields.io/nuget/v/Prova.svg)
 
