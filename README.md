@@ -4,8 +4,8 @@
 ![License](https://img.shields.io/badge/license-MIT-blue.svg)
 ![NuGet](https://img.shields.io/nuget/v/Prova.svg)
 
-> [!IMPORTANT]
-> **Experimental Research Project**: Prova is a standalone reference implementation created for research purposes to explore Native AOT testing patterns. It is **not** an official Microsoft product, nor is it an implementation of the Microsoft Testing Platform (MTP). It is a purely community-driven project.
+> [!NOTE]
+> **Research Project**: Prova is a reference implementation for Native AOT testing patterns. It is community-driven and not an official Microsoft product.
 
 **Prova** is a next-generation testing framework for .NET, built for **Speed**, **Native AOT**, and **Developer Experience**. 
 
@@ -19,9 +19,6 @@ It eliminates reflection overhead by leveraging Roslyn Source Generators to disc
 - **🎯 Focus Mode**: Use `[Focus]` to run *only* the tests you're debugging (compile-time filtering).
 - **🛡️ Flake Free**: Use `[Retry(3)]` to automatically retry flaky tests.
 - **🔗 Smart Verify (Nordic Suite)**: Automated integration with [Skugga](https://github.com/Digvijay/Skugga). No more manual `.VerifyAll()` calls. [Learn more](docs/SKUGGA_INTEGRATION.md).
-
-![Demo Output](docs/assets/demo_output.png)
-
 - **📦 xUnit Parity**:
   - `[Fact]`, `[Theory]`, `[InlineData]`, `[MemberData]`
   - `IClassFixture<T>` (Singleton Fixtures)
@@ -36,10 +33,7 @@ It eliminates reflection overhead by leveraging Roslyn Source Generators to disc
    dotnet add package Prova
    ```
 
-   > **Note**: If manually editing your `.csproj`, ensure the generator reference includes `OutputItemType="Analyzer"`:
-   > ```xml
-   > <ProjectReference Include="Prova.Generators" OutputItemType="Analyzer" ReferenceOutputAssembly="false" />
-   > ```
+
 
 2. **Write a Test**:
    ```csharp
@@ -66,15 +60,33 @@ It eliminates reflection overhead by leveraging Roslyn Source Generators to disc
    ```
 
 3. **Run**:
+   
+   **Option A: Direct Execution (Fastest / Recommended)**
    ```bash
    dotnet run
    ```
 
-   > **Why `dotnet run`?**
-   > Prova is an executable Console Application, not a class library.
-   > - **Native AOT**: `dotnet test` relies on Reflection and dynamic loading, which prohibits AOT.
-   > - **Speed**: By compiling as an App, we control the entry point (`Main`), allowing instant startup without VSTest overhead.
-   > - **Debug**: Debugging is as simple as hitting F5 on your console app project.
+   **Option B: `dotnet test` (CI/CD)**
+   To use `dotnet test`, add a `global.json` to your solution root:
+   ```json
+   {
+       "test": {
+           "runner": "Microsoft.Testing.Platform"
+       }
+   }
+   ```
+   Then run:
+   ```bash
+   dotnet test --project MyTestProject.csproj
+   ```
+
+4. **Microsoft Testing Platform (MTP)**:
+   Prova fully supports the new Microsoft Testing Platform. Check out the [MTP Sample](samples/Prova.MtpSample) for a complete example.
+   
+   **Run with TRX Reporting:**
+   ```bash
+   dotnet run --project samples/Prova.MtpSample -- --report-trx
+   ```
 
 ## 🛠️ Developer Experience
 

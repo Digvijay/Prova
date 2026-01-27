@@ -8,6 +8,7 @@
   </Folder>
   <Folder Name="/samples/">
     <Project Path="samples/Prova.Demo/Prova.Demo.csproj" />
+    <Project Path="samples/Prova.MtpSample/Prova.MtpSample.csproj" />
     <Project Path="samples/Prova.Skugga.Demo/Prova.Skugga.Demo.csproj" />
   </Folder>
 </Solution>

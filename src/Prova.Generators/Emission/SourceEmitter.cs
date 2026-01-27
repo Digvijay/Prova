@@ -19,185 +19,169 @@ namespace Prova.Generators.Emission
             sb.AppendLine("#nullable enable");
             sb.AppendLine("using System;");
             sb.AppendLine("using System.Threading.Tasks;");
-            sb.AppendLine("using System.Threading;"); // For Interlocked
+            sb.AppendLine("using System.Threading;");
             sb.AppendLine("using System.Linq;");
             sb.AppendLine("using System.Collections.Generic;");
             sb.AppendLine("using Prova;");
             sb.AppendLine("using Prova.Reporters;");
+            sb.AppendLine("using Microsoft.Testing.Extensions;");
             sb.AppendLine();
             sb.AppendLine("namespace Prova.Generated");
             sb.AppendLine("{");
+            sb.AppendLine("    /// <summary>");
+            sb.AppendLine("    /// Executor for running tests.");
+            sb.AppendLine("    /// </summary>");
             sb.AppendLine("    public static class TestRunnerExecutor");
             sb.AppendLine("    {");
+            sb.AppendLine("        /// <summary>");
+            sb.AppendLine("        /// Runs all tests.");
+            sb.AppendLine("        /// </summary>");
+            sb.AppendLine("        /// <param name=\"args\">The command line arguments.</param>");
             sb.AppendLine("        public static async global::System.Threading.Tasks.Task RunAllAsync(string[]? args = null)");
+            sb.AppendLine("        {");
+            sb.AppendLine("            args ??= global::System.Array.Empty<string>();");
+            sb.AppendLine("            bool isMtp = args.Any(a => a == \"--list-tests\" || a == \"--server\" || a.StartsWith(\"--client-port\") || a == \"--report-trx\");");
+            sb.AppendLine("            bool isSimple = args.Contains(\"--simple\");");
+            sb.AppendLine();
+            sb.AppendLine("            if (isMtp && !isSimple)");
+            sb.AppendLine("            {");
+            sb.AppendLine("                await RunMtpAsync(args);");
+            sb.AppendLine("            }");
+            sb.AppendLine("            else");
+            sb.AppendLine("            {");
+            sb.AppendLine("                await RunSimpleAsync(args);");
+            sb.AppendLine("            }");
+            sb.AppendLine("        }");
+            sb.AppendLine();
+            sb.AppendLine("        private static async global::System.Threading.Tasks.Task RunMtpAsync(string[] args)");
+            sb.AppendLine("        {");
+            sb.AppendLine("            var builder = await Microsoft.Testing.Platform.Builder.TestApplication.CreateBuilderAsync(args);");
+            sb.AppendLine("            builder.AddTrxReportProvider();");
+            sb.AppendLine("            builder.RegisterTestFramework(");
+            sb.AppendLine("                _ => new ProvaCapabilities(),");
+            sb.AppendLine("                (cap, _) => new HybridMtpAdapter(GetTests(), cap));");
+            sb.AppendLine("            using var app = await builder.BuildAsync();");
+            sb.AppendLine("            await app.RunAsync();");
+            sb.AppendLine("        }");
+            sb.AppendLine();
+            sb.AppendLine("        private static async global::System.Threading.Tasks.Task RunSimpleAsync(string[] args)");
             sb.AppendLine("        {");
             sb.AppendLine("            var reporter = new ConsoleReporter();");
             sb.AppendLine("            int passed = 0, failed = 0, skipped = 0;");
             sb.AppendLine("            var sw = global::System.Diagnostics.Stopwatch.StartNew();");
             sb.AppendLine();
-            sb.AppendLine("            // Parse Filters");
             sb.AppendLine("            var filters = new global::System.Collections.Generic.List<global::System.Collections.Generic.KeyValuePair<string, string>>();");
-            sb.AppendLine("            if (args != null)");
+            sb.AppendLine("            for (int i = 0; i < args.Length; i++)");
             sb.AppendLine("            {");
-            sb.AppendLine("                for (int i = 0; i < args.Length; i++)");
+            sb.AppendLine("                if (args[i] == \"--filter\" && i + 1 < args.Length)");
             sb.AppendLine("                {");
-            sb.AppendLine("                    if (args[i] == \"--filter\" && i + 1 < args.Length)");
-            sb.AppendLine("                    {");
-            sb.AppendLine("                        var parts = args[i+1].Split('=');");
-            sb.AppendLine("                        if (parts.Length == 2) filters.Add(new global::System.Collections.Generic.KeyValuePair<string, string>(parts[0], parts[1]));");
-            sb.AppendLine("                    }");
+            sb.AppendLine("                    var parts = args[i+1].Split('=');");
+            sb.AppendLine("                    if (parts.Length == 2) filters.Add(new global::System.Collections.Generic.KeyValuePair<string, string>(parts[0], parts[1]));");
             sb.AppendLine("                }");
             sb.AppendLine("            }");
             sb.AppendLine();
-            
-            sb.AppendLine("            var classTasks = new global::System.Collections.Generic.List<global::System.Threading.Tasks.Task>();");
+            sb.AppendLine("            var tests = GetTests();");
+            sb.AppendLine("            var hasFocus = tests.Any(t => t.Traits.Any(tr => tr.Key == \"Focus\"));");
+            sb.AppendLine("            var activeTests = hasFocus ");
+            sb.AppendLine("                ? tests.Where(t => t.Traits.Any(tr => tr.Key == \"Focus\")).ToList() ");
+            sb.AppendLine("                : tests.ToList();");
+            sb.AppendLine();
+            sb.AppendLine("            if (hasFocus)");
+            sb.AppendLine("            {");
+            sb.AppendLine("                 global::System.Console.WriteLine(\"            // [Focus] Mode Active: Only running focused tests.\");");
+            sb.AppendLine("            }");
+            sb.AppendLine();
+            sb.AppendLine("            foreach (var test in activeTests)");
+            sb.AppendLine("            {");
+            sb.AppendLine("                if (test.SkipReason != null)");
+            sb.AppendLine("                {");
+            sb.AppendLine("                    reporter.OnTestSkipped(test.DisplayName, test.SkipReason);");
+            sb.AppendLine("                    global::System.Threading.Interlocked.Increment(ref skipped);");
+            sb.AppendLine("                    continue;");
+            sb.AppendLine("                }");
+            sb.AppendLine();
+            sb.AppendLine("                if (filters.Any() && !filters.All(f => test.Traits.Contains(f))) continue;");
+            sb.AppendLine();
+            sb.AppendLine("                if (await RunTestSafe(test.ExecuteDelegate, test.DisplayName, reporter, \"Captured Output\", test.Description, test.RetryCount))");
+            sb.AppendLine("                    global::System.Threading.Interlocked.Increment(ref passed);");
+            sb.AppendLine("                else");
+            sb.AppendLine("                    global::System.Threading.Interlocked.Increment(ref failed);");
+            sb.AppendLine("            }");
+            sb.AppendLine();
+            sb.AppendLine("            sw.Stop();");
+            sb.AppendLine("            reporter.OnComplete(passed, failed, skipped, sw.Elapsed);");
+            sb.AppendLine("        }");
+            sb.AppendLine();
+            sb.AppendLine("        /// <summary>");
+            sb.AppendLine("        /// Gets the list of available tests.");
+            sb.AppendLine("        /// </summary>");
+            sb.AppendLine("        public static global::System.Collections.Generic.IEnumerable<ProvaTest> GetTests()");
+            sb.AppendLine("        {");
+            sb.AppendLine("            var list = new global::System.Collections.Generic.List<ProvaTest>();");
 
-            // Logic for [Focus]
             var allMethods = methods.Where(m => m != null).ToList();
-            var hasFocus = allMethods.Any(m => m!.IsFocused);
-            var activeMethods = hasFocus 
-                ? allMethods.Where(m => m!.IsFocused).ToList() 
-                : allMethods;
-            
-            if (hasFocus)
-            {
-                 sb.AppendLine("            // [Focus] Mode Active: Only running focused tests.");
-            }
-
-            var groupedMethods = activeMethods.GroupBy(m => m!.ClassName);
+            var groupedMethods = allMethods.GroupBy(m => m!.ClassName);
 
             foreach (var group in groupedMethods)
             {
                 var className = group.Key;
                 var classFixtures = group.First()!.FixtureTypes;
+                sb.AppendLine($"            // Class: {className}");
                 
-                // START Parallel Task for Class
-                sb.AppendLine();
-                sb.AppendLine($"            classTasks.Add(global::System.Threading.Tasks.Task.Run(async () =>");
-                sb.AppendLine($"            {{");
-                sb.AppendLine($"                // Class: {className}");
-                
-                // Initialize Fixtures
-                foreach (var fixtureType in classFixtures)
-                {
-                    var varName = $"fixture_{fixtureType.Replace(".", "_")}";
-                    sb.AppendLine($"                var {varName} = new {fixtureType}();");
-                    sb.AppendLine($"                if ({varName} is IAsyncLifetime al_init_{varName}) await al_init_{varName}.InitializeAsync();");
-                }
-
                 foreach (var method in group)
                 {
-                     if (method == null) continue;
+                    if (method == null) continue;
 
-                     // Check Skip
-                     if (!string.IsNullOrEmpty(method.SkipReason))
-                     {
-                         sb.AppendLine($"                reporter.OnTestSkipped(\"{method.ClassName}.{method.MethodName}\", \"{method.SkipReason}\");");
-                         sb.AppendLine($"                global::System.Threading.Interlocked.Increment(ref skipped);");
-                         continue;
-                     }
-
-                     // Check Traits (Filter)
-                     if (method.Traits.Count > 0)
-                     {
-                         var attributesString = string.Join(", ", method.Traits.Select(t => $"new global::System.Collections.Generic.KeyValuePair<string,string>(\"{t.Key}\", \"{t.Value}\")"));
-                         sb.AppendLine($"                var traits_{method.MethodName} = new global::System.Collections.Generic.List<global::System.Collections.Generic.KeyValuePair<string,string>> {{ {attributesString} }};");
-                         sb.AppendLine($"                if (filters.Any() && !filters.All(f => traits_{method.MethodName}.Contains(f)))");
-                         sb.AppendLine("                {");
-                         sb.AppendLine("                    // Filtered out");
-                         sb.AppendLine("                }");
-                         sb.AppendLine("                else");
-                         sb.AppendLine("                {");
-                     }
-                     else
-                     {
-                         sb.AppendLine($"                if (filters.Any()) {{ /* Filter active but no traits on method -> skip */ }} else {{");
-                     }
-
-                     if (method.IsTheory)
+                    if (method.IsTheory)
                     {
                         int theoryIndex = 0;
-                        
-                        // InlineData
                         if (method.TestData.Count > 0)
                         {
                             foreach (var args in method.TestData)
                             {
                                 var argsString = string.Join(", ", args);
-                                GenerateTestCall(sb, method, argsString, $"[{theoryIndex++}]");
+                                GenerateTestRegistration(sb, method, argsString, $"[{theoryIndex++}]", classFixtures);
                             }
                         }
 
-                        // MemberData
                         if (method.MemberData.Count > 0)
                         {
                             foreach (var md in method.MemberData)
                             {
                                 var targetType = md.MemberType ?? method.ClassName; 
                                 var invoke = $"{targetType}.{md.MemberName}";
-                                
-                                string access;
-                                if (md.Parameters.Length > 0)
-                                {
-                                     access = $"{invoke}({string.Join(", ", md.Parameters)})";
-                                }
-                                else
-                                {
-                                     access = md.IsMethod ? $"{invoke}()" : $"{invoke}"; 
-                                }
+                                string access = md.Parameters.Length > 0 
+                                    ? $"{invoke}({string.Join(", ", md.Parameters)})" 
+                                    : (md.IsMethod ? $"{invoke}()" : $"{invoke}");
 
-                                sb.AppendLine($"                // MemberData: {md.MemberName}");
-                                sb.AppendLine($"                foreach (var dataRow in {access})");
+                                sb.AppendLine($"            // MemberData: {md.MemberName}");
+                                sb.AppendLine($"            foreach (var dataRow in {access})");
+                                sb.AppendLine("            {");
                                 sb.AppendLine("                {");
-                                sb.AppendLine("                    {");
-                                 // Construct arguments list with casts
-                                 var castArgs = new List<string>();
-                                 for(int i = 0; i < method.ParameterTypes.Count; i++)
-                                 {
-                                     string typeName = method.ParameterTypes[i];
-                                     castArgs.Add($"({typeName})dataRow[{i}]");
-                                 }
-                                 string dynamicArgs = string.Join(", ", castArgs);
-                                 
-                                 GenerateTestCall(sb, method, dynamicArgs, $"[_dynamic_{theoryIndex++}]");
-
-                                sb.AppendLine("                    }");
+                                var castArgs = new List<string>();
+                                for(int i = 0; i < method.ParameterTypes.Count; i++)
+                                {
+                                    castArgs.Add($"({method.ParameterTypes[i]})dataRow[{i}]");
+                                }
+                                GenerateTestRegistration(sb, method, string.Join(", ", castArgs), $"[_dynamic_{theoryIndex++}]", classFixtures);
                                 sb.AppendLine("                }");
+                                sb.AppendLine("            }");
                             }
                         }
                     }
                     else
                     {
-                        GenerateTestCall(sb, method, "", "");
-                    }
-
-                    if (method.Traits.Count > 0 || true) // Close the filter block
-                    {
-                         sb.AppendLine("                }");
+                        GenerateTestRegistration(sb, method, "", "", classFixtures);
                     }
                 }
-
-                // Dispose Fixtures
-                foreach (var fixtureType in classFixtures)
-                {
-                    var varName = $"fixture_{fixtureType.Replace(".", "_")}";
-                    sb.AppendLine($"                if ({varName} is IAsyncLifetime al_{varName}) await al_{varName}.DisposeAsync();");
-                    sb.AppendLine($"                else if ({varName} is global::System.IDisposable d_{varName}) d_{varName}.Dispose();");
-                }
-                
-                sb.AppendLine($"            }}));"); // END Parallel Task
             }
 
-            sb.AppendLine("            await global::System.Threading.Tasks.Task.WhenAll(classTasks);");
-            sb.AppendLine("            sw.Stop();");
-            sb.AppendLine("            reporter.OnComplete(passed, failed, skipped, sw.Elapsed);");
+            sb.AppendLine("            return list;");
             sb.AppendLine("        }");
             sb.AppendLine();
             sb.AppendLine("        private static async global::System.Threading.Tasks.Task<bool> RunTestSafe(global::System.Func<global::System.Threading.Tasks.Task> test, string name, ITestReporter reporter, string? output, string? description = null, int retryCount = 0)");
             sb.AppendLine("        {");
             sb.AppendLine("             reporter.OnTestStarting(name, description);");
-            sb.AppendLine("             ");
-            sb.AppendLine("             // Retry Loop");
             sb.AppendLine("             int attempt = 0;");
             sb.AppendLine("             while (true)");
             sb.AppendLine("             {");
@@ -207,14 +191,7 @@ namespace Prova.Generators.Emission
             sb.AppendLine("                     return true;");
             sb.AppendLine("                 } catch (global::System.Exception ex) {");
             sb.AppendLine("                     attempt++;");
-            sb.AppendLine("                     if (attempt <= retryCount)");
-            sb.AppendLine("                     {");
-            sb.AppendLine("                         // Optional: Report retry?");
-            sb.AppendLine("                         // reporter.OnTestRetry(name, attempt);");
-            sb.AppendLine("                         // For now, silent retry unless final failure.");
-            sb.AppendLine("                         continue;");
-            sb.AppendLine("                     }");
-            sb.AppendLine("                     ");
+            sb.AppendLine("                     if (attempt <= retryCount) continue;");
             sb.AppendLine("                     reporter.OnTestFailure(name, ex, output ?? \"\");");
             sb.AppendLine("                     return false;");
             sb.AppendLine("                 }");
@@ -226,72 +203,69 @@ namespace Prova.Generators.Emission
             context.AddSource("TestRunnerExecutor.g.cs", SourceText.From(sb.ToString(), Encoding.UTF8));
         }
 
-        private static void GenerateTestCall(StringBuilder sb, TestMethodModel method, string args, string suffix)
+        private static void GenerateTestRegistration(StringBuilder sb, TestMethodModel method, string args, string suffix, List<string> classFixtures)
         {
-             sb.AppendLine($"                    // Test: {method.ClassName}.{method.MethodName}{suffix}");
-             sb.AppendLine("                    {"); 
+             sb.AppendLine($"            list.Add(new ProvaTest");
+             sb.AppendLine($"            {{");
+             sb.AppendLine($"                DisplayName = \"{method.ClassName}.{method.MethodName}{suffix}\",");
+             sb.AppendLine($"                Description = {(method.Description == null ? "null" : $"\"{method.Description}\"")},");
+             sb.AppendLine($"                SkipReason = {(method.SkipReason == null ? "null" : $"\"{method.SkipReason}\"")},");
+             sb.AppendLine($"                RetryCount = {method.RetryCount},");
              
-             if (method.UsesOutputHelper)
+             if (method.Traits.Count == 0 && !method.IsFocused)
              {
-                 sb.AppendLine($"                        var outputHelper = new TestOutputHelper();");
+                 sb.AppendLine("                Traits = global::System.Array.Empty<global::System.Collections.Generic.KeyValuePair<string, string>>(),");
+             }
+             else
+             {
+                 var traits = method.Traits.Select(t => $"new global::System.Collections.Generic.KeyValuePair<string, string>(\"{t.Key}\", \"{t.Value}\")").ToList();
+                 if (method.IsFocused) traits.Add("new global::System.Collections.Generic.KeyValuePair<string, string>(\"Focus\", \"true\")");
+                 sb.AppendLine($"                Traits = new[] {{ {string.Join(", ", traits)} }},");
              }
 
-             sb.AppendLine($"                        if (await RunTestSafe(async () => {{");
-             
+             sb.AppendLine($"                ExecuteDelegate = async () => ");
+             sb.AppendLine($"                {{");
+             if (method.UsesOutputHelper) sb.AppendLine($"                    var outputHelper = new TestOutputHelper();");
+
+             foreach (var fixtureType in classFixtures)
+             {
+                 var varName = $"fixture_{fixtureType.Replace(".", "_")}";
+                 sb.AppendLine($"                    var {varName} = new {fixtureType}();");
+                 sb.AppendLine($"                    if ({varName} is IAsyncLifetime al_init_{varName}) await al_init_{varName}.InitializeAsync();");
+             }
+
              if (!method.IsStatic)
              {
-                 string constructorArgs = string.Join(", ", method.Dependencies);
-                 sb.AppendLine($"                            var instance = new {method.ClassName}({constructorArgs});");
-                 
-                 if (method.ImplementsAsyncLifetime)
-                 {
-                     sb.AppendLine($"                            if (instance is IAsyncLifetime asyncLifeInit) await asyncLifeInit.InitializeAsync();");
-                 }
+                 sb.AppendLine($"                    var instance = new {method.ClassName}({string.Join(", ", method.Dependencies)});");
+                 if (method.ImplementsAsyncLifetime) sb.AppendLine($"                    if (instance is IAsyncLifetime asyncLifeInit) await asyncLifeInit.InitializeAsync();");
              }
 
-             sb.AppendLine("                            try {");
-             
-                string target = method.IsStatic ? method.ClassName : "instance";
-                if (method.IsAsync)
-                    sb.AppendLine($"                                await {target}.{method.MethodName}({args});");
-                else
-                    sb.AppendLine($"                                {target}.{method.MethodName}({args});");
+             sb.AppendLine("                    try {");
+             string target = method.IsStatic ? method.ClassName : "instance";
+             sb.AppendLine(method.IsAsync ? $"                        await {target}.{method.MethodName}({args});" : $"                        {target}.{method.MethodName}({args});");
 
-                // Nordic Suite: Smart Verify 🛡️
-                // Automatically verify all Skugga mocks
-                if (!method.IsStatic && method.MockFields.Count > 0)
-                {
-                    sb.AppendLine();
-                    sb.AppendLine("                                // Nordic Suite: Smart Verify 🛡️");
-                    sb.AppendLine("                                // Automatically verify all Skugga mocks");
-                    sb.AppendLine("                                if (true) {");
-                    foreach (var mockName in method.MockFields)
-                    {
-                        sb.AppendLine($"                                    instance.{mockName}.VerifyAll();");
-                    }
-                    sb.AppendLine("                                }");
-                }
+             if (!method.IsStatic && method.MockFields.Count > 0)
+             {
+                 sb.AppendLine("                        // Nordic Suite: Smart Verify 🛡️");
+                 foreach (var mockName in method.MockFields) sb.AppendLine($"                        instance.{mockName}.VerifyAll();");
+             }
 
-             sb.AppendLine("                            } finally {");
+             sb.AppendLine("                    } finally {");
              if (!method.IsStatic)
              {
-                 if (method.ImplementsAsyncLifetime)
-                 {
-                     sb.AppendLine($"                                if (instance is IAsyncLifetime asyncLifeDisp) await asyncLifeDisp.DisposeAsync();");
-                 }
-                 sb.AppendLine($"                                if (instance is global::System.IDisposable d) d.Dispose();");
+                 if (method.ImplementsAsyncLifetime) sb.AppendLine($"                        if (instance is IAsyncLifetime asyncLifeDisp) await asyncLifeDisp.DisposeAsync();");
+                 sb.AppendLine($"                        if (instance is global::System.IDisposable d) d.Dispose();");
              }
-             sb.AppendLine("                            }");
-             
-             string outputArg = method.UsesOutputHelper ? "outputHelper.Output" : "null";
-             string descArg = method.Description == null ? "null" : $"\"{method.Description}\"";
-             sb.AppendLine($"                        }}, \"{method.ClassName}.{method.MethodName}{suffix}\", reporter, {outputArg}, {descArg}, {method.RetryCount}))");
-             
-             sb.AppendLine($"                            global::System.Threading.Interlocked.Increment(ref passed);");
-             sb.AppendLine($"                        else");
-             sb.AppendLine($"                            global::System.Threading.Interlocked.Increment(ref failed);");
-             sb.AppendLine("                    }"); 
-             sb.AppendLine();
+             foreach (var fixtureType in classFixtures)
+             {
+                 var varName = $"fixture_{fixtureType.Replace(".", "_")}";
+                 sb.AppendLine($"                    if ({varName} is IAsyncLifetime al_{varName}) await al_{varName}.DisposeAsync();");
+                 sb.AppendLine($"                    else if ({varName} is global::System.IDisposable d_{varName}) d_{varName}.Dispose();");
+             }
+
+             sb.AppendLine("                    }");
+             sb.AppendLine("                }");
+             sb.AppendLine("            });");
         }
     }
 }

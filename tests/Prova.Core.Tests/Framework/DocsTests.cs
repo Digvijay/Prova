@@ -3,6 +3,9 @@ using Prova;
 
 namespace Prova.Core.Tests.Framework
 {
+    /// <summary>
+    /// Tests demonstrating documentation features.
+    /// </summary>
     public class DocsTests
     {
         /// <summary>
@@ -18,6 +21,7 @@ namespace Prova.Core.Tests.Framework
         private static readonly string[] Names = { "a", "b" };
         private static readonly int[] One = { 1 };
 
+        /// <summary>Test collection assertions.</summary>
         [Fact]
         public static void CollectionTest()
         {
@@ -27,6 +31,7 @@ namespace Prova.Core.Tests.Framework
             Assert.Empty(Array.Empty<int>());
         }
         
+        /// <summary>Test type assertions.</summary>
         [Fact]
         public static void TypeTest()
         {

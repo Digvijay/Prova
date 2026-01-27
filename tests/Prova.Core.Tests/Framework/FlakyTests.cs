@@ -3,10 +3,16 @@ using Prova;
 
 namespace Prova.Core.Tests.Framework
 {
+    /// <summary>
+    /// Tests retry and flaky behavior.
+    /// </summary>
     public class FlakyTests
     {
         private static int _attempts;
 
+        /// <summary>
+        /// A flaky test that passes on the 3rd attempt.
+        /// </summary>
         [Fact]
         [Retry(3)]
         // [Focus]
@@ -21,6 +27,9 @@ namespace Prova.Core.Tests.Framework
             Assert.True(true);
         }
 
+        /// <summary>
+        /// A normal passing test.
+        /// </summary>
         [Fact]
         public static void NormalTest()
         {

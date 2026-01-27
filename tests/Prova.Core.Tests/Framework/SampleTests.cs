@@ -4,20 +4,26 @@ using Prova;
 
 namespace Prova.Core.Tests
 {
+    /// <summary>
+    /// Sample tests demonstrating various framework features.
+    /// </summary>
     public class SampleTests
     {
+        /// <summary>A passing test.</summary>
         [Fact]
         public static void PassingTest()
         {
             Assert.Equal(1, 1);
         }
 
+        /// <summary>A failing test.</summary>
         [Fact(Skip = "Intentional failure for framework verification")]
         public static void FailingTest()
         {
             Assert.Equal(1, 2);
         }
 
+        /// <summary>An async passing test.</summary>
         [Fact]
         public static async Task AsyncPassingTest()
         {
@@ -25,6 +31,9 @@ namespace Prova.Core.Tests
             Assert.True(true);
         }
 
+        /// <summary>A theory test.</summary>
+        /// <param name="a">First value.</param>
+        /// <param name="b">Second value.</param>
         [Theory]
         [InlineData(1, 1)]
         [InlineData(2, 2)]
@@ -34,12 +43,17 @@ namespace Prova.Core.Tests
             Assert.Equal(a, b);
         }
 
+        /// <summary>A failing theory test.</summary>
+        /// <param name="a">First value.</param>
+        /// <param name="b">Second value.</param>
         [Theory(Skip = "Intentional failure for framework verification")]
         [InlineData(1, 2)]
         public static void FailedTheoryTest(int a, int b)
         {
             Assert.Equal(a, b);
         }
+
+        /// <summary>Test exception throwing.</summary>
         [Fact]
         public static void ThrowsTest()
         {
@@ -47,6 +61,7 @@ namespace Prova.Core.Tests
             Assert.Equal("Boom", ex.Message);
         }
 
+        /// <summary>Test async exception throwing.</summary>
         [Fact]
         public static async Task ThrowsAsyncTest()
         {

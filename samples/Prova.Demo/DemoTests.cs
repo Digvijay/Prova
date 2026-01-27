@@ -5,7 +5,9 @@ using Prova;
 
 namespace Prova.Demo
 {
-    // 1. Basic Tests
+    /// <summary>
+    /// Basic Tests
+    /// </summary>
     public class BasicTests
     {
         /// <summary>
@@ -28,9 +30,15 @@ namespace Prova.Demo
         }
     }
 
-    // 2. Data Driven Tests (MemberData & InlineData)
+    /// <summary>
+    /// Data Driven Tests (MemberData &amp; InlineData)
+    /// </summary>
     public class DataTests
     {
+        /// <summary>Test division.</summary>
+        /// <param name="a">Dividend.</param>
+        /// <param name="b">Divisor.</param>
+        /// <param name="expected">Expected quotient.</param>
         [Theory]
         [InlineData(10, 2, 5)]
         [InlineData(100, 10, 10)]
@@ -39,12 +47,15 @@ namespace Prova.Demo
             Assert.Equal(expected, a / b);
         }
 
+        /// <summary>Gets test names.</summary>
         public static IEnumerable<object[]> GetNames()
         {
             yield return new object[] { "Prova" };
             yield return new object[] { "xUnit" };
         }
 
+        /// <summary>Check output names.</summary>
+        /// <param name="name">The name.</param>
         [Theory]
         [MemberData(nameof(GetNames))]
         public static void OutputNames(string name)
@@ -53,11 +64,15 @@ namespace Prova.Demo
         }
     }
 
-    // 3. Dependency Injection (Fixtures)
+    /// <summary>
+    /// Dependency Injection (Fixtures)
+    /// </summary>
     public class DatabaseFixture : IAsyncLifetime
     {
+        /// <summary>Is connected status.</summary>
         public bool IsConnected { get; private set; }
 
+        /// <inheritdoc />
         public Task InitializeAsync()
         {
             IsConnected = true;
@@ -65,6 +80,7 @@ namespace Prova.Demo
             return Task.CompletedTask;
         }
 
+        /// <inheritdoc />
         public Task DisposeAsync()
         {
             IsConnected = false;
@@ -73,15 +89,18 @@ namespace Prova.Demo
         }
     }
 
+    /// <summary>DB Tests.</summary>
     public class DatabaseTests : IClassFixture<DatabaseFixture>
     {
         private readonly DatabaseFixture _db;
 
+        /// <summary>Constructor.</summary>
         public DatabaseTests(DatabaseFixture db)
         {
             _db = db;
         }
 
+        /// <summary>Check connection.</summary>
         [Fact]
         public void ConnectionIsValid()
         {
@@ -89,7 +108,9 @@ namespace Prova.Demo
         }
     }
 
-    // 4. Developer Experience (Retry)
+    /// <summary>
+    /// Developer Experience (Retry)
+    /// </summary>
     public class FlakyServiceTests
     {
         private static int _attempts;
@@ -111,10 +132,13 @@ namespace Prova.Demo
         }
     }
 
-    // 5. Traits
+    /// <summary>
+    /// Traits
+    /// </summary>
     [Trait("Category", "Slow")]
     public class SlowTests
     {
+        /// <summary>Heavy work.</summary>
         [Fact]
         public static async Task HeavyWork()
         {
