@@ -105,9 +105,26 @@ Prova is part of the **Nordic Suite** of developer tools. It is designed to work
 Prova is a first-class citizen in the modern .NET testing ecosystem. By integrating the **Hybrid MTP Adapter**, Prova provides:
 - **Full `dotnet test` integration** via the `Microsoft.Testing.Platform` runner.
 - **TRX Report generation** for Azure DevOps, GitHub Actions, and Jenkins.
+- **Code Coverage**: Built-in support for `--coverage` to generate `coverage.xml` or Cobertura reports.
 - **In-process test execution** with zero reflection overhead.
 
 Check out the [MTP Sample](samples/Prova.MtpSample) for a complete example.
+
+### 📊 Code Coverage
+
+To generate code coverage, use the `--coverage` flag:
+
+```bash
+# Via dotnet run
+dotnet run -- --coverage --coverage-output-format cobertura
+
+# Via dotnet test
+dotnet test -- --coverage --coverage-output-format cobertura
+```
+
+> [!NOTE]
+> **AOT Coverage**: Code coverage currently works primarily in JIT mode. Support for Native AOT coverage is an evolving area in the .NET ecosystem.
+
 
 Prova tests compile into a **stand-alone Console Application**, not a Class Library.
 

@@ -120,23 +120,36 @@ namespace Prova
             inProgressNode.Properties.Add(InProgressTestNodeStateProperty.CachedInstance);
             await messageBus.PublishAsync(this, new TestNodeUpdateMessage(sessionUid, inProgressNode));
 
-            try
+            int attempts = 0;
+            int maxAttempts = Math.Max(1, test.RetryCount);
+            Exception? lastException = null;
+
+            while (attempts < maxAttempts)
             {
-                await test.ExecuteDelegate();
-                
-                sw.Stop();
-                var passedNode = MapToNode(test);
-                passedNode.Properties.Add(PassedTestNodeStateProperty.CachedInstance);
-                passedNode.Properties.Add(new TimingProperty(new TimingInfo(DateTimeOffset.Now - sw.Elapsed, DateTimeOffset.Now, sw.Elapsed)));
-                await messageBus.PublishAsync(this, new TestNodeUpdateMessage(sessionUid, passedNode));
-            }
-            catch (Exception ex)
-            {
-                sw.Stop();
-                var failedNode = MapToNode(test);
-                failedNode.Properties.Add(new FailedTestNodeStateProperty(ex));
-                failedNode.Properties.Add(new TimingProperty(new TimingInfo(DateTimeOffset.Now - sw.Elapsed, DateTimeOffset.Now, sw.Elapsed)));
-                await messageBus.PublishAsync(this, new TestNodeUpdateMessage(sessionUid, failedNode));
+                attempts++;
+                try
+                {
+                    await test.ExecuteDelegate();
+                    
+                    sw.Stop();
+                    var passedNode = MapToNode(test);
+                    passedNode.Properties.Add(PassedTestNodeStateProperty.CachedInstance);
+                    passedNode.Properties.Add(new TimingProperty(new TimingInfo(DateTimeOffset.Now - sw.Elapsed, DateTimeOffset.Now, sw.Elapsed)));
+                    await messageBus.PublishAsync(this, new TestNodeUpdateMessage(sessionUid, passedNode));
+                    return;
+                }
+                catch (Exception ex)
+                {
+                    lastException = ex;
+                    if (attempts >= maxAttempts)
+                    {
+                        sw.Stop();
+                        var failedNode = MapToNode(test);
+                        failedNode.Properties.Add(new FailedTestNodeStateProperty(ex));
+                        failedNode.Properties.Add(new TimingProperty(new TimingInfo(DateTimeOffset.Now - sw.Elapsed, DateTimeOffset.Now, sw.Elapsed)));
+                        await messageBus.PublishAsync(this, new TestNodeUpdateMessage(sessionUid, failedNode));
+                    }
+                }
             }
         }
 
