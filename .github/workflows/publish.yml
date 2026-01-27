@@ -1,6 +1,9 @@
 name: Publish
 
 on:
+  push:
+    tags:
+      - 'v*'
   release:
     types: [published]
 
@@ -23,12 +26,16 @@ jobs:
 
     - name: Set Version
       run: |
-        TAG_NAME=${{ github.event.release.tag_name }}
+        if [ "${{ github.event_name }}" = "release" ]; then
+          TAG_NAME=${{ github.event.release.tag_name }}
+        else
+          TAG_NAME=${{ github.ref_name }}
+        fi
         VERSION=${TAG_NAME#v}
         echo "VERSION=$VERSION" >> $GITHUB_ENV
 
     - name: Pack
-      run: dotnet pack src/Prova.Core/Prova.Core.csproj --configuration Release --no-build -o out /p:Version=$VERSION
+      run: dotnet pack src/Prova.Core/Prova.Core.csproj --configuration Release --no-build -o out /p:Version=${{ env.VERSION }}
 
     - name: Push to NuGet
       run: dotnet nuget push out/*.nupkg --api-key ${{ secrets.NUGET_API_KEY }} --source https://api.nuget.org/v3/index.json
