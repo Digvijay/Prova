@@ -89,8 +89,8 @@ We minimize heap allocations in the runner loop:
 ### 5. "Magic" Features via Compiler
 
 Because we control the compilation:
-- **`[Focus]`**: We filter the *generation* of the `classTasks` list. Focused tests literally mean *only those lines of code exist* in the runner path.
-- **Documentation**: We read the `SyntaxTree` XML trivia (`/// <summary>`) and bake it into the string table of the runner. No XML parsing at runtime.
+- **`[Focus]`**: We filter the test execution set at the entry point. When `[Focus]` is active, only the targeted tests are added to the execution graph, ensuring zero distractions and immediate feedback.
+- **Documentation**: We read the `SyntaxTree` XML trivia (`/// <summary>`) at compile-time and bake it directly into the runner. No XML parsing or reflection occurs at runtime.
 
 ### Summary for Infrastructure Teams
 

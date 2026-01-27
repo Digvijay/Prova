@@ -121,7 +121,7 @@ namespace Prova
             await messageBus.PublishAsync(this, new TestNodeUpdateMessage(sessionUid, inProgressNode));
 
             int attempts = 0;
-            int maxAttempts = Math.Max(1, test.RetryCount);
+            int maxAttempts = test.RetryCount + 1;
             Exception? lastException = null;
 
             while (attempts < maxAttempts)

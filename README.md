@@ -115,11 +115,10 @@ Check out the [MTP Sample](samples/Prova.MtpSample) for a complete example.
 To generate code coverage, use the `--coverage` flag:
 
 ```bash
-# Via dotnet run
+# Generate Cobertura coverage report
 dotnet run -- --coverage --coverage-output-format cobertura
 
-# Via dotnet test
-dotnet test -- --coverage --coverage-output-format cobertura
+# Report is generated in ./TestResults/*.cobertura.xml
 ```
 
 > [!NOTE]

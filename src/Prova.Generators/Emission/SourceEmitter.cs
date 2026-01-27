@@ -40,7 +40,7 @@ namespace Prova.Generators.Emission
             sb.AppendLine("        public static async global::System.Threading.Tasks.Task RunAllAsync(string[]? args = null)");
             sb.AppendLine("        {");
             sb.AppendLine("            args ??= global::System.Array.Empty<string>();");
-            sb.AppendLine("            bool isMtp = args.Any(a => a == \"--list-tests\" || a == \"--server\" || a.StartsWith(\"--client-port\") || a == \"--report-trx\" || a == \"--coverage\");");
+            sb.AppendLine("            bool isMtp = args.Any(a => a == \"--list-tests\" || a == \"--server\" || a.StartsWith(\"--client-port\") || a == \"--report-trx\" || a == \"--coverage\" || a == \"--help\" || a == \"-?\" || a == \"-h\");");
             sb.AppendLine("            bool isSimple = args.Contains(\"--simple\");");
             sb.AppendLine();
             sb.AppendLine("            if (isMtp && !isSimple)");
@@ -57,6 +57,7 @@ namespace Prova.Generators.Emission
             sb.AppendLine("        {");
             sb.AppendLine("            var builder = await global::Microsoft.Testing.Platform.Builder.TestApplication.CreateBuilderAsync(args);");
             sb.AppendLine("            builder.AddTrxReportProvider();");
+            sb.AppendLine("            builder.AddCodeCoverageProvider();");
             sb.AppendLine("            builder.RegisterTestFramework(");
             sb.AppendLine("                _ => new ProvaCapabilities(),");
             sb.AppendLine("                (cap, _) => new HybridMtpAdapter(GetTests(), cap));");
