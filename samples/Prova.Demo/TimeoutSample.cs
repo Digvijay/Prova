@@ -22,7 +22,7 @@ namespace Prova.Demo
         /// <summary>
         /// A test designed to exceed its timeout limit and fail.
         /// </summary>
-        [Fact]
+        [Fact(Skip = "Intentional failure for verification")]
         [Timeout(50)] // 50ms timeout
         public async Task Slow_Test_Should_Fail()
         {
