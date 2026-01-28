@@ -23,6 +23,7 @@ namespace Prova.Generators.Models
         bool IsStatic,
         int? MaxParallel,
         List<string> ClassData, // [ClassData(typeof(T))]
-        long? MaxAllocBytes // [MaxAlloc(bytes)]
+        long? MaxAllocBytes, // [MaxAlloc(bytes)]
+        int? TimeoutMs // [Timeout(ms)]
     );
 }

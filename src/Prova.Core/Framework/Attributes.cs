@@ -49,7 +49,7 @@ namespace Prova
     /// <summary>
     /// Specifies the maximum number of concurrent tests to run for a class or project.
     /// </summary>
-    [AttributeUsage(AttributeTargets.Class, AllowMultiple = false)]
+    [AttributeUsage(AttributeTargets.Class | AttributeTargets.Method, AllowMultiple = false)]
     public class ParallelAttribute : Attribute
     {
         /// <summary>Gets the maximum degree of parallelism.</summary>
@@ -110,6 +110,25 @@ namespace Prova
         public MaxAllocAttribute(long bytes)
         {
             Bytes = bytes;
+        }
+    }
+
+    /// <summary>
+    /// Specifies a timeout for a test in milliseconds.
+    /// </summary>
+    [AttributeUsage(AttributeTargets.Method, AllowMultiple = false)]
+    public class TimeoutAttribute : Attribute
+    {
+        /// <summary>Gets the timeout in milliseconds.</summary>
+        public int Milliseconds { get; }
+
+        /// <summary>
+        /// Initializes a new instance of the <see cref="TimeoutAttribute"/> class.
+        /// </summary>
+        /// <param name="milliseconds">The timeout in milliseconds.</param>
+        public TimeoutAttribute(int milliseconds)
+        {
+            Milliseconds = milliseconds;
         }
     }
 }

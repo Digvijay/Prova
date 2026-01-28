@@ -29,13 +29,14 @@ namespace Prova.Reporters
             lock (_lock)
             {
                 Console.ForegroundColor = ConsoleColor.Green;
-                Console.Write("[PASS] ");
+                Console.Write("✓ ");
                 Console.ResetColor();
                 Console.WriteLine(testName);
                 if (!string.IsNullOrEmpty(output))
                 {
-                    Console.WriteLine("Output:");
+                    Console.ForegroundColor = ConsoleColor.DarkGray;
                     Console.WriteLine(output);
+                    Console.ResetColor();
                 }
             }
         }
@@ -46,15 +47,17 @@ namespace Prova.Reporters
              lock (_lock)
              {
                 Console.ForegroundColor = ConsoleColor.Red;
-                Console.Write("[FAIL] ");
-                Console.ResetColor();
+                Console.Write("✗ ");
+                Console.ForegroundColor = ConsoleColor.Red;
                 Console.WriteLine($"{testName}: {ex.Message}");
+                Console.ForegroundColor = ConsoleColor.DarkGray;
                 Console.WriteLine(ex.StackTrace);
                 if (!string.IsNullOrEmpty(output))
                 {
                     Console.WriteLine("Output:");
                     Console.WriteLine(output);
                 }
+                Console.ResetColor();
              }
         }
 
@@ -64,9 +67,9 @@ namespace Prova.Reporters
              lock (_lock)
              {
                 Console.ForegroundColor = ConsoleColor.Yellow;
-                Console.Write("[SKIP] ");
+                Console.Write("⚠ ");
                 Console.ResetColor();
-                Console.WriteLine($"{testName}: {reason}");
+                Console.WriteLine($"{testName} (Skipped: {reason})");
              }
         }
 
@@ -76,8 +79,17 @@ namespace Prova.Reporters
              lock (_lock)
              {
                 Console.WriteLine();
-                Console.WriteLine($"Total: {passed + failed + skipped}, Passed: {passed}, Failed: {failed}, Skipped: {skipped}");
-                Console.WriteLine($"Duration: {duration.TotalMilliseconds}ms");
+                
+                var color = failed > 0 ? ConsoleColor.Red : ConsoleColor.Green;
+                Console.ForegroundColor = color;
+                Console.WriteLine("═══════════════════════════════════════════════");
+                Console.WriteLine($"  Total:   {passed + failed + skipped}");
+                Console.WriteLine($"  Passed:  {passed}");
+                Console.WriteLine($"  Failed:  {failed}");
+                Console.WriteLine($"  Skipped: {skipped}");
+                Console.WriteLine($"  Time:    {duration.TotalSeconds:F3}s");
+                Console.WriteLine("═══════════════════════════════════════════════");
+                Console.ResetColor();
              }
             
             if (failed > 0)

@@ -43,6 +43,7 @@ Why switch? Prova gives you the modern benefits of TUnit without the learning cu
   - **`[Parallel(max: 4)]`**: Explicit concurrency control to prevent thread pool choking.
   - **`[Focus]`**: Exclusive execution mode (Jest-style `.only`).
   - **`[MaxAlloc(bytes)]`**: Enforce zero-allocation or strict memory budgets per test.
+  - **`[Timeout(ms)]`**: Hard execution limits to prevent CI hangs.
 
 ## 🛡️ The Nordic Suite
 
@@ -167,6 +168,18 @@ Running 1000s of tests in parallel can choke the thread pool. Prova lets you bou
 ```csharp
 [Parallel(max: 4)] // <--- Only 4 tests in this class run concurrently
 public class ResourceHeavyTests { ... }
+```
+
+### Timeouts & Reliability
+Prevent deadlocks in CI by enforcing strict timeouts.
+
+```csharp
+[Fact]
+[Timeout(500)] // <--- Fails if test takes > 500ms
+public async Task NetworkRequest() 
+{
+    await _client.GetAsync("...");
+}
 ```
 
 ### Output Capture

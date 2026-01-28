@@ -296,7 +296,22 @@ namespace Prova.Generators.Emission
              sb.AppendLine("                        if (maxAlloc.HasValue) startAlloc = global::System.GC.GetAllocatedBytesForCurrentThread();");
 
              string target = method.IsStatic ? method.ClassName : "instance";
-             sb.AppendLine(method.IsAsync ? $"                        await {target}.{method.MethodName}({args});" : $"                        {target}.{method.MethodName}({args});");
+             string invocation = method.IsAsync ? $"await {target}.{method.MethodName}({args})" : $"{target}.{method.MethodName}({args})";
+
+             // Timeout Logic ⏱️
+             if (method.TimeoutMs.HasValue)
+             {
+                 sb.AppendLine($"                        var testTask = global::System.Threading.Tasks.Task.Run(async () => {{ {invocation}; }});");
+                 sb.AppendLine($"                        var timeoutTask = global::System.Threading.Tasks.Task.Delay({method.TimeoutMs.Value});");
+                 sb.AppendLine("                        var completedTask = await global::System.Threading.Tasks.Task.WhenAny(testTask, timeoutTask);");
+                 sb.AppendLine("                        if (completedTask == timeoutTask)");
+                 sb.AppendLine($"                            throw new global::System.TimeoutException(\"Test exceeded timeout of {method.TimeoutMs.Value}ms.\");");
+                 sb.AppendLine("                        await testTask; // Propagate exceptions");
+             }
+             else
+             {
+                 sb.AppendLine($"                        {invocation};");
+             }
              
              sb.AppendLine("                        if (maxAlloc.HasValue)");
              sb.AppendLine("                        {");

@@ -5,6 +5,7 @@
   </Folder>
   <Folder Name="/tests/">
     <Project Path="tests/Prova.Core.Tests/Prova.Core.Tests.csproj" />
+    <Project Path="tests/Prova.Generators.Tests/Prova.Generators.Tests.csproj" />
   </Folder>
   <Folder Name="/samples/">
     <Project Path="samples/Prova.Demo/Prova.Demo.csproj" />

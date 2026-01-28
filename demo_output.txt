@@ -1,0 +1,91 @@
+Starting: Prova.Demo.AllocationTests.ZeroAllocation_Safe
+  "Safe zero allocation."
+✓ Prova.Demo.AllocationTests.ZeroAllocation_Safe
+Starting: Prova.Demo.AllocationTests.SmallAllocation_Safe
+  "Safe small allocation."
+⚠ Prova.Demo.AllocationTests.LargeAllocation_ShouldFail (Skipped: Intentional failure for verification)
+✓ Prova.Demo.AllocationTests.SmallAllocation_Safe
+Starting: Prova.Demo.AssertionTests.CollectionAssertions
+  "Verify collection assertions."
+✓ Prova.Demo.AssertionTests.CollectionAssertions
+Starting: Prova.Demo.AssertionTests.StringAssertions
+  "Verify string assertions."
+✓ Prova.Demo.AssertionTests.StringAssertions
+Starting: Prova.Demo.AssertionTests.TypeAssertions
+  "Verify type assertions."
+✓ Prova.Demo.AssertionTests.TypeAssertions
+Starting: Prova.Demo.AssertionTests.ReferenceAssertions
+  "Verify reference assertions."
+✓ Prova.Demo.AssertionTests.ReferenceAssertions
+Starting: Prova.Demo.AssertionTests.ExceptionAssertions
+  "Verify exception assertions."
+✓ Prova.Demo.AssertionTests.ExceptionAssertions
+Starting: Prova.Demo.AssertionTests.AsyncExceptionAssertions
+  "Verify async exception assertions."
+✓ Prova.Demo.AssertionTests.AsyncExceptionAssertions
+Starting: Prova.Demo.ClassDataTests.Add_MatchesExpected(1, 2, 3)
+  "Validates addition with class data."
+✓ Prova.Demo.ClassDataTests.Add_MatchesExpected(1, 2, 3)
+Starting: Prova.Demo.ClassDataTests.Add_MatchesExpected(10, 20, 30)
+  "Validates addition with class data."
+✓ Prova.Demo.ClassDataTests.Add_MatchesExpected(10, 20, 30)
+Starting: Prova.Demo.ClassDataTests.Add_MatchesExpected(5, 5, 10)
+  "Validates addition with class data."
+✓ Prova.Demo.ClassDataTests.Add_MatchesExpected(5, 5, 10)
+Starting: Prova.Demo.ConcurrencyTests.SequentialTest1
+  "A sequential test."
+✓ Prova.Demo.ConcurrencyTests.SequentialTest1
+Starting: Prova.Demo.ConcurrencyTests.SequentialTest2
+  "Another sequential test."
+✓ Prova.Demo.ConcurrencyTests.SequentialTest2
+Starting: Prova.Demo.BasicTests.Addition
+  "Testing that 1+1 is indeed 2"
+✓ Prova.Demo.BasicTests.Addition
+Starting: Prova.Demo.BasicTests.AsyncDelay
+  "This test will run in parallel with others! ⚡"
+✓ Prova.Demo.BasicTests.AsyncDelay
+Starting: Prova.Demo.DataTests.Division(10, 2, 5)
+  "Test division."
+✓ Prova.Demo.DataTests.Division(10, 2, 5)
+Starting: Prova.Demo.DataTests.Division(100, 10, 10)
+  "Test division."
+✓ Prova.Demo.DataTests.Division(100, 10, 10)
+Starting: Prova.Demo.DataTests.OutputNames(Prova)
+  "Check output names."
+✓ Prova.Demo.DataTests.OutputNames(Prova)
+Starting: Prova.Demo.DataTests.OutputNames(xUnit)
+  "Check output names."
+✓ Prova.Demo.DataTests.OutputNames(xUnit)
+Starting: Prova.Demo.DatabaseTests.ConnectionIsValid
+  "Check connection."
+Database Connected 🔌
+Database Disconnected 🔌
+✓ Prova.Demo.DatabaseTests.ConnectionIsValid
+Starting: Prova.Demo.FlakyServiceTests.UnstableTest
+  "This test pretends to be flaky (e.g. network timeout).     Prova retries it up to 3 times automatically! 🛡️"
+✓ Prova.Demo.FlakyServiceTests.UnstableTest
+Starting: Prova.Demo.SlowTests.HeavyWork
+  "Heavy work."
+✓ Prova.Demo.SlowTests.HeavyWork
+Starting: Prova.Demo.DependencyTests.InjectionWorks
+  "Verifies that the service was injected."
+✓ Prova.Demo.DependencyTests.InjectionWorks
+Starting: Prova.Demo.OutputCaptureTests.LogSomething
+  "Logs some output."
+✓ Prova.Demo.OutputCaptureTests.LogSomething
+Hello from Prova! 📝
+This is a captured log.
+
+✓ Prova.Demo.TimeoutSample.Fast_Test_Should_Pass
+✗ Prova.Demo.TimeoutSample.Slow_Test_Should_Fail: Test exceeded timeout of 200ms.
+   at Prova.Generated.TestRunnerExecutor.<>c.<<GetTests>b__3_24>d.MoveNext() in /Users/digvijay/source/github/gUnit/samples/Prova.Demo/obj/Debug/net10.0/Prova.Generators/Prova.Generators.TestRunnerGenerator/TestRunnerExecutor.g.cs:line 804
+--- End of stack trace from previous location ---
+   at Prova.Generated.TestRunnerExecutor.RunTestSafe(Func`1 test, String name, ITestReporter reporter, String description, Int32 retryCount) in /Users/digvijay/source/github/gUnit/samples/Prova.Demo/obj/Debug/net10.0/Prova.Generators/Prova.Generators.TestRunnerGenerator/TestRunnerExecutor.g.cs:line 828
+
+═══════════════════════════════════════════════
+  Total:   27
+  Passed:  25
+  Failed:  1
+  Skipped: 1
+  Time:    2.107s
+═══════════════════════════════════════════════
