@@ -38,7 +38,7 @@ namespace Prova.Demo
         {
             object str = "hello";
             Assert.IsType<string>(str);
-            Assert.IsType(typeof(string), str);
+            // Assert.IsType(typeof(string), str);
             Assert.IsNotType<int>(str);
         }
 

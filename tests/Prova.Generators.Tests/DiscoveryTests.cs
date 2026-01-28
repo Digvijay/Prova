@@ -20,7 +20,9 @@ public class MyFactTests
     }
 }";
             // Expected partial match for the standard runner
+            #pragma warning disable CS0219
             var expectedSnippet = @"            // Class: MyFactTests
+            #pragma warning restore CS0219
             list.Add(new ProvaTest
             {
                 DisplayName = $""MyFactTests.SimpleFact"",
