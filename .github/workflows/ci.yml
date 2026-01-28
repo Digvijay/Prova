@@ -25,7 +25,7 @@ jobs:
       run: dotnet build --no-restore --configuration Release
 
     - name: Run Unit Tests
-      run: dotnet test --project tests/Prova.Core.Tests/Prova.Core.Tests.csproj --configuration Release --no-build
+      run: dotnet test tests/Prova.Core.Tests/Prova.Core.Tests.csproj --configuration Release --no-build
 
     - name: Verify Console Runner (Prova.Demo)
       run: dotnet run --project samples/Prova.Demo --configuration Release --no-build -- --simple
