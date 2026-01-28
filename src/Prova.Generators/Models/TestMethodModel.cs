@@ -22,6 +22,8 @@ namespace Prova.Generators.Models
         List<string> MockFields, // New: Fields that need VerifyAll()
         bool IsStatic,
         int? MaxParallel,
-        List<string> ClassData // [ClassData(typeof(T))]
+        List<string> ClassData, // [ClassData(typeof(T))]
+        long? MaxAllocBytes, // [MaxAlloc(bytes)]
+        int? TimeoutMs // [Timeout(ms)]
     );
 }

@@ -254,12 +254,34 @@ namespace Prova.Generators.Analysis
 
             // Concurrency Control
             int? maxParallel = null;
-            var parallelAttr = classSymbol.GetAttributes().FirstOrDefault(ad => ad.AttributeClass?.Name == "ParallelAttribute");
+            var parallelAttr = classSymbol.GetAttributes()
+                                          .Concat(symbol.GetAttributes()) // Check method logic too!
+                                          .FirstOrDefault(ad => ad.AttributeClass?.Name == "ParallelAttribute");
             if (parallelAttr != null && parallelAttr.ConstructorArguments.Length > 0)
             {
                 if (parallelAttr.ConstructorArguments[0].Value is int max)
                 {
                     maxParallel = max;
+                }
+            }
+
+            long? maxAllocBytes = null;
+            var maxAllocAttr = attributes.FirstOrDefault(ad => ad.AttributeClass?.Name == "MaxAllocAttribute");
+            if (maxAllocAttr != null && maxAllocAttr.ConstructorArguments.Length > 0)
+            {
+                if (maxAllocAttr.ConstructorArguments[0].Value is long bytes)
+                {
+                    maxAllocBytes = bytes;
+                }
+            }
+
+            int? timeoutMs = null;
+            var timeoutAttr = attributes.FirstOrDefault(ad => ad.AttributeClass?.Name == "TimeoutAttribute");
+            if (timeoutAttr != null && timeoutAttr.ConstructorArguments.Length > 0)
+            {
+                if (timeoutAttr.ConstructorArguments[0].Value is int ms)
+                {
+                    timeoutMs = ms;
                 }
             }
 
@@ -283,7 +305,9 @@ namespace Prova.Generators.Analysis
                 mockFields,
                 symbol.IsStatic,
                 maxParallel,
-                classDataList
+                classDataList,
+                maxAllocBytes,
+                timeoutMs
             );
         }
 

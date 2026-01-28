@@ -4,8 +4,14 @@ using Prova;
 
 namespace Prova.Demo
 {
+    /// <summary>
+    /// A data generator for class data tests.
+    /// </summary>
     public class NumberGenerator : IEnumerable<object[]>
     {
+        /// <summary>
+        /// Gets the enumerator.
+        /// </summary>
         public IEnumerator<object[]> GetEnumerator()
         {
             yield return new object[] { 1, 2, 3 };
@@ -16,8 +22,14 @@ namespace Prova.Demo
         IEnumerator IEnumerable.GetEnumerator() => GetEnumerator();
     }
 
+    /// <summary>
+    /// Tests for validating ClassData support.
+    /// </summary>
     public class ClassDataTests
     {
+        /// <summary>
+        /// Validates addition with class data.
+        /// </summary>
         [Theory]
         [ClassData(typeof(NumberGenerator))]
         public void Add_MatchesExpected(int a, int b, int expected)

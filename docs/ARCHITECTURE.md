@@ -8,19 +8,16 @@
 ```
 src/
   Prova.Core/           # Runtime Library (Attributes, Assert, Interfaces)
-    Abstractions/       # ITestReporter, IClassFixture, IAsyncLifetime
-    Framework/          # [Fact], [Theory], Assert
-    Reporters/          # ConsoleReporter
-  Prova.Generators/     # The Brains 🧠 (Roslyn Source Generators)
-    Analysis/           # SyntaxAnalyzer (Reads your code)
-    Emission/           # SourceEmitter (Writes the runner)
-    Models/             # Intermediate Representations (MethodModel, etc.)
+  Prova.Generators/     # Roslyn Source Generators (Analysis, Emission using SyntaxProvider)
 
 tests/
-  Prova.Core.Tests/     # The Test Suite (Prova testing itself)
+  Prova.Core.Tests/     # Unit tests for the runtime library
+  Prova.Generators.Tests/ # Integration tests for the Source Generator (Verify)
   
 samples/
   Prova.Demo/           # Showcase Console App
+  Prova.MtpSample/      # Microsoft Testing Platform integration sample
+  Prova.Skugga.Demo/    # Skugga (Mocking) integration sample
 ```
 
 ## The Pipeline

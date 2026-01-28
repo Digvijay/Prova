@@ -1,35 +1,28 @@
-# Executive Summary: Prova 🇸🇪
-*A Standalone Reference Implementation for Native AOT Testing*
+# Executive Summary: Prova
+*Reference Implementation for Native AOT Testing*
 
-> [!CAUTION]
-> **Independent Project Notice**: Prova is a community-driven **Experimental Research Project**. It is a standalone reference implementation for AOT-native testing. While independent of Microsoft, it provides **Hybrid MTP Compatibility** for modern ecosystem integration.
+> **Project Scope**: Prova is a standalone **reference implementation** and an **experimental research project**. It showcases the potential of Roslyn-based testing architectures. It is a research initiative and is not associated with Microsoft Corporation.
 
-## The Mission
-**Prova** (Swedish: *Test*) is built to demonstrate the extreme capabilities of the modern .NET ecosystem, specifically the power of **Roslyn Source Generators**. It is a purely independent research initiative.
+## Project Objectives
+**Prova** demonstrates the capabilities of the modern .NET ecosystem, specifically leveraging **Roslyn Source Generators** to shift test discovery and orchestration from **Runtime Reflection** to **Compile Time**.
 
-It is designed to serve as an inspiration for the ecosystem, showcasing how we can achieve **Zero-Overhead** and **Native AOT** compatibility by moving discovery from **Runtime Reflection** to **Compile Time**.
+## Key Architectural Principles
 
-## The Architecture: "Compile-Time is the new Runtime"
-Legacy frameworks were designed in the "Reflection Era." Prova reimagines testing for the "AOT Era."
+### 1. Compile-Time Generation
+Legacy frameworks rely on runtime reflection for discovery, which incurs startup costs and limits optimization. Prova generates the test runner harnessing code during compilation.
+- **Legacy**: Runtime Assembly Scanning -> Type Reflection -> Dynamic Invocation.
+- **Prova**: Source Generation -> Static Linking -> Direct Execution.
 
-### 1. ⚡ Zero-Overhead Performance
-By generating the test runner code at compile time, Prova starts instantly. 
-- **Legacy**: Scan assembly -> Reflection -> Loading.
-- **Prova**: `Main()` -> `await TestRunner.RunAllAsync()`.
+### 2. Enhanced Developer Experience
+Leveraging compiler access allows for features that are difficult to implement in runtime-only frameworks:
+- **Documentation Integration**: XML documentation comments (`/// <summary>`) are extracted at compile-time and included in test reports.
+- **Selective Compilation**: The `[Focus]` attribute instructs the generator to emit code only for the target test, significantly reducing the debug loop.
 
-### 2. 🧙‍♂️ "Magical" Developer Experience
-We leveraged the compiler to build features impossible in runtime-only frameworks:
-- **Magic Docs**: XML documentation comments (`/// <summary>`) are extracted at compile-time and displayed in the test output.
-- **Compiler-Enforced Focus**: `[Focus]` works by telling the generator to *only emit code for that test*. 
+### 3. Native AOT Compatibility
+Prova is designed for **Native AOT**. Test suites can be compiled into standalone, optimized binaries that operate without a full .NET runtime dependency, ideal for containerized or constrained environments.
 
-### 3. 🛡️ Native AOT Ready
-Prova is **100% Native AOT compatible**. You can compile your test suite into a standalone, optimized binary that runs anywhere without the .NET runtime installed.
-
-## The Nordic Suite 🛡️
-Prova is the "Voice" of the Nordic AOT Suite. It is designed to integrate seamlessly with ecosystem tools like **Skugga** (AOT Mocks).
-- **Smart Verify**: Prova automatically detects Skugga mocks in your test class and ensures verification happens, eliminating boilerplate.
+## Integration
+Prova serves as a reference for integrating with other AOT-compatible tools, such as **Skugga** (AOT Mocks). It demonstrates patterns for compile-time heuristic detection of dependencies to reduce boilerplate without runtime coupling.
 
 ## Conclusion
-Prova is not just a framework; it's a blueprint for the future of .NET testing. By embracing modern compiler capabilities, we unlock a "Developer Joy" feature set that was previously impossible.
-
-**Ready for the future of .NET testing?**
+Prova provides a blueprint for high-performance, AOT-safe testing infrastructures. It serves as a proof-of-concept for framework authors looking to modernize their architecture using strict static analysis and source generation.

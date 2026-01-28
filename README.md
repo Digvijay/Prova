@@ -4,192 +4,124 @@
 ![License](https://img.shields.io/badge/license-MIT-blue.svg)
 ![NuGet](https://img.shields.io/nuget/v/Prova.svg)
 
-> [!NOTE]
-> **Research Project**: Prova is a reference implementation for Native AOT testing patterns. It is community-driven and not an official Microsoft product.
+**Prova** is a high-performance, Native AOT-compatible test runner for .NET. Use the xUnit syntax you already know, but with zero runtime reflection and instant startup.
 
-**Prova** is a next-generation testing framework for .NET, built for **Speed**, **Native AOT**, and **Developer Experience**. 
+## Why Prova?
 
-Documentation IS the test output.
+### 1. Zero Migration Cost
+Your tests remain exactly the same. Prova supports standard xUnit attributes (`[Fact]`, `[Theory]`, `[InlineData]`, `Assert`). You only change the runner.
 
-![Comparison Output](docs/assets/comparison_output.png)
+### 2. Native Performance
+Tests are discovered at compile-time using Source Generators and can be compiled to Native AOT. This eliminates runtime discovery costs and enables instant startup, making it ideal for high-frequency "inner loop" development or containerized CI environments.
 
-## ⚔️ The Kill Sheet
+### 3. Safe Parallelism
+Tests run in parallel by default (`Task.WhenAll`), utilizing all available cores.
 
-Why switch? Prova gives you the modern benefits of TUnit without the learning curve of a new syntax.
+---
 
-| Feature | xUnit v2/v3 | TUnit | Prova |
-| :--- | :---: | :---: | :---: |
-| **Runtime** | Reflection (Slow) | AOT Optimized | **Native AOT (Instant)** |
-| **Syntax** | Standard (`[Fact]`) | New Fluent API | **Standard (`[Fact]`)** |
-| **Discovery** | Runtime Scan | Source Gen | **Source Gen** |
-| **Parallelism** | Assemblly Level | Method Level | **Method Level (Default)** |
-| **Migration Cost** | - | High (Rewrite) | **Zero (Copy-Paste)** |
-| **User Experience** | Plain Text | Modern | **Rich + Magic Docs** |
+## Quick Start
 
-## ✨ Features
-
-- **⚡ Zero Reflection / Native AOT**: Fully compatible with `PublishAot`. No runtime discovery cost. Start time: **Instant**.
-- **🏃 True Parallelism**: Test Classes run concurrently by default (`Task.WhenAll`), maximizing CPU usage.
-- **🔌 MTP Ready**: Fully supports the **Microsoft Testing Platform**. Works with `dotnet test` and TRX reporting.
-- **🧙‍♂️ Magic Documentation**: Your `/// <summary>` test comments are automatically extracted and displayed in the runner output.
-- **📦 xUnit Parity**: Don't rewrite your tests. Just change the runner.
-  - `[Fact]`, `[Theory]`, `[InlineData]`, `[MemberData]`
-
-  - `IAsyncLifetime` (Async Setup/Teardown)
-  - `[Trait]` categories & filtering
-  - Full `Assert` suite (`Equal`, `Throws`, `Contains`, `Single`, etc.)
-- **🛡️ Enterprise Ready**:
-  - **`[Parallel(max: 4)]`**: Explicit concurrency control to prevent thread pool choking.
-
-## 🛡️ The Nordic Suite
-
-Prova is part of the **Nordic Suite** of developer tools. It is designed to work perfectly with **[Skugga](https://github.com/Digvijay/Skugga)**, our AOT-native mocking library.
-
-> [!TIP]
-> **Integration Magic**: Prova automatically detects Skugga mocks (fields starting with `Mock<T>`) and generates a `finally { mock.VerifyAll(); }` block for you. This ensures strict mock behavior without boilerplate, **and with zero hard dependency on Skugga**.
-
-[Learn more about Skugga Integration](docs/SKUGGA_INTEGRATION.md).
-
-## 🚀 Quick Start
-
-1. **Install Prova**:
-   ```bash
-   dotnet add package Prova
-   ```
-
-2. **Write a Test**:
-   ```csharp
-   using Prova;
-
-   public class CalculatorTests
-   {
-       [Fact]
-       public void Add_ReturnsSum()
-       {
-           Assert.Equal(4, 2 + 2);
-       }
-
-       /// <summary>
-       /// Simple division test ➗
-       /// </summary>
-       [Theory]
-       [InlineData(10, 2, 5)]
-       public void Divide_ReturnsQuotient(int a, int b, int expected)
-       {
-           Assert.Equal(expected, a / b);
-       }
-   }
-   ```
-
-3. **Run**:
-   
-   **Option A: Direct Execution (Fastest / Recommended)**
-   ```bash
-   dotnet run
-   ```
-
-   **Option B: `dotnet test` (CI/CD / MTP)**
-   Prova fully supports the **Microsoft Testing Platform**. To use `dotnet test`, add a `global.json` to your solution root:
-   ```json
-   {
-       "test": {
-           "runner": "Microsoft.Testing.Platform"
-       }
-   }
-   ```
-   Then run:
-   ```bash
-   dotnet test --project MyTestProject.csproj
-   ```
-
-## 🔌 Microsoft Testing Platform (MTP) Support
-
-Prova is a first-class citizen in the modern .NET testing ecosystem. By integrating the **Hybrid MTP Adapter**, Prova provides:
-- **Full `dotnet test` integration** via the `Microsoft.Testing.Platform` runner.
-- **TRX Report generation** for Azure DevOps, GitHub Actions, and Jenkins.
-- **Code Coverage**: Built-in support for `--coverage` to generate `coverage.xml` or Cobertura reports.
-- **In-process test execution** with zero reflection overhead.
-
-Check out the [MTP Sample](samples/Prova.MtpSample) for a complete example.
-
-### 📊 Code Coverage
-
-To generate code coverage, use the `--coverage` flag:
-
+### 1. Install Code
 ```bash
-# Generate Cobertura coverage report
-dotnet run -- --coverage --coverage-output-format cobertura
-
-# Report is generated in ./TestResults/*.cobertura.xml
+dotnet add package Prova
 ```
 
-> [!NOTE]
-> **AOT Coverage**: Code coverage currently works primarily in JIT mode. Support for Native AOT coverage is an evolving area in the .NET ecosystem.
-
-
-Prova tests compile into a **stand-alone Console Application**, not a Class Library.
-
-- **0ms Startup**: We control the entry point (`Main`). No VSTest adapter overhead. 
-- **MTP via `dotnet run`**: Get the full Microsoft Testing Platform experience (TRX, etc.) without leaving the fast `dotnet run` inner loop.
-- **Debuggable**: Just hit **F5**. It's just a console app!
-- **Cloud-Ready**: Compile to a single Native AOT binary and dropship it to any container.
-
-## 🛠️ Developer Experience
-
-
-
-### Explicit Concurrency Control
-Running 1000s of tests in parallel can choke the thread pool. Prova lets you bound parallelism per class or globally.
-
+### 2. Write Tests (Standard xUnit Syntax)
 ```csharp
-[Parallel(max: 4)] // <--- Only 4 tests in this class run concurrently
-public class ResourceHeavyTests { ... }
-```
+using Prova; // or 'using Xunit;' (Prova aliases this for compatibility)
 
-### Output Capture
-Standard `Console.WriteLine` can be messy in parallel tests. Use `ITestOutputHelper` to capture logs per-test.
-
-```csharp
-public class MyTests
+public class CalculatorTests
 {
-    private readonly ITestOutputHelper _output;
-    public MyTests(ITestOutputHelper output) => _output = output;
-
     [Fact]
-    public void DebugSomething()
+    public void Add_ReturnsSum()
     {
-        _output.WriteLine("This log appears attached to the test result! 📝");
+        Assert.Equal(4, 2 + 2);
+    }
+
+    [Theory]
+    [InlineData(10, 2, 5)]
+    [InlineData(20, 4, 5)]
+    public void Divide_ReturnsQuotient(int a, int b, int expected)
+    {
+        Assert.Equal(expected, a / b);
     }
 }
 ```
 
-### Dependency Injection (AOT-Safe)
-Prova uses a compile-time "Explicit Factory" pattern for DI. No containers, no reflection.
-
-1. **Mark a static method** as a factory with `[TestDependency]`.
-2. **Inject the type** into your test constructor.
-
-```csharp
-public static class TestDependencies
-{
-    [TestDependency]
-    public static IService CreateService() => new MyService(); // 🏭
-}
-
-public class MyTests
-{
-    private readonly IService _service;
-    public MyTests(IService service) => _service = service; // 💉 Injected!
-
-    [Fact]
-    public void TestService() => Assert.NotNull(_service);
-}
+### 3. Run
+```bash
+dotnet run
 ```
 
-## 🤝 Contributing
+---
 
-We love contributions! Please read our [CONTRIBUTING.md](CONTRIBUTING.md) to get started.
+## Microsoft Testing Platform (MTP) Support
 
-## 📄 License
+Prova integrates with the [Microsoft Testing Platform](https://github.com/microsoft/testfx). This enables support for `dotnet test`, TRX reporting, and code coverage without sacrificing AOT compatibility.
 
-Prova is fully open source and licensed under [MIT](LICENSE).
+**To enable `dotnet test` support:**
+
+1. Add a `global.json` to your solution root:
+   ```json
+   { "test": { "runner": "Microsoft.Testing.Platform" } }
+   ```
+
+2. Run with standard tooling:
+   ```bash
+   dotnet test --coverage --report-trx
+   ```
+
+---
+
+## Advanced Features
+
+While Prova is a drop-in replacement, it adds enterprise-grade features for strictly governed codebases.
+
+### Explicit Concurrency
+Prevent thread pool starvation in massive test suites by bounding parallelism.
+
+```csharp
+[Parallel(max: 4)] // Limits concurrency for this class
+public class DatabaseTests { ... }
+```
+
+### Allocation Governance
+Enforce zero-allocation policies or strict memory budgets for critical paths.
+
+```csharp
+[Fact]
+[MaxAlloc(0)] // Fails if the test allocates any memory on the heap
+public void HotPath_ShouldNotAllocate() { ... }
+```
+
+### Flakiness Management
+```csharp
+[Fact]
+[Retry(3)] // Automatically retry flaky network tests
+public void IntegrationTest() { ... }
+```
+
+### Focused Execution
+Run only the specific test you are debugging (similar to `.only` in Jest).
+
+```csharp
+[Fact]
+[Focus] // Prova will ONLY generate and run this test
+public void DebuggingThisRightNow() { ... }
+```
+
+---
+
+## Contributing
+
+We welcome issues and pull requests. Please see [CONTRIBUTING.md](CONTRIBUTING.md) for details.
+
+## See it in Action
+
+Prova produces clean, hierarchical output that is easy to parse visually.
+
+![Test Output](docs/assets/comparison_output.png)
+
+## License
+
+MIT

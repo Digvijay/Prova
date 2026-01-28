@@ -1,51 +1,49 @@
-# Skugga Integration: Smart Verify 🛡️
+# Skugga Integration: Automated Mock Verification
 
-Prova features deep, zero-dependency integration with **Skugga**, the high-performance AOT mocking library. This integration is part of the **Nordic AOT Suite**.
+Prova supports optional integration with **Skugga**, an AOT mocking library. This integration allows for automated mock verification without adding a hard runtime dependency.
 
-## How "Smart Verify" Works
+## Mock Verification Automation
 
-Prova's "Smart Verify" is a compiler-time optimization. It does **not** add a runtime dependency on Skugga. Instead, the Prova Source Generator uses heuristics to detect mocks and automate verification.
+Prova uses compile-time heuristics to detect mock objects within test classes and automate their verification lifecycle.
 
-### 🛡️ No Hard Dependency
-The Prova binaries do not reference Skugga. Prova remains a lightweight, standalone testing framework. The integration is activated only when it detects Skugga types in your test code.
+### Loose Coupling
+The Prova binaries do not reference Skugga. The integration is activated via source generation only when Skugga types are detected in the user's codebase.
 
-### 🧙‍♂️ The "Magic" Logic
-During compilation, the Prova generator:
-1.  Scans for fields in your test class.
-2.  Checks if a field type name contains `"Skugga"` or `"Mock<"`.
-3.  If detected, Prova automatically injects a `.VerifyAll()` call at the end of every test method in that class.
+### Detection Logic
+During the source generation phase, Prova:
+1.  Scans for fields within the test class.
+2.  Checks if a field's type name contains `"Skugga"` or `"Mock<"`.
+3.  If detected, Prova generates a `finally` block that invokes `.VerifyAll()` on the mock instance at the end of each test method execution.
 
-## Quick Start Sample
+## Usage Example
 
-To use Prova with Skugga, simply define your mocks as fields in your test class.
+To enable automated verification, define mocks as fields in the test class.
 
 ### 1. Install Dependencies
 ```bash
-# Add Prova
 dotnet add package Prova
-
-# Add Skugga (v1.3.1+)
-dotnet add package Skugga --version 1.3.1
+dotnet add package Skugga
 ```
 
-### 2. Write an Automated Mock Test
+### 2. Implementation
 ```csharp
 using Prova;
 using Skugga;
 
 public class PaymentTests
 {
-    // Prova detects this field and will call _gatewayMock.VerifyAll() automatically!
-    internal readonly Mock<IPaymentGateway> _gatewayMock = new Mock<IPaymentGateway>();
+    // Prova detects this field and generates a call to _paymentGateway.VerifyAll()
+    // at the end of every test method in this class.
+    private readonly Mock<IPaymentGateway> _paymentGateway = new Mock<IPaymentGateway>();
 
     [Fact]
     public void Charge_CallsGateway()
     {
-        var processor = new PaymentProcessor(_gatewayMock.Object);
+        var processor = new PaymentProcessor(_paymentGateway.Object);
         processor.Process(100m);
         
-        // No manual _gatewayMock.VerifyAll() needed!
-        // The Prova runner handles it for you.
+        // Manual verification is not required.
+        // If expectation was not met, the test will fail during teardown.
     }
 }
 ```
@@ -53,7 +51,3 @@ public class PaymentTests
 ## Resources
 
 - **Skugga Repository**: [https://github.com/Digvijay/Skugga](https://github.com/Digvijay/Skugga)
-- **Skugga NuGet**: [https://www.nuget.org/packages/Skugga/1.3.1](https://www.nuget.org/packages/Skugga/1.3.1)
-
----
-*Part of the Nordic AOT Suite: Building the future of zero-reflection .NET.*
