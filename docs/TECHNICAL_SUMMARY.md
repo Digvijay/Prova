@@ -111,6 +111,13 @@ To avoid runtime reflection (scanning constructors), Prova uses an **Explicit Fa
 - **Wiring**: When generating test instantiation (`new MyTest(dep)`), the emitter resolves dependencies from this map directly in source code.
 - **Result**: Zero DI container overhead. Zero runtime resolution. 100% Native AOT safe.
 
+### 9. Governance: Prophetic Allocation Monitoring
+To enforce `[MaxAlloc(n)]`, Prova does **not** use a profiler API or complex instrumentation.
+- **Mechanism**: The generator simply wraps the test call in a `try/finally` block.
+- **Measurement**: `GC.GetAllocatedBytesForCurrentThread()` is called before and after the test delegate.
+- **Cost**: If `[MaxAlloc]` is missing, **0 instructions** are emitted. The overhead is strictly pay-for-play.
+- **Safety**: Because this happens inside the `Task.Run` delegate, it correctly attributes allocations to the specific test thread (even in parallel execution).
+
 ### Summary for Infrastructure Teams
 
 Prova is designed to be embedded in high-performance CI/CD pipelines where:

@@ -1,5 +1,20 @@
 # Changelog
 
+## [v0.3.0] - The Governance Update (Draft) 🛡️
+
+**Status:** Alpha / Draft
+
+This update introduces "Governance Features" for mission-critical and high-performance applications.
+
+### ✨ New Features
+-   **Memory Governance**: Added `[MaxAlloc(bytes)]` attribute.
+    -   Enables strict, zero-overhead enforcement of heap allocation budgets per test.
+    -   Powered by `GC.GetAllocatedBytesForCurrentThread()` wrapped in `try/finally` blocks.
+-   **Assertions Parity**: Completed the implementation of `Assert.Throws`, `Assert.Contains`, `Assert.Empty`, `Assert.IsType`, and `Assert.Same`.
+
+### 🛠️ Improvements
+-   **Documentation**: Initial support for verifying XML documentation completeness in CI.
+
 ## [v0.2.0] - The Enterprise Update 🚀
 
 **Released:** 2026-01-28

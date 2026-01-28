@@ -42,6 +42,7 @@ Why switch? Prova gives you the modern benefits of TUnit without the learning cu
   - **`[Retry(3)]`**: Automatic retry logic for flaky tests.
   - **`[Parallel(max: 4)]`**: Explicit concurrency control to prevent thread pool choking.
   - **`[Focus]`**: Exclusive execution mode (Jest-style `.only`).
+  - **`[MaxAlloc(bytes)]`**: Enforce zero-allocation or strict memory budgets per test.
 
 ## 🛡️ The Nordic Suite
 
@@ -206,6 +207,19 @@ public class MyTests
     [Fact]
     public void TestService() => Assert.NotNull(_service);
 }
+
+### Memory Governance
+High-performance code shouldn't allocate unexpectedly. Prova enforces this with `[MaxAlloc]`.
+
+```csharp
+[Fact]
+[MaxAlloc(0)] // <--- Fails if even 1 byte is allocated!
+public void ParseSpan() 
+{
+    var span = "123".AsSpan();
+    int val = int.Parse(span); 
+}
+```
 ```
 
 ## 🤝 Contributing
