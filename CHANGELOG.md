@@ -2,7 +2,7 @@
 
 ## [v0.3.0] - The Governance Update 🛡️
 
-**Released:** 2026-01-28
+**Released:** 2026-01-31
 
 This update introduces "Governance Features" for mission-critical and high-performance applications.
 
