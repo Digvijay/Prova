@@ -263,6 +263,16 @@ namespace Prova.Generators.Analysis
                 }
             }
 
+            long? maxAllocBytes = null;
+            var maxAllocAttr = attributes.FirstOrDefault(ad => ad.AttributeClass?.Name == "MaxAllocAttribute");
+            if (maxAllocAttr != null && maxAllocAttr.ConstructorArguments.Length > 0)
+            {
+                if (maxAllocAttr.ConstructorArguments[0].Value is long bytes)
+                {
+                    maxAllocBytes = bytes;
+                }
+            }
+
             return new TestMethodModel(
                 symbol.ContainingType.ToDisplayString(),
                 symbol.Name,
@@ -283,7 +293,8 @@ namespace Prova.Generators.Analysis
                 mockFields,
                 symbol.IsStatic,
                 maxParallel,
-                classDataList
+                classDataList,
+                maxAllocBytes
             );
         }
 

@@ -291,8 +291,19 @@ namespace Prova.Generators.Emission
              }
 
              sb.AppendLine("                    try {");
+             sb.AppendLine($"                        long? maxAlloc = {(method.MaxAllocBytes.HasValue ? method.MaxAllocBytes.Value.ToString(global::System.Globalization.CultureInfo.InvariantCulture) : "null")};");
+             sb.AppendLine("                        long startAlloc = 0;");
+             sb.AppendLine("                        if (maxAlloc.HasValue) startAlloc = global::System.GC.GetAllocatedBytesForCurrentThread();");
+
              string target = method.IsStatic ? method.ClassName : "instance";
              sb.AppendLine(method.IsAsync ? $"                        await {target}.{method.MethodName}({args});" : $"                        {target}.{method.MethodName}({args});");
+             
+             sb.AppendLine("                        if (maxAlloc.HasValue)");
+             sb.AppendLine("                        {");
+             sb.AppendLine("                            long totalAlloc = global::System.GC.GetAllocatedBytesForCurrentThread() - startAlloc;");
+             sb.AppendLine("                            if (totalAlloc > maxAlloc.Value)");
+             sb.AppendLine("                                throw new global::System.Exception($\"Test exceeded allocation budget! Allowed: {maxAlloc.Value} bytes. Allocated: {totalAlloc} bytes.\");");
+             sb.AppendLine("                        }");
 
              if (!method.IsStatic && method.MockFields.Count > 0)
              {
