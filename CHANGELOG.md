@@ -1,8 +1,8 @@
 # Changelog
 
-## [v0.3.0] - The Governance Update (Draft) 🛡️
+## [v0.3.0] - The Governance Update 🛡️
 
-**Status:** Alpha / Draft
+**Released:** 2026-01-28
 
 This update introduces "Governance Features" for mission-critical and high-performance applications.
 
