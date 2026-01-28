@@ -22,26 +22,24 @@ Why switch? Prova gives you the modern benefits of TUnit without the learning cu
 | **Runtime** | Reflection (Slow) | AOT Optimized | **Native AOT (Instant)** |
 | **Syntax** | Standard (`[Fact]`) | New Fluent API | **Standard (`[Fact]`)** |
 | **Discovery** | Runtime Scan | Source Gen | **Source Gen** |
-| **Parallelism** | Assemblly Level | Class Level | **Class Level (Default)** |
+| **Parallelism** | Assemblly Level | Method Level | **Method Level (Default)** |
 | **Migration Cost** | - | High (Rewrite) | **Zero (Copy-Paste)** |
 | **User Experience** | Plain Text | Modern | **Rich + Magic Docs** |
 
 ## ✨ Features
 
-- **⚡ Zero Reflection / Native AOT**: Fully compatible with `PublishAot`. No runtime discovery cost. Start time: **0ms**.
+- **⚡ Zero Reflection / Native AOT**: Fully compatible with `PublishAot`. No runtime discovery cost. Start time: **Instant**.
 - **🏃 True Parallelism**: Test Classes run concurrently by default (`Task.WhenAll`), maximizing CPU usage.
 - **🔌 MTP Ready**: Fully supports the **Microsoft Testing Platform**. Works with `dotnet test` and TRX reporting.
 - **🧙‍♂️ Magic Documentation**: Your `/// <summary>` test comments are automatically extracted and displayed in the runner output.
 - **📦 xUnit Parity**: Don't rewrite your tests. Just change the runner.
   - `[Fact]`, `[Theory]`, `[InlineData]`, `[MemberData]`
-  - `IClassFixture<T>` (Isolated Fixtures)
+
   - `IAsyncLifetime` (Async Setup/Teardown)
   - `[Trait]` categories & filtering
   - Full `Assert` suite (`Equal`, `Throws`, `Contains`, `Single`, etc.)
 - **🛡️ Enterprise Ready**:
-  - **`[Retry(3)]`**: Automatic retry logic for flaky tests.
   - **`[Parallel(max: 4)]`**: Explicit concurrency control to prevent thread pool choking.
-  - **`[Focus]`**: Exclusive execution mode (Jest-style `.only`).
 
 ## 🛡️ The Nordic Suite
 
@@ -138,27 +136,7 @@ Prova tests compile into a **stand-alone Console Application**, not a Class Libr
 
 ## 🛠️ Developer Experience
 
-### Focus Mode
-Working on a specific test? Don't run the whole suite. Just add `[Focus]`.
 
-```csharp
-[Fact]
-[Focus] // <--- Only this test will run!
-public void MyNewFeature() { ... }
-```
-
-> **Why `[Focus]`?**
-> - **Zero Overhead**: Unlike runtime filtering, `Prova` *only generates code* for focused tests. Skipped tests aren't even allocated.
-> - **Convenience**: No more complex CLI args like `dotnet test --filter "FullyQualifiedName~MyTest"`. Just tag and run.
-
-### Retry Flaky Tests
-Have a test that fails sporadically?
-
-```csharp
-[Fact]
-[Retry(3)] // <--- Retries up to 3 times before failing
-public void NetworkTest() { ... }
-```
 
 ### Explicit Concurrency Control
 Running 1000s of tests in parallel can choke the thread pool. Prova lets you bound parallelism per class or globally.
