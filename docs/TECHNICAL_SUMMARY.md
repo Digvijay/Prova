@@ -56,28 +56,28 @@ Prova treats the test suite as a massive async graph.
 ```csharp
 public static async Task RunAllAsync()
 {
-    var classTasks = new List<Task>();
-    
-    // Class A
-    classTasks.Add(Task.Run(async () => {
-         // Isolation: Fixtures are currently created per-test for AOT safety
-         var fixture = new DatabaseFixture();
-         await fixture.InitializeAsync();
-         
-         // Test 1
-         try { await new ClassA(fixture).Test1(); } ...
-         
-         // Test 2
-         try { await new ClassA(fixture).Test2(); } ...
-    }));
+    var tasks = new List<Task>();
+    // Bounded Schedular implemented via SemaphoreSlim(maxParallel)
+    using var semaphore = new SemaphoreSlim(maxParallel);
 
-    // Class B (Runs in Parallel with A)
-    classTasks.Add(Task.Run(async () => { ... }));
+    foreach(var test in tests)
+    {
+        await semaphore.WaitAsync();
+        tasks.Add(Task.Run(async () => {
+             try {
+                 // Output is bubbled up from the test logic
+                 string? output = await test.ExecuteDelegate();
+                 reporter.OnSuccess(test, output);
+             } finally {
+                 semaphore.Release();
+             }
+        }));
+    }
 
-    await Task.WhenAll(classTasks);
+    await Task.WhenAll(tasks);
 }
 ```
-This maximizes thread pool utilization (`ThreadPool.QueueUserWorkItem`) without manual thread management.
+This maximizes thread pool utilization while preventing starvation via the `[Parallel(max: n)]` setting.
 
 ### 4. Zero-Allocation Testing Goals
 
@@ -96,6 +96,20 @@ Because we control the compilation:
 Prova implements a **Bounded Scheduler** via `SemaphoreSlim` in both the Console Runner and the MTP Adapter.
 - **Default**: `Environment.ProcessorCount`.
 - **Override**: Use `[Parallel(max: n)]` at the class level to specify a custom limit. Prova takes the minimum `max` found across all tests to ensure the most restrictive environment is honored.
+
+### 7. Output Capture
+Capturing stdout in parallel/async tests is difficult. `Console.SetOut` is not thread-safe.
+Prova solves this by injecting a per-test `ITestOutputHelper`.
+- The generator creates a new `TestOutputHelper` instance for each test.
+- The `ExecuteDelegate` signature is modified from `Func<Task>` to `Func<Task<string?>>`.
+- Logs are strictly isolated and returned to the runner *after* execution, ensuring no cross-talk between thread logs.
+
+### 8. AOT Dependency Injection (Factory Pattern)
+To avoid runtime reflection (scanning constructors), Prova uses an **Explicit Factory Pattern**:
+- **Setup**: Users mark static factory methods with `[TestDependency]`.
+- **Index**: The analyzer builds a `ReturnType -> MethodCall` map at compile time.
+- **Wiring**: When generating test instantiation (`new MyTest(dep)`), the emitter resolves dependencies from this map directly in source code.
+- **Result**: Zero DI container overhead. Zero runtime resolution. 100% Native AOT safe.
 
 ### Summary for Infrastructure Teams
 

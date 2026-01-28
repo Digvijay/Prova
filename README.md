@@ -48,7 +48,7 @@ Why switch? Prova gives you the modern benefits of TUnit without the learning cu
 Prova is part of the **Nordic Suite** of developer tools. It is designed to work perfectly with **[Skugga](https://github.com/Digvijay/Skugga)**, our AOT-native mocking library.
 
 > [!TIP]
-> **Integration Magic**: Prova automatically detects Skugga mocks and calls `.VerifyAll()` for you at the end of every test. No more forgotten verifications!
+> **Integration Magic**: Prova automatically detects Skugga mocks (fields starting with `Mock<T>`) and generates a `finally { mock.VerifyAll(); }` block for you. This ensures strict mock behavior without boilerplate, **and with zero hard dependency on Skugga**.
 
 [Learn more about Skugga Integration](docs/SKUGGA_INTEGRATION.md).
 
@@ -158,6 +158,54 @@ Have a test that fails sporadically?
 [Fact]
 [Retry(3)] // <--- Retries up to 3 times before failing
 public void NetworkTest() { ... }
+```
+
+### Explicit Concurrency Control
+Running 1000s of tests in parallel can choke the thread pool. Prova lets you bound parallelism per class or globally.
+
+```csharp
+[Parallel(max: 4)] // <--- Only 4 tests in this class run concurrently
+public class ResourceHeavyTests { ... }
+```
+
+### Output Capture
+Standard `Console.WriteLine` can be messy in parallel tests. Use `ITestOutputHelper` to capture logs per-test.
+
+```csharp
+public class MyTests
+{
+    private readonly ITestOutputHelper _output;
+    public MyTests(ITestOutputHelper output) => _output = output;
+
+    [Fact]
+    public void DebugSomething()
+    {
+        _output.WriteLine("This log appears attached to the test result! 📝");
+    }
+}
+```
+
+### Dependency Injection (AOT-Safe)
+Prova uses a compile-time "Explicit Factory" pattern for DI. No containers, no reflection.
+
+1. **Mark a static method** as a factory with `[TestDependency]`.
+2. **Inject the type** into your test constructor.
+
+```csharp
+public static class TestDependencies
+{
+    [TestDependency]
+    public static IService CreateService() => new MyService(); // 🏭
+}
+
+public class MyTests
+{
+    private readonly IService _service;
+    public MyTests(IService service) => _service = service; // 💉 Injected!
+
+    [Fact]
+    public void TestService() => Assert.NotNull(_service);
+}
 ```
 
 ## 🤝 Contributing

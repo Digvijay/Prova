@@ -13,6 +13,7 @@ using Microsoft.Testing.Platform.Services;
 
 namespace Prova
 {
+#pragma warning disable TPEXP // Type is for evaluation purposes only and is subject to change or removal in future updates. Suppress this diagnostic to proceed.
     /// <summary>
     /// A hybrid adapter that enables Prova tests to run on the Microsoft Testing Platform (MTP).
     /// </summary>
@@ -129,12 +130,18 @@ namespace Prova
                 attempts++;
                 try
                 {
-                    await test.ExecuteDelegate();
+                    string? output = await test.ExecuteDelegate();
                     
                     sw.Stop();
                     var passedNode = MapToNode(test);
                     passedNode.Properties.Add(PassedTestNodeStateProperty.CachedInstance);
                     passedNode.Properties.Add(new TimingProperty(new TimingInfo(DateTimeOffset.Now - sw.Elapsed, DateTimeOffset.Now, sw.Elapsed)));
+                    
+                    if (!string.IsNullOrEmpty(output))
+                    {
+                         passedNode.Properties.Add(new StandardOutputProperty(output));
+                    }
+
                     await messageBus.PublishAsync(this, new TestNodeUpdateMessage(sessionUid, passedNode));
                     return;
                 }

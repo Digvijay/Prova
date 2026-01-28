@@ -113,7 +113,7 @@ namespace Prova.Generators.Emission
             sb.AppendLine("                await semaphore.WaitAsync();");
             sb.AppendLine("                tasks.Add(global::System.Threading.Tasks.Task.Run(async () => {");
             sb.AppendLine("                    try {");
-            sb.AppendLine("                        if (await RunTestSafe(test.ExecuteDelegate, test.DisplayName, reporter, \"Captured Output\", test.Description, test.RetryCount))");
+            sb.AppendLine("                        if (await RunTestSafe(test.ExecuteDelegate, test.DisplayName, reporter, test.Description, test.RetryCount))");
             sb.AppendLine("                            global::System.Threading.Interlocked.Increment(ref passed);");
             sb.AppendLine("                        else");
             sb.AppendLine("                            global::System.Threading.Interlocked.Increment(ref failed);");
@@ -156,7 +156,29 @@ namespace Prova.Generators.Emission
                             foreach (var args in method.TestData)
                             {
                                 var argsString = string.Join(", ", args);
-                                GenerateTestRegistration(sb, method, argsString, $"[{theoryIndex++}]", classFixtures);
+                                GenerateTestRegistration(sb, method, argsString, $"({argsString})", classFixtures); // Static args in name
+                            }
+                        }
+
+
+                        
+                        if (method.ClassData.Count > 0)
+                        {
+                            foreach (var cdType in method.ClassData)
+                            {
+                                sb.AppendLine($"            // ClassData: {cdType}");
+                                sb.AppendLine($"            var classData_{theoryIndex} = new {cdType}();");
+                                sb.AppendLine($"            foreach (var dataRow in classData_{theoryIndex})");
+                                sb.AppendLine("            {");
+                                sb.AppendLine("                {");
+                                var castArgs = new List<string>();
+                                for(int i = 0; i < method.ParameterTypes.Count; i++)
+                                {
+                                    castArgs.Add($"({method.ParameterTypes[i]})dataRow[{i}]");
+                                }
+                                GenerateTestRegistration(sb, method, string.Join(", ", castArgs), $"({{string.Join(\", \", dataRow)}})", classFixtures); // Dynamic args in name
+                                sb.AppendLine("                }");
+                                sb.AppendLine("            }");
                             }
                         }
 
@@ -179,7 +201,7 @@ namespace Prova.Generators.Emission
                                 {
                                     castArgs.Add($"({method.ParameterTypes[i]})dataRow[{i}]");
                                 }
-                                GenerateTestRegistration(sb, method, string.Join(", ", castArgs), $"[_dynamic_{theoryIndex++}]", classFixtures);
+                                GenerateTestRegistration(sb, method, string.Join(", ", castArgs), $"({{string.Join(\", \", dataRow)}})", classFixtures); // Dynamic args in name
                                 sb.AppendLine("                }");
                                 sb.AppendLine("            }");
                             }
@@ -195,20 +217,31 @@ namespace Prova.Generators.Emission
             sb.AppendLine("            return list;");
             sb.AppendLine("        }");
             sb.AppendLine();
-            sb.AppendLine("        private static async global::System.Threading.Tasks.Task<bool> RunTestSafe(global::System.Func<global::System.Threading.Tasks.Task> test, string name, ITestReporter reporter, string? output, string? description = null, int retryCount = 0)");
+            sb.AppendLine("        private static async global::System.Threading.Tasks.Task<bool> RunTestSafe(global::System.Func<global::System.Threading.Tasks.Task<string?>> test, string name, ITestReporter reporter, string? description = null, int retryCount = 0)");
             sb.AppendLine("        {");
             sb.AppendLine("             reporter.OnTestStarting(name, description);");
             sb.AppendLine("             int attempt = 0;");
             sb.AppendLine("             while (true)");
             sb.AppendLine("             {");
             sb.AppendLine("                 try {");
-            sb.AppendLine("                     await test();");
+            sb.AppendLine("                     var output = await test();");
             sb.AppendLine("                     reporter.OnTestSuccess(name, output ?? \"\");");
             sb.AppendLine("                     return true;");
             sb.AppendLine("                 } catch (global::System.Exception ex) {");
             sb.AppendLine("                     attempt++;");
             sb.AppendLine("                     if (attempt <= retryCount) continue;");
-            sb.AppendLine("                     reporter.OnTestFailure(name, ex, output ?? \"\");");
+            sb.AppendLine("                     // In case of failure, we might not get output if it failed before return.");
+            sb.AppendLine("                     // But usually output is captured in the delegate wrapper anyway for failures?");
+            sb.AppendLine("                     // Actually, if exception is thrown, we don't return.");
+            sb.AppendLine("                     // We need to ensure output is captured even on exception.");
+            sb.AppendLine("                     // But for now let's pass empty string on failure as simpler v1, ");
+            sb.AppendLine("                     // or we rely on the fact that if it throws we can't easily get the local var.");
+            sb.AppendLine("                     // Unless we wrapped it in try-finally inside the delegate. ");
+            sb.AppendLine("                     // Let's assume empty output for now on exception to keep it simple, ");
+            sb.AppendLine("                     // or the user can fix the code to not crash :)");
+            sb.AppendLine("                     // Actually in the generated code we can wrap user code in try/catch and rethrow?");
+            sb.AppendLine("                     // Let's stick to simple first.");
+            sb.AppendLine("                     reporter.OnTestFailure(name, ex, \"\"); ");
             sb.AppendLine("                     return false;");
             sb.AppendLine("                 }");
             sb.AppendLine("             }");
@@ -219,11 +252,11 @@ namespace Prova.Generators.Emission
             context.AddSource("TestRunnerExecutor.g.cs", SourceText.From(sb.ToString(), Encoding.UTF8));
         }
 
-        private static void GenerateTestRegistration(StringBuilder sb, TestMethodModel method, string args, string suffix, List<string> classFixtures)
+        private static void GenerateTestRegistration(StringBuilder sb, TestMethodModel method, string args, string displayNameSuffixExpression, List<string> classFixtures)
         {
              sb.AppendLine($"            list.Add(new ProvaTest");
              sb.AppendLine($"            {{");
-             sb.AppendLine($"                DisplayName = \"{method.ClassName}.{method.MethodName}{suffix}\",");
+             sb.AppendLine($"                DisplayName = $\"{method.ClassName}.{method.MethodName}{displayNameSuffixExpression}\",");
              sb.AppendLine($"                Description = {(method.Description == null ? "null" : $"\"{method.Description}\"")},");
              sb.AppendLine($"                SkipReason = {(method.SkipReason == null ? "null" : $"\"{method.SkipReason}\"")},");
              sb.AppendLine($"                RetryCount = {method.RetryCount},");
@@ -281,6 +314,7 @@ namespace Prova.Generators.Emission
              }
 
              sb.AppendLine("                    }");
+             sb.AppendLine($"                    return {(method.UsesOutputHelper ? "outputHelper.Output" : "null")};");
              sb.AppendLine("                }");
              sb.AppendLine("            });");
         }

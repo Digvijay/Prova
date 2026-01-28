@@ -27,7 +27,7 @@ namespace Prova
         /// <summary>Gets the maximum number of concurrent tests to run for the class or project.</summary>
         public int? MaxParallel { get; init; }
 
-        /// <summary>Gets the delegate used to execute the test logic.</summary>
-        public required Func<Task> ExecuteDelegate { get; init; }
+        /// <summary>Gets the delegate used to execute the test logic. Returns captured output if any.</summary>
+        public required Func<Task<string?>> ExecuteDelegate { get; init; }
     }
 }

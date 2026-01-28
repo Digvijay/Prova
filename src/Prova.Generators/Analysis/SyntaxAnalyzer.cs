@@ -159,6 +159,18 @@ namespace Prova.Generators.Analysis
                     }
                 }
             }
+            // NEW: Class Data
+            var classDataList = new List<string>();
+            foreach (var attr in attributes)
+            {
+                if (attr.AttributeClass?.Name == "ClassDataAttribute")
+                {
+                    if (attr.ConstructorArguments.Length > 0 && attr.ConstructorArguments[0].Value is INamedTypeSymbol typeSymbol)
+                    {
+                        classDataList.Add(typeSymbol.ToDisplayString());
+                    }
+                }
+            }
 
             // Analyze Constructor for Dependencies
             var classSymbol = symbol.ContainingType;
@@ -166,6 +178,25 @@ namespace Prova.Generators.Analysis
             var dependencies = new List<string>();
             var fixtureTypes = new List<string>();
             bool usesOutputHelper = false;
+
+            // DI: Scan for [TestDependency] factory methods
+            var compilation = context.SemanticModel.Compilation;
+            var factories = new Dictionary<string, string>(); // ReturnType -> "Method()"
+
+            // Scan all types in compilation for [TestDependency]
+            // Optimization: Only scan types in the current assembly + referenced ones?
+            // For now, we only scan the test project assembly to avoid perf hit.
+            // Or maybe we can rely on GlobalNamespace recursive scan? No, too slow.
+            // Let's scan compilation.GlobalNamespace.GetMembers() recursively?
+            
+            // To be efficient, we scan the symbols available in the compilation.
+            // But getting ALL symbols is expensive. 
+            // Alternative: User must be in same project.
+            // Let's iterate namespace members of the current assembly.
+            // This is a minimal implementation of "Search".
+            
+            var visitor = new DependencyVisitor();
+            visitor.Visit(compilation.Assembly.GlobalNamespace);
 
             if (constructor != null)
             {
@@ -176,6 +207,10 @@ namespace Prova.Generators.Analysis
                     {
                         dependencies.Add("outputHelper");
                         usesOutputHelper = true;
+                    }
+                    else if (visitor.Factories.TryGetValue(typeName, out var factoryCall))
+                    {
+                        dependencies.Add(factoryCall);
                     }
                     else
                     {
@@ -192,6 +227,8 @@ namespace Prova.Generators.Analysis
                         }
                         else
                         {
+                            // If not found, maybe just try new T()? 
+                            // Or keep default! to warn user.
                             dependencies.Add("default!"); 
                         }
                     }
@@ -245,7 +282,8 @@ namespace Prova.Generators.Analysis
                 parameterTypes,
                 mockFields,
                 symbol.IsStatic,
-                maxParallel
+                maxParallel,
+                classDataList
             );
         }
 
@@ -265,6 +303,44 @@ namespace Prova.Generators.Analysis
             if (value is double d) return $"{d}d";
             if (value is decimal dec) return $"{dec}m";
             return value?.ToString() ?? "null";
+        }
+    }
+
+    internal sealed class DependencyVisitor : SymbolVisitor
+    {
+        public Dictionary<string, string> Factories { get; } = new Dictionary<string, string>();
+
+        public override void VisitNamespace(INamespaceSymbol symbol)
+        {
+            foreach (var member in symbol.GetMembers())
+            {
+                member.Accept(this);
+            }
+        }
+
+        public override void VisitNamedType(INamedTypeSymbol symbol)
+        {
+             foreach (var member in symbol.GetMembers())
+             {
+                 member.Accept(this);
+             }
+        }
+
+        public override void VisitMethod(IMethodSymbol symbol)
+        {
+            if (symbol.IsStatic && symbol.DeclaredAccessibility == Accessibility.Public)
+            {
+                 var attr = symbol.GetAttributes().FirstOrDefault(ad => ad.AttributeClass?.Name == "TestDependencyAttribute");
+                 if (attr != null)
+                 {
+                     var returnType = symbol.ReturnType.ToDisplayString();
+                     var call = $"{symbol.ContainingType.ToDisplayString()}.{symbol.Name}()";
+                     if (!Factories.ContainsKey(returnType))
+                     {
+                         Factories[returnType] = call;
+                     }
+                 }
+            }
         }
     }
 }
