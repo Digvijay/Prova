@@ -2,7 +2,6 @@
 
 **Target Audience:** Architects, Framework Authors, Performance Engineers.
 
-> [!CAUTION]
 > **Project Scope**: Prova is a standalone **reference implementation** and an **experimental research project**. It is intended to showcase the potential of Roslyn-based testing architectures. It is not associated with Microsoft Corporation but provides a **Hybrid MTP Adapter** for compatibility with the modern .NET testing ecosystem.
 
 ## Core Philosophy: "Compile-Time is the new Runtime"
@@ -86,7 +85,7 @@ We minimize heap allocations in the runner loop:
 - **Structs**: Internal models used during execution are kept lean.
 - **No Boxing**: `Assert` methods use generic constraints (`T`) to avoid boxing value types where possible.
 
-### 5. "Magic" Features via Compiler
+### 5. Compiler-Integrated Features
 
 Because we control the compilation:
 - **`[Focus]`**: We filter the test execution set at the entry point. When `[Focus]` is active, only the targeted tests are added to the execution graph, ensuring zero distractions and immediate feedback.
