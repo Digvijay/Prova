@@ -22,19 +22,18 @@ Why switch? Prova gives you the modern benefits of TUnit without the learning cu
 | **Runtime** | Reflection (Slow) | AOT Optimized | **Native AOT (Instant)** |
 | **Syntax** | Standard (`[Fact]`) | New Fluent API | **Standard (`[Fact]`)** |
 | **Discovery** | Runtime Scan | Source Gen | **Source Gen** |
-| **Parallelism** | Assemblly Level | Class Level | **Class Level (Default)** |
+| **Parallelism** | Assemblly Level | Method Level | **Method Level (Default)** |
 | **Migration Cost** | - | High (Rewrite) | **Zero (Copy-Paste)** |
 | **User Experience** | Plain Text | Modern | **Rich + Magic Docs** |
 
 ## ✨ Features
 
-- **⚡ Zero Reflection / Native AOT**: Fully compatible with `PublishAot`. No runtime discovery cost. Start time: **0ms**.
+- **⚡ Zero Reflection / Native AOT**: Fully compatible with `PublishAot`. No runtime discovery cost. Start time: **Instant**.
 - **🏃 True Parallelism**: Test Classes run concurrently by default (`Task.WhenAll`), maximizing CPU usage.
 - **🔌 MTP Ready**: Fully supports the **Microsoft Testing Platform**. Works with `dotnet test` and TRX reporting.
 - **🧙‍♂️ Magic Documentation**: Your `/// <summary>` test comments are automatically extracted and displayed in the runner output.
 - **📦 xUnit Parity**: Don't rewrite your tests. Just change the runner.
   - `[Fact]`, `[Theory]`, `[InlineData]`, `[MemberData]`
-  - `IClassFixture<T>` (Isolated Fixtures)
   - `IAsyncLifetime` (Async Setup/Teardown)
   - `[Trait]` categories & filtering
   - Full `Assert` suite (`Equal`, `Throws`, `Contains`, `Single`, etc.)
