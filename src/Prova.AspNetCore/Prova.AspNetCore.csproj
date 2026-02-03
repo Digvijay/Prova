@@ -1,0 +1,21 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+    <IsAotCompatible>true</IsAotCompatible>
+    <RootNamespace>Prova.AspNetCore</RootNamespace>
+    <IsPackable>true</IsPackable>
+    <IsTestProject>false</IsTestProject>
+    <EnableMicrosoftTestingPlatform>false</EnableMicrosoftTestingPlatform>
+    <TestingPlatformDotnetTestSupport>true</TestingPlatformDotnetTestSupport>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <FrameworkReference Include="Microsoft.AspNetCore.App" />
+    <PackageReference Include="Microsoft.AspNetCore.Mvc.Testing" Version="10.0.0-preview.1.25080.5" />
+    <ProjectReference Include="..\Prova.Core\Prova.Core.csproj" />
+  </ItemGroup>
+
+</Project>

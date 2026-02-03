@@ -21,5 +21,13 @@ namespace Prova
 
         /// <summary>Gets the captured output.</summary>
         public string Output => _buffer.ToString();
+
+        /// <inheritdoc />
+        public void AttachArtifact(string filePath, string? displayName = null, string? mimeType = null)
+        {
+            var name = displayName ?? System.IO.Path.GetFileName(filePath);
+            // Using a structured format that can be parsed by reporters
+            _buffer.AppendLine(string.Format(global::System.Globalization.CultureInfo.InvariantCulture, "[[ATTACHMENT|{0}|{1}|{2}]]", filePath, name, mimeType));
+        }
     }
 }

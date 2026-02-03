@@ -2,10 +2,12 @@
   <Folder Name="/src/">
     <Project Path="src/Prova.Core/Prova.Core.csproj" />
     <Project Path="src/Prova.Generators/Prova.Generators.csproj" />
+    <Project Path="src/Prova.Analyzers/Prova.Analyzers.csproj" />
   </Folder>
   <Folder Name="/tests/">
     <Project Path="tests/Prova.Core.Tests/Prova.Core.Tests.csproj" />
     <Project Path="tests/Prova.Generators.Tests/Prova.Generators.Tests.csproj" />
+    <Project Path="tests/Prova.Analyzers.Tests/Prova.Analyzers.Tests.csproj" />
   </Folder>
   <Folder Name="/samples/">
     <Project Path="samples/Prova.Demo/Prova.Demo.csproj" />

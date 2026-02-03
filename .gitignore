@@ -46,5 +46,5 @@ warnings.txt
 nupkgs/
 build_output.txt
 tests/Prova.PackageTest/
-
+tests/Prova.Analyzers.Tests/TestResults
 docs/node_modules

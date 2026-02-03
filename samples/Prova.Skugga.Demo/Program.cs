@@ -1,1 +1,1 @@
-﻿await Prova.Generated.TestRunnerExecutor.RunAllAsync(args);
+﻿await Prova.TestRunnerExecutor.RunAllAsync(args);

@@ -8,6 +8,9 @@
     <IsAotCompatible>true</IsAotCompatible>
     <RootNamespace>Prova</RootNamespace>
     <OutputType>Library</OutputType>
+    <IsTestProject>false</IsTestProject>
+    <EnableMicrosoftTestingPlatform>false</EnableMicrosoftTestingPlatform>
+    <TestingPlatformDotnetTestSupport>true</TestingPlatformDotnetTestSupport>
     <IsPackable>true</IsPackable>
 
     <PackageId>Prova</PackageId>
@@ -23,12 +26,16 @@
     <PackageReference Include="Microsoft.Testing.Extensions.TrxReport.Abstractions" Version="2.0.2" />
     <PackageReference Include="Microsoft.Testing.Extensions.TrxReport" Version="2.0.2" />
     <PackageReference Include="Microsoft.Testing.Platform.MSBuild" Version="2.0.2" />
+    <PackageReference Include="Microsoft.Testing.Extensions.CrashDump" Version="2.0.2" />
+    <PackageReference Include="Microsoft.Testing.Extensions.HangDump" Version="2.0.2" />
     
     <!-- Analyzer Reference for IDE/Build -->
     <ProjectReference Include="..\Prova.Generators\Prova.Generators.csproj" OutputItemType="Analyzer" ReferenceOutputAssembly="false" />
+    <ProjectReference Include="..\Prova.Analyzers\Prova.Analyzers.csproj" OutputItemType="Analyzer" ReferenceOutputAssembly="false" />
 
-    <!-- Explicitly Pack the Generator DLL -->
+    <!-- Explicitly Pack the Generator/Analyzer DLLs -->
     <None Include="..\Prova.Generators\bin\$(Configuration)\netstandard2.0\Prova.Generators.dll" Pack="true" PackagePath="analyzers/dotnet/cs" Visible="false" />
+    <None Include="..\Prova.Analyzers\bin\$(Configuration)\netstandard2.0\Prova.Analyzers.dll" Pack="true" PackagePath="analyzers/dotnet/cs" Visible="false" />
 
     <!-- Pack Build Props -->
     <None Include="build\Prova.props" Pack="true" PackagePath="build" />

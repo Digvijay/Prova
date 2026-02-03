@@ -1,4 +1,4 @@
-using Prova.Generated;
+using Prova;
 
 // Prova Hybrid Entry Point
 // By default, this runs as a Microsoft Testing Platform runner.

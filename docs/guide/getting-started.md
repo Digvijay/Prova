@@ -1,23 +1,27 @@
 # Getting Started
 
+> [!TIP]
+> Prova is designed to be a drop-in replacement for xUnit but built for the modern Native AOT era.
+
 ## Installation
 
-### Manually
-First, create a console application (Tests in Prova are executables).
+### 1. Create a Console Project
+Tests in Prova are executable console applications. This gives you full control over the entry point and configuration.
 
 ```bash
 dotnet new console -n MyTestProject
 cd MyTestProject
 ```
 
-To that project, add the **Prova** package:
+### 2. Install Prova
+Add the Prova package to your project.
 
 ```bash
 dotnet add package Prova
 ```
 
-### Project Configuration
-Update your `.csproj` to enable **Native AOT** and standard testing capabilities.
+### 3. Configure `.csproj`
+Enable **Native AOT** and ensure the output type is `Exe`.
 
 ```xml
 <Project Sdk="Microsoft.NET.Sdk">
@@ -27,47 +31,63 @@ Update your `.csproj` to enable **Native AOT** and standard testing capabilities
         <TargetFramework>net8.0</TargetFramework>
         <ImplicitUsings>enable</ImplicitUsings>
         <Nullable>enable</Nullable>
-        <PublishAot>true</PublishAot> <!-- Crucial for Prova -->
+        <!-- Crucial: Enable Native AOT -->
+        <PublishAot>true</PublishAot>
     </PropertyGroup>
 
     <ItemGroup>
         <PackageReference Include="Prova" Version="0.3.0" />
-        <PackageReference Include="Microsoft.Testing.Platform" Version="1.0.0" />
+        <!-- Microsoft Testing Platform is built-in, but ensure you have the MSBuild integration -->
+        <PackageReference Include="Microsoft.Testing.Platform.MSBuild" Version="1.0.0" />
     </ItemGroup>
 
 </Project>
 ```
 
-### Global Usings
-Prova works seamlessly with global usings to keep your test files clean.
-
-```csharp
-// GlobalUsings.cs
-global using Prova;
-global using Prova.Assertions;
-```
-
 ## Writing Your First Test
 
-Prova is compatible with standard xUnit attributes.
+Prova uses attributes you are likely familiar with (`[Fact]`, `[Theory]`) but lives in the `Prova` namespace.
 
 ```csharp
-using xUnit;
+using Prova;
+using Prova.Assertions;
 
 public class CalculatorTests
 {
     [Fact]
     public void Add_ReturnsSum()
     {
-        Assert.Equal(4, 2 + 2);
+        int result = 2 + 2;
+        Assert.Equal(4, result);
+    }
+
+    [Theory]
+    [InlineData(1, 1, 2)]
+    [InlineData(5, 5, 10)]
+    public void Add_WithParams_ReturnsSum(int a, int b, int expected)
+    {
+        Assert.Equal(expected, a + b);
     }
 }
 ```
 
 ## Running Tests
 
-Run your tests using the standard `dotnet test` command.
+Since your test project is a standard console app, you can run it directly or use `dotnet test`.
 
 ```bash
 dotnet test
 ```
+
+Or run the executable directly for instant feedback:
+
+```bash
+# Faster run without MSBuild overhead
+./bin/Debug/net8.0/MyTestProject
+```
+
+## Next Steps
+
+- **[Migrating from xUnit](./migration.md)**: Learn how to use our automatic code fixers.
+- **[Assertions](../api/assertions.md)**: Explore the full assertion library.
+- **[Architecture](./why-prova.md)**: Understand why we chose Native AOT.
