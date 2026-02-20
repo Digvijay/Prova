@@ -22,7 +22,7 @@ Provides a single row of data for a `[Theory]`.
 - **Arguments**: Match the parameters of the test method.
 
 ### `[MemberData]`
-Sours data from a static member (property, method, or field).
+Sources data from a static member (property, method, or field).
 - **Arguments**: 
   - `string memberName`: Name of the static member.
   - `params object[] parameters`: Optional parameters for method-sourced data.
@@ -35,54 +35,103 @@ Sources data from a class that implements `IEnumerable<object[]>`.
 
 ---
 
-## Lifecycle Hooks
+## Metadata & Reporting
 
-### `[Before]`
-Executes code before test runs.
+### `[DisplayName]`
+Overwrites the name of the test in test reports.
 - **Target**: Method
-- **Scope**: Default is `HookScope.Test`. Use `HookScope.Class` or `HookScope.Assembly` for broader scopes.
-- **Requirements**: `Class` and `Assembly` hooks must be `static`.
 
-### `[After]`
-Executes code after test runs.
+### `[Description]`
+Adds a text description to the test metadata.
 - **Target**: Method
-- **Scope**: Default is `HookScope.Test`. Use `HookScope.Class` or `HookScope.Assembly` for broader scopes.
-- **Requirements**: `Class` and `Assembly` hooks must be `static`.
+
+### `[Trait]` / `[Property]`
+Adds arbitrary key-value pairs to the test metadata. Useful for filtering.
+- **Target**: Method or Class
+- **Arguments**: `string key, string value`.
 
 ---
 
-## Behavior Configuration
+## Lifecycle Hooks
+
+### `[Before]` / `[After]`
+Executes code before or after test runs.
+- **Target**: Method
+- **Scope**: Default is `HookScope.Test`. Use `HookScope.Class` or `HookScope.Assembly` for broader scopes.
+
+### `[BeforeEvery]` / `[AfterEvery]`
+Executes code before or after **every** test in the project. These are global hooks.
+- **Target**: Method (must be static)
+
+### `[BeforeClass]` / `[AfterClass]`
+Executes code before or after all tests in a class.
+- **Target**: Method (must be static)
+
+### `[BeforeAssembly]` / `[AfterAssembly]`
+Executes code before or after all tests in an assembly.
+- **Target**: Method (must be static)
+
+---
+
+## Behavior & Concurrency
 
 ### `[Parallel]`
-Controls execution concurrency for a class.
-- **Target**: Class
-- **Arguments**: `int max` (e.g., `[Parallel(2)]`).
+Controls execution concurrency for a class or project.
+- **Scope**: Class or Assembly.
+- **Arguments**: `int max`.
 
 ### `[NotInParallel]`
-Enforces sequential execution for tests sharing a resource.
-- **Target**: Method or Class
-- **Arguments**: `params string[] keys` (e.g., `[NotInParallel("Database")]`).
-- **Effect**: Tests with the same key will NOT run concurrently with each other.
+Strict serial execution for tests sharing a resource. Shorthand for `[ParallelLimiter(key, 1)]`.
+- **Arguments**: `params string[] keys`.
+
+### `[ParallelLimiter]`
+Restricts the number of concurrent tests for a specific resource key.
+- **Arguments**: `string key, int limit`.
+
+### `[ParallelGroup]`
+Logical grouping for tests, useful for resource allocation and reporting.
+- **Arguments**: `string name`.
+
+### `[Sequential]`
+Marks a class or assembly as sequential, disabling parallel execution for its children.
+
+---
+
+## Dependency Injection
+
+### `[ConfigureServices]`
+Marks a static method used to register services in the `ProvaServiceProvider`.
+- **Target**: Method (static)
+- **Parameter**: Must accept `ProvaServiceProvider`.
+
+### `[TestDependency]`
+Marks a static factory method used as a dependency for test constructors.
+- **Target**: Method (static)
+
+### `[ClassFactory]`
+Overrides how a test class is instantiated.
+- **Arguments**: `Type factoryType` (must implement `IClassConstructor`).
+
+---
+
+## Quality Governance
 
 ### `[MaxAlloc]`
-Enforces a memory allocation budget using `GC.GetAllocatedBytesForCurrentThread()`.
-- **Target**: Method
-- **Arguments**: `long bytes` (e.g., `[MaxAlloc(1024)]`).
+Enforces a memory allocation budget per test.
+- **Arguments**: `long bytes`.
 
 ### `[Timeout]`
 Enforces a maximum execution time.
-- **Target**: Method
-- **Arguments**: `int milliseconds` (e.g., `[Timeout(500)]`).
+- **Arguments**: `int milliseconds`.
 
 ### `[Retry]`
-Automatically retries a test if it fails.
-- **Target**: Method
-- **Arguments**: `int count` (e.g., `[Retry(3)]`).
+Automatically retries a failing test.
+- **Arguments**: `int count`.
+
+### `[Repeat]`
+Runs a test multiple times regardless of outcome.
+- **Arguments**: `int count`.
 
 ### `[Focus]`
-Isolates execution. If ANY test has `[Focus]`, only those tests will run. All others are skipped.
+Isolates execution. If ANY test has `[Focus]`, all others are ignored.
 - **Target**: Method
-
-### `[TestDependency]`
-Marks a static factory method for Dependency Injection.
-- **Target**: Method (Static)

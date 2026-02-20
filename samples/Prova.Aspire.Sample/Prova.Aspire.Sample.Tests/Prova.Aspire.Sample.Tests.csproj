@@ -7,9 +7,9 @@
     <Nullable>enable</Nullable>
     <IsTestProject>true</IsTestProject>
     <GenerateTestingPlatformEntryPoint>false</GenerateTestingPlatformEntryPoint>
-    <TestingPlatformDotnetTestSupport>true</TestingPlatformDotnetTestSupport>
+    <TestingPlatformDotnetTestSupport>false</TestingPlatformDotnetTestSupport>
     <UseMicrosoftTestingPlatformRunner>true</UseMicrosoftTestingPlatformRunner>
-    <IsTestingPlatformApplication>true</IsTestingPlatformApplication>
+    <IsTestingPlatformApplication>false</IsTestingPlatformApplication>
     <TreatWarningsAsErrors>false</TreatWarningsAsErrors>
   </PropertyGroup>
 

@@ -31,4 +31,4 @@ For maximum speed and debugging, you can run the compiled executable directly. T
 By default, Prova runs all tests in parallel. You can control this via command line arguments or global configuration.
 
 > [!NOTE]
-> Detailed configuration options are available in the **[Configuration API](../api/config.md)** section.
+> Detailed configuration options are available in the **[Configuration API](./configuration-json.md)** section.

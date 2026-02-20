@@ -1,6 +1,6 @@
 # Dependency Injection
 
-Prova supports first-class Dependency Injection (DI) to help you write modular and testable code. It uses a lightweight, built-in service container (`ProvaServiceCollection`) that works seamlessly with your test classes.
+Prova supports first-class Dependency Injection (DI) to help you write modular and testable code. It uses a lightweight, built-in service container (`ProvaServiceProvider`) that works seamlessly with your test classes.
 
 ## Features
 
@@ -21,7 +21,7 @@ using Prova.Core.Attributes;
 public class TestSetup
 {
     [ConfigureServices]
-    public static void Configure(ProvaServiceCollection services)
+    public static void Configure(ProvaServiceProvider services)
     {
         // Register a singleton
         services.AddSingleton<IDatabase>(() => new InMemoryDatabase());
@@ -59,9 +59,9 @@ public class MyServiceTests
 }
 ```
 
-## ProvaServiceCollection
+## ProvaServiceProvider
 
-Prova uses its own `ProvaServiceCollection` which provides a simple, zero-reflection API for registration:
+Prova uses its own `ProvaServiceProvider` which provides a simple, zero-reflection API for registration:
 
 - `AddSingleton<T>(Func<T> factory)`: Created once and shared.
 - `AddTransient<T>(Func<T> factory)`: Created every time it is requested.

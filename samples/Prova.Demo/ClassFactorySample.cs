@@ -34,7 +34,7 @@ namespace Prova.Demo
     public class ClassFactoryConfiguration
     {
         [ConfigureServices]
-        public static void Configure(ProvaServiceCollection services)
+        public static void Configure(ProvaServiceProvider services)
         {
             // Register the factory so the runner can resolve it
             services.AddTransient(() => new MySampleFactory());

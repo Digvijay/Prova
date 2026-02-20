@@ -23,7 +23,7 @@ public class MyDataProvider
 public class MyTests
 {
     [ConfigureServices]
-    public static void Configure(ProvaServiceCollection services) 
+    public static void Configure(ProvaServiceProvider services) 
     {
         services.Add<IMyService, MyService>();
         services.Add<MyDataProvider>();
@@ -73,4 +73,4 @@ public class DataProvider
 
 ## Registration
 
-The data provider type must be registered in the `ProvaServiceCollection` within a method decorated with `[ConfigureServices]`.
+The data provider type must be registered in the `ProvaServiceProvider` within a method decorated with `[ConfigureServices]`.

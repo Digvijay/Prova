@@ -1,5 +1,33 @@
 # Changelog
 
+## [v0.4.0] - The Integrations Update 🔌
+
+**Released:** 2026-02-20
+
+This release adds first-class integration packages, global lifecycle hooks, and a VitePress documentation site.
+
+### ✨ New Features
+-   **FsCheck Integration**: New `Prova.FsCheck` package with `[Property]` attribute for property-based testing.
+-   **Global Lifecycle Hooks**: Added `[BeforeEvery]` and `[AfterEvery]` attributes for cross-cutting concerns.
+-   **Documentation Site**: Full VitePress documentation deployed to [prova.digvijay.dev](https://prova.digvijay.dev).
+-   **Migration Analyzers**: Added code fixers for MSTest (`[TestMethod]`, `[DataRow]`, `[TestInitialize]`, etc.).
+
+### 🛠️ Improvements
+-   **.NET 10 Compatibility**: Fixed `dotnet test` MTP compatibility on .NET 10 SDK.
+-   **Zero-Warning Build**: Resolved all RS1032/RS1033 analyzer warnings for clean CI.
+-   **NuGet Packaging**: All integration packages (`Prova.AspNetCore`, `Prova.Playwright`, `Prova.Testcontainers`, `Prova.FsCheck`) are now independently packable with proper metadata.
+
+### 📦 New Packages
+| Package | Description |
+|---------|-------------|
+| `Prova` | Core framework |
+| `Prova.AspNetCore` | ASP.NET Core integration |
+| `Prova.Playwright` | Playwright browser testing |
+| `Prova.Testcontainers` | Docker container testing |
+| `Prova.FsCheck` | Property-based testing |
+
+---
+
 ## [v0.3.0] - The Governance Update 🛡️
 
 **Released:** 2026-01-28

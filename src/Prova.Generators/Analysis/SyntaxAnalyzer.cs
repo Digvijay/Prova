@@ -100,6 +100,7 @@ namespace Prova.Generators.Analysis
 
             // Focus & Retry
             bool isFocused = attributes.Any(ad => ad.AttributeClass?.Name == "FocusAttribute" || ad.AttributeClass?.ToDisplayString() == "Prova.FocusAttribute");
+            if (isFocused) properties["Focus"] = "true";
             int? retryCount = null;
             
             // Retry Hierarchy: Method > Class > Assembly

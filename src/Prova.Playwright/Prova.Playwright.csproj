@@ -6,9 +6,26 @@
     <Nullable>enable</Nullable>
     <IsAotCompatible>true</IsAotCompatible>
     <RootNamespace>Prova.Playwright</RootNamespace>
+    <IsPackable>true</IsPackable>
     <IsTestProject>false</IsTestProject>
     <EnableMicrosoftTestingPlatform>false</EnableMicrosoftTestingPlatform>
+    <Version>0.4.0</Version>
+
+    <PackageId>Prova.Playwright</PackageId>
+    <Description>Playwright integration for the Prova testing framework.</Description>
+    <Authors>Digvijay</Authors>
+    <Company>Prova</Company>
+    <PackageLicenseExpression>MIT</PackageLicenseExpression>
+    <PackageProjectUrl>https://github.com/Digvijay/Prova</PackageProjectUrl>
+    <RepositoryUrl>https://github.com/Digvijay/Prova.git</RepositoryUrl>
+    <RepositoryType>git</RepositoryType>
+    <PackageTags>test testing aot mtp playwright</PackageTags>
+    <PackageIcon>icon.png</PackageIcon>
   </PropertyGroup>
+
+  <ItemGroup>
+    <None Include="..\..\icon.png" Pack="true" PackagePath="\" />
+  </ItemGroup>
 
   <ItemGroup>
     <ProjectReference Include="..\Prova.Core\Prova.Core.csproj" />

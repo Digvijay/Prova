@@ -28,7 +28,7 @@ Enable **Native AOT** and ensure the output type is `Exe`.
 
     <PropertyGroup>
         <OutputType>Exe</OutputType>
-        <TargetFramework>net8.0</TargetFramework>
+        <TargetFramework>net10.0</TargetFramework>
         <ImplicitUsings>enable</ImplicitUsings>
         <Nullable>enable</Nullable>
         <!-- Crucial: Enable Native AOT -->
@@ -36,9 +36,7 @@ Enable **Native AOT** and ensure the output type is `Exe`.
     </PropertyGroup>
 
     <ItemGroup>
-        <PackageReference Include="Prova" Version="0.3.0" />
-        <!-- Microsoft Testing Platform is built-in, but ensure you have the MSBuild integration -->
-        <PackageReference Include="Microsoft.Testing.Platform.MSBuild" Version="1.0.0" />
+        <PackageReference Include="Prova" Version="0.4.0" />
     </ItemGroup>
 
 </Project>
@@ -83,11 +81,11 @@ Or run the executable directly for instant feedback:
 
 ```bash
 # Faster run without MSBuild overhead
-./bin/Debug/net8.0/MyTestProject
+./bin/Debug/net10.0/MyTestProject
 ```
 
 ## Next Steps
 
 - **[Migrating from xUnit](./migration.md)**: Learn how to use our automatic code fixers.
 - **[Assertions](../api/assertions.md)**: Explore the full assertion library.
-- **[Architecture](./why-prova.md)**: Understand why we chose Native AOT.
+- **[Architecture](../concepts/architecture.md)**: Understand why we chose Native AOT.

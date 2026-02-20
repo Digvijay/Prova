@@ -7,7 +7,7 @@ namespace Prova.Demo
     public class DIDataSourceSample
     {
         [ConfigureServices]
-        public static void Configure(ProvaServiceCollection services)
+        public static void Configure(ProvaServiceProvider services)
         {
             // Register the data provider and its dependencies
             services.AddSingleton<MyDIService>(() => new MyDIService());

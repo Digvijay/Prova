@@ -1,4 +1,4 @@
-# Runtime Configuration (testconfig.json)
+# Runtime Configuration
 
 Prova supports runtime configuration through a `testconfig.json` file. This allows you to change execution policies and global metadata without recompiling your test assembly.
 

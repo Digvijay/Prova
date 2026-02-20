@@ -39,7 +39,7 @@ namespace Prova.AspNetCore.Sample.Tests
         [Fact]
         public async Task Get_Items_Returns_Success()
         {
-            var response = await _client.GetFromJsonAsync("/", SharedJsonContext.Default.StringArray);
+            var response = await _client.GetFromJsonAsync("/api/items", SharedJsonContext.Default.StringArray);
             Assert.NotNull(response);
             Assert.Equal(2, response!.Length);
             Assert.Equal("Item1", response[0]);

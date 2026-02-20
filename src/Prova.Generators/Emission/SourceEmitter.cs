@@ -1272,7 +1272,7 @@ namespace Prova.Generators.Emission
                               sb.AppendLine($"                        instance.{concreteMethodName}({pCall});");
                           else
                               sb.AppendLine($"                        instance.{concreteMethodName}({pCall}).GetAwaiter().GetResult();");
-                        sb.AppendLine("                    }});");
+                        sb.AppendLine("                    });");
                         
                         sb.AppendLine("                    var fsConfig = new global::System.Collections.Generic.Dictionary<string, string>();");
                          if (method.FsCheckConfig != null)

@@ -18,7 +18,7 @@ namespace Prova.Demo
     public class DemoConfiguration
     {
         [ConfigureServices]
-        public static void Configure(ProvaServiceCollection services)
+        public static void Configure(ProvaServiceProvider services)
         {
             services.AddSingleton<IInjectedService>(() => new InjectedService());
             services.AddSingleton<DatabaseFixture>(() => new DatabaseFixture());

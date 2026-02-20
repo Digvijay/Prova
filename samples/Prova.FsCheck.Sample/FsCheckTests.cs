@@ -16,13 +16,13 @@ namespace Prova.FsCheck.Sample
             // Should be equal
             // Using basic assertion or manual check
             bool equal = list.SequenceEqual(doubleReversed);
-            if (!equal) throw new Exception("List not equal after double reverse");
+            if (!equal) throw new InvalidOperationException("List not equal after double reverse");
         }
 
         [Property(MaxTest = 1000)]
         public void AdditionIsCommutative(int a, int b)
         {
-            if (a + b != b + a) throw new Exception("Math is broken");
+            if (a + b != b + a) throw new InvalidOperationException("Math is broken");
         }
 
         // Falsifiable test (uncomment to test failure)

@@ -10,10 +10,18 @@
     <OutputType>Library</OutputType>
     <IsTestProject>false</IsTestProject>
     <EnableMicrosoftTestingPlatform>false</EnableMicrosoftTestingPlatform>
-    <TestingPlatformDotnetTestSupport>true</TestingPlatformDotnetTestSupport>
     <IsPackable>true</IsPackable>
+    <Version>0.4.0</Version>
 
     <PackageId>Prova</PackageId>
+    <Description>High-performance, AOT-safe testing framework for .NET.</Description>
+    <Authors>Digvijay</Authors>
+    <Company>Prova</Company>
+    <PackageLicenseExpression>MIT</PackageLicenseExpression>
+    <PackageProjectUrl>https://github.com/Digvijay/Prova</PackageProjectUrl>
+    <RepositoryUrl>https://github.com/Digvijay/Prova.git</RepositoryUrl>
+    <RepositoryType>git</RepositoryType>
+    <PackageTags>test testing aot mtp xunit playwright testcontainers</PackageTags>
     <PackageIcon>icon.png</PackageIcon>
     <PackageReadmeFile>README.md</PackageReadmeFile>
   </PropertyGroup>

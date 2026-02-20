@@ -50,7 +50,7 @@ Assert.Equal(42, value);
 Assert.That(value).IsEqualTo(42);
 ```
 
-See the **[Assertions API](../api/assertions.md)** for the full list.
+See the **[Assertions Reference](../api/assertions.md)** for the full list.
 
 ## Lifecycle
 

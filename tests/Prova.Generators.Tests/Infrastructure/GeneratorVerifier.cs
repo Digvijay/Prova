@@ -59,7 +59,12 @@ namespace Prova.Generators.Tests
             var expected = expectedGeneratedSource.Replace("\r\n", "\n").Trim();
             var actual = generatedSourceText.Replace("\r\n", "\n").Trim();
 
-            Assert.Equal(expected, actual);
+            if (expected != actual)
+            {
+                Console.WriteLine("GENERATOR TEST FAILED. ACTUAL SOURCE:");
+                Console.WriteLine(generatedSourceText);
+                Assert.Equal(expected, actual);
+            }
         }
 
         public static void VerifyContains(string source, string expectedSnippet)

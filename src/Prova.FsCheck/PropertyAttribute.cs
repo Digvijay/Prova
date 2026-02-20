@@ -33,11 +33,11 @@ namespace Prova.FsCheck
         /// <summary>
         /// Output verbose details.
         /// </summary>
-        public bool Verbose { get; set; } = false;
+        public bool Verbose { get; set; }
         
         /// <summary>
         /// If true, suppress shrinking on failure.
         /// </summary>
-        public bool QuietOnSuccess { get; set; } = false;
+        public bool QuietOnSuccess { get; set; }
     }
 }

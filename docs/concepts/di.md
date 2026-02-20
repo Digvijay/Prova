@@ -29,7 +29,7 @@ using Prova.Core.Attributes;
 public static class Setup
 {
     [ConfigureServices]
-    public static void Configure(ProvaServiceCollection services)
+    public static void Configure(ProvaServiceProvider services)
     {
         // Transient: Created new every time
         services.AddTransient<ICalculator>(() => new Calculator());

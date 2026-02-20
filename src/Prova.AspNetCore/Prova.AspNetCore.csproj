@@ -9,12 +9,27 @@
     <IsPackable>true</IsPackable>
     <IsTestProject>false</IsTestProject>
     <EnableMicrosoftTestingPlatform>false</EnableMicrosoftTestingPlatform>
-    <TestingPlatformDotnetTestSupport>true</TestingPlatformDotnetTestSupport>
+    <Version>0.4.0</Version>
+
+    <PackageId>Prova.AspNetCore</PackageId>
+    <Description>ASP.NET Core integration for the Prova testing framework.</Description>
+    <Authors>Digvijay</Authors>
+    <Company>Prova</Company>
+    <PackageLicenseExpression>MIT</PackageLicenseExpression>
+    <PackageProjectUrl>https://github.com/Digvijay/Prova</PackageProjectUrl>
+    <RepositoryUrl>https://github.com/Digvijay/Prova.git</RepositoryUrl>
+    <RepositoryType>git</RepositoryType>
+    <PackageTags>test testing aot mtp aspnetcore</PackageTags>
+    <PackageIcon>icon.png</PackageIcon>
   </PropertyGroup>
 
   <ItemGroup>
+    <None Include="..\..\icon.png" Pack="true" PackagePath="\" />
+  </ItemGroup>
+
+  <ItemGroup>
     <FrameworkReference Include="Microsoft.AspNetCore.App" />
-    <PackageReference Include="Microsoft.AspNetCore.Mvc.Testing" Version="10.0.0-preview.1.25080.5" />
+    <PackageReference Include="Microsoft.AspNetCore.Mvc.Testing" Version="10.0.0-preview.1.25120.3" />
     <ProjectReference Include="..\Prova.Core\Prova.Core.csproj" />
   </ItemGroup>
 

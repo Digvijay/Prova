@@ -4,10 +4,33 @@
     <TargetFramework>net10.0</TargetFramework>
     <ImplicitUsings>enable</ImplicitUsings>
     <Nullable>enable</Nullable>
+    <IsPackable>true</IsPackable>
+    <IsTestProject>false</IsTestProject>
+    <EnableMicrosoftTestingPlatform>false</EnableMicrosoftTestingPlatform>
+    <Version>0.4.0</Version>
+
+    <PackageId>Prova.FsCheck</PackageId>
+    <Description>FsCheck (Property-Based Testing) integration for the Prova testing framework.</Description>
+    <Authors>Digvijay</Authors>
+    <Company>Prova</Company>
+    <PackageLicenseExpression>MIT</PackageLicenseExpression>
+    <PackageProjectUrl>https://github.com/Digvijay/Prova</PackageProjectUrl>
+    <RepositoryUrl>https://github.com/Digvijay/Prova.git</RepositoryUrl>
+    <RepositoryType>git</RepositoryType>
+    <PackageTags>test testing aot mtp fscheck pbt</PackageTags>
+    <PackageIcon>icon.png</PackageIcon>
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="FsCheck" Version="3.3.2" />
+    <None Include="..\..\icon.png" Pack="true" PackagePath="\" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\Prova.Core\Prova.Core.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="FsCheck" Version="2.16.0" />
   </ItemGroup>
 
 </Project>

@@ -36,7 +36,7 @@ namespace DemoApp
     /// </summary>
     public class PaymentTests
     {
-        // gUnit/Prova should automatically detect this field is a Mock
+        // Prova should automatically detect this field is a Mock
         // and call _gatewayMock.VerifyAll() at the end of the test!
         internal readonly Mock<IPaymentGateway> _gatewayMock = new Mock<IPaymentGateway>();
 

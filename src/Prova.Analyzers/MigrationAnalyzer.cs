@@ -48,7 +48,7 @@ namespace Prova.Analyzers
         private const string MessageFormat_MSTestClassInitialize = "Use '[BeforeClass]' instead of '[ClassInitialize]'";
         private const string MessageFormat_MSTestClassCleanup = "Use '[AfterClass]' instead of '[ClassCleanup]'";
         private const string MessageFormat_MSTestTestClass = "Remove '[TestClass]'. Prova does not require this attribute.";
-        private const string MessageFormat_TestContext = "Use 'Prova.TestContext.Current' instead of injecting 'TestContext'.";
+        private const string MessageFormat_TestContext = "Use 'Prova.TestContext.Current' instead of injecting 'TestContext'";
         
         private const string Description = "Prova provides better performance and reliability.";
         private const string Category = "Migration";
