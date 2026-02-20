@@ -20,14 +20,13 @@ namespace Prova.Demo
         }
 
         /// <summary>
-        /// A test designed to exceed its timeout limit and fail.
+        /// A synchronous test that exceeds its timeout.
         /// </summary>
         [Fact(Skip = "Intentional failure for verification")]
-        [Timeout(50)] // 50ms timeout
-        public async Task Slow_Test_Should_Fail()
+        [Timeout(100)]
+        public void Sync_Test_Should_Fail()
         {
-            // This runs for 500ms, which is > 50ms
-            await Task.Delay(500); 
+            System.Threading.Thread.Sleep(500);
         }
     }
 }

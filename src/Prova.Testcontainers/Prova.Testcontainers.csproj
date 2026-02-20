@@ -1,0 +1,36 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <ItemGroup>
+    <ProjectReference Include="..\Prova.Core\Prova.Core.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Testcontainers" Version="4.10.0" />
+  </ItemGroup>
+
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+    <IsPackable>true</IsPackable>
+    <IsTestProject>false</IsTestProject>
+    <EnableMicrosoftTestingPlatform>false</EnableMicrosoftTestingPlatform>
+    <Version>0.4.0</Version>
+
+    <PackageId>Prova.Testcontainers</PackageId>
+    <Description>Testcontainers integration for the Prova testing framework.</Description>
+    <Authors>Digvijay</Authors>
+    <Company>Prova</Company>
+    <PackageLicenseExpression>MIT</PackageLicenseExpression>
+    <PackageProjectUrl>https://github.com/Digvijay/Prova</PackageProjectUrl>
+    <RepositoryUrl>https://github.com/Digvijay/Prova.git</RepositoryUrl>
+    <RepositoryType>git</RepositoryType>
+    <PackageTags>test testing aot mtp testcontainers</PackageTags>
+    <PackageIcon>icon.png</PackageIcon>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <None Include="..\..\icon.png" Pack="true" PackagePath="\" />
+  </ItemGroup>
+
+</Project>

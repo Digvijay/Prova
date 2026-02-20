@@ -21,6 +21,7 @@ namespace Prova
     {
         private readonly IEnumerable<ProvaTest> _tests;
         private readonly ITestFrameworkCapabilities _capabilities;
+        private readonly Configuration.ProvaConfig _config;
 
         /// <summary>
         /// Initializes a new instance of the <see cref="HybridMtpAdapter"/> class.
@@ -31,6 +32,16 @@ namespace Prova
         {
             _tests = tests;
             _capabilities = capabilities;
+            _config = Configuration.ConfigLoader.Load();
+            
+            // Merge Global Properties from config
+            foreach (var test in _tests)
+            {
+                foreach (var prop in _config.GlobalProperties)
+                {
+                    if (!test.Properties.ContainsKey(prop.Key)) test.Properties[prop.Key] = prop.Value;
+                }
+            }
         }
 
         /// <inheritdoc />
@@ -78,7 +89,7 @@ namespace Prova
 
                 // Bounded Parallelism (CRITICAL)
                 int? specMax = _tests.Select(t => t.MaxParallel).Where(m => m.HasValue).Min();
-                int maxParallel = specMax ?? Environment.ProcessorCount;
+                int maxParallel = _config.MaxParallel ?? specMax ?? Environment.ProcessorCount;
                 
                 using var semaphore = new SemaphoreSlim(maxParallel);
                 var tasks = new List<Task>();
@@ -93,6 +104,7 @@ namespace Prova
                         {
                             if (test.SkipReason != null)
                             {
+                                await EventRegistry.DispatchEndAsync(test, TestResult.Skipped, 0);
                                 await ReportSkippedAsync(messageBus, session.SessionUid, test);
                             }
                             else
@@ -115,6 +127,7 @@ namespace Prova
         private async Task RunTestAsync(IMessageBus messageBus, Microsoft.Testing.Platform.TestHost.SessionUid sessionUid, ProvaTest test, CancellationToken ct)
         {
             var sw = Stopwatch.StartNew();
+            await EventRegistry.DispatchStartAsync(test);
 
             // Report InProgress
             var inProgressNode = MapToNode(test); 
@@ -122,12 +135,15 @@ namespace Prova
             await messageBus.PublishAsync(this, new TestNodeUpdateMessage(sessionUid, inProgressNode));
 
             int attempts = 0;
-            int maxAttempts = test.RetryCount + 1;
+            int maxAttempts = (test.RetryCount ?? _config.DefaultRetryCount ?? 0) + 1;
             Exception? lastException = null;
 
             while (attempts < maxAttempts)
             {
                 attempts++;
+                using var cts = CancellationTokenSource.CreateLinkedTokenSource(ct);
+                var testContext = new TestContext(test.DisplayName, test.Properties, cts.Token);
+                TestContext.Current = testContext;
                 try
                 {
                     string? output = await test.ExecuteDelegate();
@@ -143,6 +159,7 @@ namespace Prova
                     }
 
                     await messageBus.PublishAsync(this, new TestNodeUpdateMessage(sessionUid, passedNode));
+                    await EventRegistry.DispatchEndAsync(test, TestResult.Passed, sw.ElapsedMilliseconds);
                     return;
                 }
                 catch (Exception ex)
@@ -155,7 +172,12 @@ namespace Prova
                         failedNode.Properties.Add(new FailedTestNodeStateProperty(ex));
                         failedNode.Properties.Add(new TimingProperty(new TimingInfo(DateTimeOffset.Now - sw.Elapsed, DateTimeOffset.Now, sw.Elapsed)));
                         await messageBus.PublishAsync(this, new TestNodeUpdateMessage(sessionUid, failedNode));
+                        await EventRegistry.DispatchEndAsync(test, TestResult.Failed, sw.ElapsedMilliseconds);
                     }
+                }
+                finally
+                {
+                    TestContext.Current = null!;
                 }
             }
         }
@@ -176,10 +198,10 @@ namespace Prova
                 Properties = new PropertyBag()
             };
 
-            foreach (var trait in test.Traits)
+            foreach (var prop in test.Properties)
             {
                 // In MTP 2.0.2, KeyValuePairStringProperty is replaced by TestMetadataProperty
-                node.Properties.Add(new Microsoft.Testing.Platform.Extensions.Messages.TestMetadataProperty(trait.Key, trait.Value));
+                node.Properties.Add(new Microsoft.Testing.Platform.Extensions.Messages.TestMetadataProperty(prop.Key, prop.Value));
             }
 
             return node;

@@ -1,0 +1,10 @@
+{
+    "DefaultRetryCount": 2,
+    "DefaultTimeoutMs": 5000,
+    "MaxParallel": 4,
+    "DefaultCulture": "en-US",
+    "GlobalProperties": {
+        "Environment": "Development",
+        "Team": "Core"
+    }
+}

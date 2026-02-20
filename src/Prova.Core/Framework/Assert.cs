@@ -160,11 +160,11 @@ namespace Prova
         }
 
         /// <summary>Verifies that an object is not null.</summary>
-        public static void NotNull(object? item)
+        public static void NotNull(object? item, string? userMessage = null)
         {
             if (item is null)
             {
-                throw new AssertException("Assert.NotNull() Failure");
+                throw new AssertException(userMessage ?? "Assert.NotNull() Failure");
             }
         }
 
@@ -210,6 +210,15 @@ namespace Prova
             }
 
             throw new AssertException($"Assert.ThrowsAsync() Failure\nExpected: {typeof(T).Name}\nActual:   No exception was thrown");
+        }
+
+        /// <summary>Verifies that a string starts with a given substring.</summary>
+        public static void StartsWith(string expectedStart, string? actualString)
+        {
+            if (actualString == null || !actualString.StartsWith(expectedStart, StringComparison.Ordinal))
+            {
+                throw new AssertException($"Assert.StartsWith() Failure\nExpected to start with: {expectedStart}\nActual: {actualString ?? "(null)"}");
+            }
         }
     }
 }

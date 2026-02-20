@@ -8,7 +8,7 @@ namespace Prova.Core.Tests
         /// <summary>Main method.</summary>
         public static async System.Threading.Tasks.Task Main(string[] args)
         {
-            await Prova.Generated.TestRunnerExecutor.RunAllAsync(args);
+            await Prova.TestRunnerExecutor.RunAllAsync(args);
         }
     }
 }
