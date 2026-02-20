@@ -19,10 +19,10 @@ jobs:
         dotnet-version: 10.0.x
 
     - name: Restore
-      run: dotnet restore
+      run: dotnet restore Prova.sln
 
     - name: Build
-      run: dotnet build --configuration Release --no-restore
+      run: dotnet build Prova.sln --configuration Release --no-restore
 
     - name: Set Version
       run: |
