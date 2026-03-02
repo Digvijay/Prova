@@ -6,16 +6,16 @@ namespace Prova.Demo
 {
     public class FlowControlSample
     {
-        private static int _attempts = 0;
+        private static int _flakyRuns;
 
         [Fact]
         [Retry(3)]
         public void FlakyTest()
         {
-            _attempts++;
-            if (_attempts < 3)
+            _flakyRuns++;
+            if (_flakyRuns < 3)
             {
-                throw new Exception("Flaky failure!");
+                throw new InvalidOperationException("Simulated flaky failure");
             }
             // Passes on 3rd attempt
         }
@@ -50,7 +50,7 @@ namespace Prova.Demo
             // In French culture, it should be 25/10/2023
             if (date.ToShortDateString() != "25/10/2023")
             {
-                throw new Exception($"Culture check failed: {date.ToShortDateString()}");
+                throw new InvalidOperationException($"Culture check failed: {date.ToShortDateString()}");
             }
         }
     }

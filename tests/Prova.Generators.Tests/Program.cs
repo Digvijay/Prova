@@ -9,6 +9,8 @@ try
 
     new DiscoveryTests().Fact_Discovers_Test();
     new DiscoveryTests().Theory_Generates_InlineData_Registration();
+    new DiscoveryTests().Theory_WithStringData_GeneratesEscapedDisplayName();
+    new DiscoveryTests().Theory_WithMemberData_GeneratesEscapedRowDisplay();
     new DiscoveryTests().Fact_With_Skip_Generates_SkipReason();
     new DiscoveryTests().Fact_With_Focus_Generates_Focus_Trait();
     new DiscoveryTests().Fact_With_Retry_Generates_RetryCount();

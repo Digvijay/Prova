@@ -9,7 +9,7 @@ namespace Prova.Demo
 {
     public class GlobalPoliciesSample
     {
-        private static int _attempt = 0;
+        private static int _attempt;
 
         [Fact]
         public void RetriedTest()
@@ -17,7 +17,7 @@ namespace Prova.Demo
             _attempt++;
             if (_attempt < 3)
             {
-                throw new Exception("Simulated flaky failure");
+                throw new InvalidOperationException("Simulated flaky failure");
             }
             Console.WriteLine($"Passed on attempt {_attempt}");
         }

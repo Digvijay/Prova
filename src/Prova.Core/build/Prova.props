@@ -1,7 +1,12 @@
 <Project>
   <PropertyGroup>
     <IsTestProject>true</IsTestProject>
-    <!-- Prova provides its own Main method via user code or generation, so disable MTP's auto-generated entry point -->
+    <OutputType>Exe</OutputType>
+    <!-- Prova auto-generates its own entry point (Program.g.cs), so disable MTP's auto-generated entry point -->
     <GenerateTestingPlatformEntryPoint>false</GenerateTestingPlatformEntryPoint>
+    <!-- Disable the default Program.cs generation so Prova's generated one takes effect -->
+    <GenerateProgramFile>false</GenerateProgramFile>
+    <!-- Enable MTP support for dotnet test -->
+    <TestingPlatformDotnetTestSupport>true</TestingPlatformDotnetTestSupport>
   </PropertyGroup>
 </Project>

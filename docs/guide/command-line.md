@@ -61,12 +61,15 @@ In Prova, arguments are passed after a `--` separator when using `dotnet run` or
 
 ## Microsoft Testing Platform (MTP) Arguments
 
-When running via `dotnet test`, you can also use standard MTP arguments:
+Thanks to Prova v0.5.0's MTP-Native execution, MTP arguments work identically whether you use `dotnet run`, `dotnet test`, or the raw executable.
 
 ```bash
-# Generate a TRX report
-dotnet test -- --report-trx
+# Discover 0ms static test registry tests
+dotnet run -- --list-tests
 
-# Filter by FullyQualifiedName
-dotnet test -- --filter "FullyQualifiedName~Calculator"
+# Generate a TRX report via dotnet test
+dotnet test --report-trx
+
+# Filter via tree node filter using the executable
+./bin/Debug/net10.0/MyTestProject --treenode-filter="*Calculator*"
 ```

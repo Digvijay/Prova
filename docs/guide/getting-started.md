@@ -36,11 +36,14 @@ Enable **Native AOT** and ensure the output type is `Exe`.
     </PropertyGroup>
 
     <ItemGroup>
-        <PackageReference Include="Prova" Version="0.4.0" />
+        <PackageReference Include="Prova" Version="0.5.0" />
     </ItemGroup>
 
 </Project>
 ```
+
+> [!NOTE]
+> Prova auto-generates a `Program.cs` entry point for you. If your project has a custom `Program.cs` you can delete it, or disable auto-generation by setting `<GenerateProgramFile>false</GenerateProgramFile>` in your `.csproj`.
 
 ## Writing Your First Test
 
@@ -48,7 +51,7 @@ Prova uses attributes you are likely familiar with (`[Fact]`, `[Theory]`) but li
 
 ```csharp
 using Prova;
-using Prova.Assertions;
+using Prova.Assertions; // Working as of v0.5.0!
 
 public class CalculatorTests
 {
@@ -71,17 +74,14 @@ public class CalculatorTests
 
 ## Running Tests
 
-Since your test project is a standard console app, you can run it directly or use `dotnet test`.
+Prova v0.5.0 runs natively on the Microsoft Testing Platform (MTP). You can run tests via standard CLI commands without any VSTest bridge:
 
 ```bash
+# Native Microsoft Testing Platform features
 dotnet test
-```
 
-Or run the executable directly for instant feedback:
-
-```bash
-# Faster run without MSBuild overhead
-./bin/Debug/net10.0/MyTestProject
+# Run as a self-executing console app for instant feedback
+dotnet run
 ```
 
 ## Next Steps

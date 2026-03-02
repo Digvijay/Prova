@@ -12,7 +12,7 @@ namespace Prova.Demo
         public void Test_Running_In_STA()
         {
             var apartment = Thread.CurrentThread.GetApartmentState();
-            Console.WriteLine($"[STA] Test running in: {apartment} (Thread ID: {Thread.CurrentThread.ManagedThreadId})");
+            Console.WriteLine($"[STA] Test running in: {apartment} (Thread ID: {Environment.CurrentManagedThreadId})");
             
             if (global::System.OperatingSystem.IsWindows())
             {
@@ -24,7 +24,7 @@ namespace Prova.Demo
         public void Test_Running_In_MTA_By_Default()
         {
             var apartment = Thread.CurrentThread.GetApartmentState();
-            Console.WriteLine($"[MTA] Test running in: {apartment} (Thread ID: {Thread.CurrentThread.ManagedThreadId})");
+            Console.WriteLine($"[MTA] Test running in: {apartment} (Thread ID: {Environment.CurrentManagedThreadId})");
         }
     }
 }

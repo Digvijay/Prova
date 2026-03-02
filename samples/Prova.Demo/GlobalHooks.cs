@@ -2,18 +2,21 @@ using Prova;
 using System;
 using System.Threading.Tasks;
 
-public static class GlobalHooksSample
+namespace Prova.Demo
 {
-    [BeforeEvery(HookScope.Test)]
-    public static void GlobalTestSetup()
+    public static class GlobalHooksSample
     {
-        Console.WriteLine("🌍 [Global] Before every test");
-    }
+        [BeforeEvery(HookScope.Test)]
+        public static void GlobalTestSetup()
+        {
+            Console.WriteLine("🌍 [Global] Before every test");
+        }
 
-    [BeforeEvery(HookScope.Class)]
-    public static async Task GlobalClassSetup()
-    {
-        Console.WriteLine("🌍 [Global] Before every class");
-        await Task.Delay(1);
+        [BeforeEvery(HookScope.Class)]
+        public static async Task GlobalClassSetup()
+        {
+            Console.WriteLine("🌍 [Global] Before every class");
+            await Task.Delay(1);
+        }
     }
 }

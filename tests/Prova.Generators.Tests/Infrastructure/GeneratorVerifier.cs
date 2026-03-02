@@ -44,16 +44,22 @@ namespace Prova.Generators.Tests
             var result = driver.GetRunResult();
 
             // 3. Verify
-            // Expect 1 generated source from execution
+            // The generator emits 2 sources: TestRunnerExecutor.g.cs and Program.g.cs
             var runResult = result.Results[0];
             
-            if (runResult.GeneratedSources.Length != 1)
+            if (runResult.GeneratedSources.Length < 1)
             {
-                // If 0, it means generator didn't run or find candidates
-                Assert.Fail($"Expected 1 generated source, but found {runResult.GeneratedSources.Length}. Parsing errors: {string.Join("\n", result.Diagnostics)}");
+                Assert.Fail($"Expected at least 1 generated source, but found {runResult.GeneratedSources.Length}. Parsing errors: {string.Join("\n", result.Diagnostics)}");
             }
 
-            var generatedSourceText = runResult.GeneratedSources[0].SourceText.ToString();
+            var executorSource = runResult.GeneratedSources.FirstOrDefault(s => s.HintName == "TestRunnerExecutor.g.cs");
+            if (executorSource.SourceText == null)
+            {
+                Assert.Fail($"TestRunnerExecutor.g.cs not found in generated sources. Found: {string.Join(", ", runResult.GeneratedSources.Select(s => s.HintName))}");
+                return;
+            }
+
+            var generatedSourceText = executorSource.SourceText!.ToString();
             
             // Normalize line endings for comparison
             var expected = expectedGeneratedSource.Replace("\r\n", "\n").Trim();
@@ -102,14 +108,22 @@ namespace Prova.Generators.Tests
             var result = driver.GetRunResult();
 
             // 3. Verify
+            // The generator emits 2 sources: TestRunnerExecutor.g.cs and Program.g.cs
             var runResult = result.Results[0];
             
-            if (runResult.GeneratedSources.Length != 1)
+            if (runResult.GeneratedSources.Length < 1)
             {
-                Assert.Fail($"Expected 1 generated source, but found {runResult.GeneratedSources.Length}. Diagnostics: {string.Join("\n", result.Diagnostics)}");
+                Assert.Fail($"Expected at least 1 generated source, but found {runResult.GeneratedSources.Length}. Diagnostics: {string.Join("\n", result.Diagnostics)}");
             }
 
-            var generatedSourceText = runResult.GeneratedSources[0].SourceText.ToString();
+            var executorSource = runResult.GeneratedSources.FirstOrDefault(s => s.HintName == "TestRunnerExecutor.g.cs");
+            if (executorSource.SourceText == null)
+            {
+                Assert.Fail($"TestRunnerExecutor.g.cs not found in generated sources. Found: {string.Join(", ", runResult.GeneratedSources.Select(s => s.HintName))}");
+                return;
+            }
+
+            var generatedSourceText = executorSource.SourceText!.ToString();
             var actual = generatedSourceText.Replace("\r\n", "\n").Trim();
 
             foreach (var snippet in expectedSnippets)

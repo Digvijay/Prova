@@ -45,7 +45,31 @@ public class MyTheoryTests
             var expectedSnippets = new[] {
                 "MyTheoryTests.Add",
                 "instance.Add(1, 2)",
-                "instance.Add(3, 4)"
+                "instance.Add(3, 4)",
+                "DisplayName = $\"MyTheoryTests.Add(1, 2)\"",
+                "DisplayName = $\"MyTheoryTests.Add(3, 4)\""
+            };
+            
+            GeneratorVerifier.VerifyContains(source, expectedSnippets);
+        }
+
+        [Fact]
+        public void Theory_WithStringData_GeneratesEscapedDisplayName()
+        {
+            var source = @"
+using Prova;
+using Xunit;
+
+public class MyTheoryTests
+{
+    [Theory]
+    [InlineData(""MethodRowA"")]
+    [InlineData(""Quote\""InSide"")]
+    public void TestWithString(string value) { }
+}";
+            var expectedSnippets = new[] {
+                "instance.TestWithString(\"MethodRowA\")",
+                "instance.TestWithString(\"Quote\\\"InSide\")"
             };
             
             GeneratorVerifier.VerifyContains(source, expectedSnippets);
@@ -106,6 +130,28 @@ public class MyRetryTests
 }";
             var expectedSnippets = new[] {
                 "RetryCount = 5"
+            };
+            
+            GeneratorVerifier.VerifyContains(source, expectedSnippets);
+        }
+        [Fact]
+        public void Theory_WithMemberData_GeneratesEscapedRowDisplay()
+        {
+            var source = @"
+using Prova;
+using System.Collections.Generic;
+
+public class MyMemberDataTests
+{
+    public static IEnumerable<object[]> GetTestData() => new List<object[]> { new object[] { 1, 2 } };
+
+    [Theory]
+    [MemberData(nameof(GetTestData))]
+    public void Add(int a, int b) { }
+}";
+            var expectedSnippets = new[] {
+                "string __rowDisplay = string.Join(\", \", dataRow);",
+                "DisplayName = $\"MyMemberDataTests.Add({__rowDisplay})\""
             };
             
             GeneratorVerifier.VerifyContains(source, expectedSnippets);

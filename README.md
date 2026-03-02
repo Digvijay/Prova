@@ -1,33 +1,50 @@
-# Prova 🇸🇪
+# Prova
 
 [![Build Status](https://img.shields.io/github/actions/workflow/status/Digvijay/Prova/ci.yml?branch=master)](https://github.com/Digvijay/Prova/actions)
 [![License](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
 [![NuGet](https://img.shields.io/nuget/v/Prova.svg)](https://www.nuget.org/packages/Prova)
 [![Docs](https://img.shields.io/badge/docs-prova.digvijay.dev-blue)](https://prova.digvijay.dev)
 
-**Prova** is a high-performance, Native AOT-compatible test runner for .NET. Use the xUnit syntax you already know, but with zero runtime reflection and instant startup.
+**Prova** is a high-performance, MTP-native testing framework for .NET 10. It uses the xUnit syntax you already know, but with zero runtime reflection and full Native AOT compatibility. Theories are "unrolled" at compile-time into parameterless test methods -- no boxing, no reflection, instant startup.
 
-📖 **[Read the full documentation →](https://prova.digvijay.dev)**
+[Read the full documentation](https://prova.digvijay.dev)
 
 ## Why Prova?
 
 ### 1. Zero Migration Cost
 Your tests remain exactly the same. Prova supports standard xUnit attributes (`[Fact]`, `[Theory]`, `[InlineData]`, `Assert`). You only change the runner.
 
-### 2. Native Performance
-Tests are discovered at compile-time using Source Generators and can be compiled to Native AOT. This eliminates runtime discovery costs and enables instant startup, making it ideal for high-frequency "inner loop" development or containerized CI environments.
+### 2. MTP-Native Execution
+Prova implements the [Microsoft Testing Platform](https://github.com/microsoft/testfx) (MTP) natively. This means full `dotnet test` support, TRX reporting, crash/hang dump collection, and code coverage -- all without a legacy VSTest bridge.
 
-### 3. Safe Parallelism
-Tests run in parallel by default (`Task.WhenAll`), utilizing all available cores.
+### 3. Theory Unrolling (Zero Reflection)
+Each `[InlineData]` row is statically compiled into its own parameterless test method by the Source Generator. There is zero boxing, zero `object[]` allocation, and zero reflection at runtime. This makes `[Theory]` tests fully Native AOT compatible.
+
+### 4. Self-Executing Test Projects
+Prova auto-generates a `Program.cs` entry point with UTF-8 output. Your test project is a self-executing console app from `dotnet new`. No boilerplate needed.
+
+### 5. Safe Parallelism
+Tests run in parallel by default (`Task.WhenAll`), utilizing all available cores. Use `[Parallel(max: N)]` to bound concurrency.
 
 ---
 
 ## Quick Start
 
-### 1. Install
-```bash
-dotnet add package Prova
+### 1. Create a Test Project
+
+```xml
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <TargetFramework>net10.0</TargetFramework>
+  </PropertyGroup>
+  <ItemGroup>
+    <PackageReference Include="Prova" Version="0.5.0" />
+  </ItemGroup>
+</Project>
 ```
+
+> **Note:** `<OutputType>Exe</OutputType>` and `<TargetFramework>net10.0</TargetFramework>` are required. Prova auto-generates the entry point -- you do not need a `Program.cs`.
 
 ### 2. Write Tests (Standard xUnit Syntax)
 ```csharp
@@ -52,18 +69,39 @@ public class CalculatorTests
 ```
 
 ### 3. Run
+
 ```bash
+# Run as a self-executing console app (fastest)
 dotnet run
+
+# Run via the Microsoft Testing Platform (supports --coverage, --report-trx, etc.)
+dotnet test
 ```
 
 ---
 
-## Microsoft Testing Platform (MTP) Support
+## Microsoft Testing Platform (MTP) CLI
 
-Prova integrates with the [Microsoft Testing Platform](https://github.com/microsoft/testfx). This enables support for `dotnet test`, TRX reporting, and code coverage without sacrificing AOT compatibility.
+Prova natively supports MTP CLI arguments. No adapters or bridges needed.
 
 ```bash
-dotnet test --coverage --report-trx
+# List all discovered tests (0ms discovery from static registry)
+dotnet run -- --list-tests
+
+# Filter tests by name
+dotnet run -- --treenode-filter="*Calculator*"
+
+# Generate TRX report
+dotnet test --report-trx
+
+# Collect code coverage
+dotnet test --coverage
+
+# Crash dump on failure
+dotnet test --crashdump
+
+# Hang dump with timeout
+dotnet test --hangdump --hangdump-timeout 30000
 ```
 
 ---

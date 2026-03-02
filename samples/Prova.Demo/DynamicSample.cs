@@ -33,7 +33,7 @@ namespace Prova.Demo
             // Generate a test that fails
             builder.Add("Dynamic.FailingTest", () =>
             {
-                throw new Exception("This dynamic test is designed to fail.");
+                throw new InvalidOperationException("This dynamic test is designed to fail.");
             })
             .WithSkip("Skipping this failing dynamic test for now")
             .WithDescription("A test that would fail if not skipped");

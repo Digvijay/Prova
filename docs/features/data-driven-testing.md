@@ -107,5 +107,12 @@ public class StorageTests
 > [!TIP]
 > You can combine Class-Level Data with Method-Level Theories. If a class has 2 data rows and a method has 3 data rows, the method will run a total of 6 times (2 * 3).
 
-## 🚀 Performance Note
-Because Prova is a source-generated runner, all data-driven tests are expanded at compile-time into individual test registrations (when possible) or iterated at runtime using the generated loops. This ensures maximum performance and full AOT compatibility.
+## 🚀 Performance Note: Theory Unrolling
+Because Prova is a source-generated runner, `[Theory]` + `[InlineData]` combinations are subject to **Theory Unrolling** (introduced in v0.5.0). 
+
+Each `[InlineData]` row is explicitly "unrolled" into a separate, statically generated, parameterless test method at compile-time. This guarantees:
+- **Zero Reflection at runtime**
+- **Zero Boxed array allocations (`object[]`)**
+- **Full Native AOT compatibility**
+
+For dynamic data sources like `[MemberData]` or `[ClassData]`, Prova generates efficient runtime execution loops, heavily minimizing reflection usage compared to traditional test runners.

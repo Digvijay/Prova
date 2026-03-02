@@ -10,7 +10,6 @@ public class GenericStorageTests<T>
     [Fact]
     public void Storage_Can_Handle_Type()
     {
-        var item = default(T);
         // In a real test, we would do more, but here we just prove it runs
         Console.WriteLine($"Running storage test for type: {typeof(T).Name}");
     }

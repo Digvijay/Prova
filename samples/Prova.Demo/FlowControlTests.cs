@@ -8,7 +8,7 @@ namespace Prova.Demo
 {
     public class FlowControlTests
     {
-        private static int _repeatCounter = 0;
+        private static int _repeatCounter;
 
         [Fact]
         [Repeat(3)]

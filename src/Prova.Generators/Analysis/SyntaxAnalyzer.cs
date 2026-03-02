@@ -970,7 +970,7 @@ namespace Prova.Generators.Analysis
             }
             
             var value = constant.Value;
-            if (value is string s) return $"\"{s}\"";
+    if (value is string s) return $"\"{s.Replace("\\", "\\\\").Replace("\"", "\\\"").Replace("\n", "\\n").Replace("\r", "\\r")}\"";
             if (value is bool b) return b ? "true" : "false";
             if (value is float f) return $"{f}f";
             if (value is double d) return $"{d}d";

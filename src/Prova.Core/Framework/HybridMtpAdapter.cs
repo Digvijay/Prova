@@ -47,11 +47,11 @@ namespace Prova
         /// <inheritdoc />
         public string Uid => "Prova";
         /// <inheritdoc />
-        public string Version => "0.2.0";
+        public string Version => "0.5.0";
         /// <inheritdoc />
         public string DisplayName => "Prova";
         /// <inheritdoc />
-        public string Description => "High-Performance, Zero-Reflection Testing for .NET 10";
+        public string Description => "MTP-Native, Zero-Reflection Testing for .NET 10";
 
         /// <inheritdoc />
         public Type[] DataTypesProduced => new[] { typeof(TestNodeUpdateMessage) };

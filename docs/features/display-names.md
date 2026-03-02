@@ -45,6 +45,18 @@ public void UserTest([Matrix("Alice", "Bob")] string user, [Matrix(true, false)]
 }
 ```
 
+## Emojis in Display Names
+
+Thanks to Prova's auto-generated entry point (introduced in v0.5.0), the console's `OutputEncoding` and `InputEncoding` are forced to `UTF-8`. This means you can safely use emojis in `[DisplayName]` or string arguments, and they will render perfectly across Windows Terminal, PowerShell, and bash without mangling!
+
+```csharp
+[Fact]
+[DisplayName("🔌 Database Initialization Test")]
+public void Setup_Database()
+{
+}
+```
+
 ## Best Practices
 
 - Use display names to describe the **scenario** being tested rather than the technical method name.

@@ -3,7 +3,7 @@
     <Authors>Digvijay Chauhan</Authors>
     <Company>Digvijay Chauhan</Company>
     <Product>Prova</Product>
-    <Version>0.4.0</Version>
+    <Version>0.5.0</Version>
     <Copyright>Copyright © 2026 Digvijay Chauhan</Copyright>
     <PackageLicenseExpression>MIT</PackageLicenseExpression>
     <RepositoryUrl>https://github.com/Digvijay/Prova</RepositoryUrl>
@@ -24,7 +24,7 @@
     <AnalysisLevel>latest</AnalysisLevel>
     <AnalysisMode>Recommended</AnalysisMode>
     <EnforceCodeStyleInBuild>true</EnforceCodeStyleInBuild>
-    <NoWarn>$(NoWarn);CA1707;CA1822</NoWarn>
+    <NoWarn>$(NoWarn);CA1707;CA1822;NU5104</NoWarn>
     
     <!-- Deterministic Builds -->
     <Deterministic>true</Deterministic>

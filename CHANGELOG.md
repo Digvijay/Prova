@@ -1,5 +1,33 @@
 # Changelog
 
+## [v0.5.0] - MTP-Native Theory Unrolling
+
+**Released:** 2026-03-02
+
+This release upgrades Prova to a .NET 10 "MTP-Native" testing framework with zero-reflection execution and a streamlined onboarding experience.
+
+### Breaking Changes
+-   Prova now auto-generates `Program.g.cs`. If you have a custom `Program.cs`, set `<GenerateProgramFile>false</GenerateProgramFile>` in your `.csproj` to avoid conflicts, or remove your custom entry point.
+-   The `.csproj` for test projects now requires `<OutputType>Exe</OutputType>` (set automatically by `Prova.props`).
+
+### Bug Fixes
+-   **Theory Unrolling**: Fixed the v0.4.0 bug where `[Theory]` + `[InlineData]` could fail under Native AOT. Each `[InlineData]` row is now "unrolled" into a unique, statically-generated, parameterless test method at compile-time. Display names now show actual data values (e.g., `Add(1, 2, 3)`) instead of the opaque `Row_N` format.
+-   **String Quote Escaping**: Fixed a compile error in generated code when string items in `[InlineData]` contained quotes (`"`). They are now properly escaped into valid C# literals (`\"`).
+
+### New Features
+-   **MTP-Native Execution**: Replaced the legacy VSTest bridge with a native Microsoft Testing Platform (MTP) execution model. All MTP CLI arguments (`--list-tests`, `--report-trx`, `--coverage`, `--filter`, `--crashdump`, `--hangdump`) are natively supported.
+-   **Static TestRegistry**: The generator now emits a `TestRegistry` class with `Count` and `Discover()` methods, providing a 0ms discovery phase by serving a pre-compiled list of tests to the MTP host.
+-   **Auto-Generated Entry Point**: If no `Main` method is detected, the generator emits a `Program.g.cs` containing `await Prova.TestRunnerExecutor.RunAllAsync(args)`, making the test project a self-executing console app by default.
+-   **`Prova.Assertions` Namespace**: The `Prova.Assertions` namespace is now correctly exported, so `using Prova.Assertions;` works immediately as per documentation.
+-   **UTF-8 Encoding**: The generated entry point forces `Console.OutputEncoding = Encoding.UTF8` to prevent emoji mangling in `[DisplayName]` across PowerShell, bash, and zsh.
+
+### Documentation
+-   **README Overhaul**: Rewritten Getting Started guide reflecting `<OutputType>Exe</OutputType>` and `<TargetFramework>net10.0</TargetFramework>` requirements.
+-   **MTP CLI Docs**: Documented MTP-powered CLI arguments (`--list-tests`, `--report-trx`, `--coverage`, `--filter`, `--crashdump`, `--hangdump`).
+
+---
+
+
 ## [v0.4.0] - The Integrations Update 🔌
 
 **Released:** 2026-02-20
