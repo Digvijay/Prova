@@ -14,8 +14,13 @@
     <Project Path="tests/Prova.Generators.Tests/Prova.Generators.Tests.csproj" />
   </Folder>
   <Folder Name="/samples/">
+    <Project Path="samples/CrashSample/CrashSample.csproj" />
+    <Project Path="samples/HangSample/HangSample.csproj" />
     <Project Path="samples/LoggingSample/LoggingSample.csproj" />
     <Project Path="samples/Prova.AspNetCore.Sample/Prova.AspNetCore.Sample.csproj" />
+    <Project Path="samples/Prova.Aspire.Sample/Prova.Aspire.Sample.AppHost/Prova.Aspire.Sample.AppHost.csproj" />
+    <Project Path="samples/Prova.Aspire.Sample/Prova.Aspire.Sample.ServiceDefaults/Prova.Aspire.Sample.ServiceDefaults.csproj" />
+    <Project Path="samples/Prova.Aspire.Sample/Prova.Aspire.Sample.Tests/Prova.Aspire.Sample.Tests.csproj" />
     <Project Path="samples/Prova.Demo/Prova.Demo.csproj" />
     <Project Path="samples/Prova.FsCheck.Sample/Prova.FsCheck.Sample.csproj" />
     <Project Path="samples/Prova.MtpSample/Prova.MtpSample.csproj" />

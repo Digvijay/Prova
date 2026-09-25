@@ -20,9 +20,22 @@ namespace Prova
     /// </summary>
     public sealed class HybridMtpAdapter : ITestFramework, IDataProducer
     {
-        private readonly IEnumerable<ProvaTest> _tests;
+        private readonly IReadOnlyList<ProvaTest> _tests;
         private readonly ITestFrameworkCapabilities _capabilities;
         private readonly Configuration.ProvaConfig _config;
+
+        /// <summary>
+        /// The stable, unique MTP identity of each test, assigned once per run.
+        /// </summary>
+        /// <remarks>
+        /// Previously the display name was used directly as the <c>TestNodeUid</c>. Display names
+        /// carry no uniqueness guarantee: a <c>[DisplayName("...")]</c> whose format string has no
+        /// placeholders yields byte-identical names for every row of a <c>[Theory]</c>, so the
+        /// rows collided into a single node and all but one result was lost. Identity now comes
+        /// from the structural name, and genuinely identical registrations are disambiguated with
+        /// a deterministic ordinal suffix.
+        /// </remarks>
+        private readonly Dictionary<ProvaTest, string> _testUids = new Dictionary<ProvaTest, string>(ReferenceEqualityComparer.Instance);
 
         /// <summary>
         /// Initializes a new instance of the <see cref="HybridMtpAdapter"/> class.
@@ -30,10 +43,33 @@ namespace Prova
         /// <param name="tests">The collection of Prova tests to execute.</param>
         /// <param name="capabilities">The test framework capabilities.</param>
         public HybridMtpAdapter(IEnumerable<ProvaTest> tests, ITestFrameworkCapabilities capabilities)
+            : this(tests, capabilities, null)
         {
-            _tests = tests;
+        }
+
+        /// <summary>
+        /// Initializes a new instance of the <see cref="HybridMtpAdapter"/> class, applying any
+        /// name filters supplied on the command line.
+        /// </summary>
+        /// <param name="tests">The collection of Prova tests to execute.</param>
+        /// <param name="capabilities">The test framework capabilities.</param>
+        /// <param name="commandLineOptions">
+        /// The parsed command line, or <see langword="null"/> when the host does not supply one.
+        /// </param>
+        public HybridMtpAdapter(
+            IEnumerable<ProvaTest> tests,
+            ITestFrameworkCapabilities capabilities,
+            Microsoft.Testing.Platform.CommandLine.ICommandLineOptions? commandLineOptions)
+        {
+            // Materialise once. The UID assignment below and every later pass must see the same
+            // instances in the same order, which a lazily generated sequence would not guarantee.
+            var allTests = tests as IReadOnlyList<ProvaTest> ?? tests.ToList();
+
+            _tests = TestFilter.Apply(allTests, commandLineOptions);
             _capabilities = capabilities;
             _config = Configuration.ConfigLoader.Load();
+
+            AssignTestUids();
 
             // Merge Global Properties from config
             foreach (var test in _tests)
@@ -45,10 +81,54 @@ namespace Prova
             }
         }
 
+        private void AssignTestUids()
+        {
+            var occurrences = new Dictionary<string, int>(StringComparer.Ordinal);
+
+            foreach (var test in _tests)
+            {
+                // Fall back through progressively weaker identities so a hand-built ProvaTest,
+                // which the generator did not produce, still gets a usable identity.
+                var identity = test.UniqueName ?? test.FullName ?? test.DisplayName;
+
+                if (occurrences.TryGetValue(identity, out var seen))
+                {
+                    occurrences[identity] = seen + 1;
+                    _testUids[test] = identity + "#" + (seen + 1).ToString(global::System.Globalization.CultureInfo.InvariantCulture);
+                }
+                else
+                {
+                    occurrences[identity] = 1;
+                    _testUids[test] = identity;
+                }
+            }
+        }
+
+        /// <summary>
+        /// Gets the stable identifier this adapter reports to the test platform for a test.
+        /// </summary>
+        /// <param name="test">A test belonging to this adapter.</param>
+        /// <returns>
+        /// The identifier, or <see langword="null"/> if the test is not one this adapter holds —
+        /// which is the case when a filter excluded it.
+        /// </returns>
+        /// <remarks>
+        /// Exposed so that the uniqueness of these identifiers can be asserted directly. Editors
+        /// and CI systems key a test's history off this value, so two tests sharing one identifier
+        /// silently merge into a single result.
+        /// </remarks>
+        public string? GetTestUid(ProvaTest test)
+            => test is not null && _testUids.TryGetValue(test, out var uid) ? uid : null;
+
+        /// <summary>
+        /// Gets the tests this adapter will run, after any command-line filter has been applied.
+        /// </summary>
+        public IReadOnlyList<ProvaTest> Tests => _tests;
+
         /// <inheritdoc />
         public string Uid => "Prova";
         /// <inheritdoc />
-        public string Version => "0.5.0";
+        public string Version => ProvaVersion.Value;
         /// <inheritdoc />
         public string DisplayName => "Prova";
         /// <inheritdoc />
@@ -257,11 +337,15 @@ namespace Prova
             await messageBus.PublishAsync(this, new TestNodeUpdateMessage(sessionUid, node));
         }
 
-        private static TestNode MapToNode(ProvaTest test)
+        private TestNode MapToNode(ProvaTest test)
         {
+            var uid = _testUids.TryGetValue(test, out var assigned)
+                ? assigned
+                : test.UniqueName ?? test.FullName ?? test.DisplayName;
+
             var node = new TestNode
             {
-                Uid = new Microsoft.Testing.Platform.Extensions.Messages.TestNodeUid(test.DisplayName),
+                Uid = new Microsoft.Testing.Platform.Extensions.Messages.TestNodeUid(uid),
                 DisplayName = test.DisplayName,
                 Properties = new PropertyBag()
             };

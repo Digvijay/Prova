@@ -15,6 +15,11 @@ namespace Prova.Assertions
 
         /// <summary>Verifies that two objects are equal.</summary>
         public static void Equal<T>(T expected, T actual) => Prova.Assert.Equal(expected, actual);
+        /// <summary>Verifies that two objects are not equal.</summary>
+        /// <typeparam name="T">The type of the values being compared.</typeparam>
+        /// <param name="expected">The value the actual value must differ from.</param>
+        /// <param name="actual">The actual value.</param>
+        public static void NotEqual<T>(T expected, T actual) => Prova.Assert.NotEqual(expected, actual);
 
         /// <summary>Verifies that an object is null.</summary>
         public static void Null(object? item) => Prova.Assert.Null(item);

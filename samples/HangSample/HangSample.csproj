@@ -1,15 +1,28 @@
 <Project Sdk="Microsoft.NET.Sdk">
+
+  <!--
+    A sample that deliberately hangs, used to exercise the hang dump provider.
+
+    It is a member of the solution so that it is compiled on every build and included in the
+    vulnerability audit; a project outside the build graph is also outside the audit. It is not a
+    testing-platform application, so `dotnet test` will not attempt to run it — which is the point,
+    because running it would never terminate.
+  -->
+
   <PropertyGroup>
     <OutputType>Exe</OutputType>
-    <TargetFramework>net10.0</TargetFramework>
+    <TargetFrameworks>$(ToolkitAppTargetFrameworks)</TargetFrameworks>
     <ImplicitUsings>enable</ImplicitUsings>
     <Nullable>enable</Nullable>
+    <IsPackable>false</IsPackable>
     <GenerateTestingPlatformEntryPoint>false</GenerateTestingPlatformEntryPoint>
     <TestingPlatformDotnetTestSupport>false</TestingPlatformDotnetTestSupport>
+    <IsTestingPlatformApplication>false</IsTestingPlatformApplication>
   </PropertyGroup>
 
   <ItemGroup>
     <ProjectReference Include="..\..\src\Prova.Core\Prova.Core.csproj" />
     <ProjectReference Include="..\..\src\Prova.Generators\Prova.Generators.csproj" OutputItemType="Analyzer" ReferenceOutputAssembly="false" />
   </ItemGroup>
+
 </Project>

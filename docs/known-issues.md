@@ -209,29 +209,120 @@ in the solution. There was no coverage, no format check and no preview leg.
 solution, collects coverage, verifies formatting, packs, uploads artifacts, and has an advisory
 net11.0 preview leg.
 
+## Severity 5 — usability, identity and the audit boundary
+
+### 22. The MTP adapter supported no name-based test filtering
+
+`dotnet test --filter-method '*Foo*'` was rejected with *"Unknown option '--filter-method'"* and
+exited 5 having run nothing. Only `--filter-uid` was offered, and a UID is not discoverable without
+first listing the tests. Investigating a single failure meant running the whole project and reading
+the output.
+
+**Fixed.** `ProvaFilterCommandLineProvider` adds `--filter-name`, `--filter-class` and
+`--filter-method`. Patterns support `*` and `?`; a pattern with no wildcard matches as a substring,
+which is what someone typing a bare method name expects. Repeating an option is a disjunction,
+combining different options is a conjunction, and every pattern is escaped so that the brackets and
+parentheses that appear in data-row names are matched literally rather than reinterpreted as a
+regular expression.
+
+The filter is applied on **both** emission paths — the platform host and the standalone runner.
+Prova has previously shipped a feature on one path and not the other (defect 7), so the matching
+code is shared rather than written twice. On the standalone path the filter's *value* is also
+removed from the argument list, because that runner treats any bare argument as a keyword filter and
+would otherwise narrow the run a second time, by a different rule, without saying so.
+
+The options appear in `--help` and `--info` alongside the platform's own.
+
+### 23. `MapToNode` used `DisplayName` as `TestNodeUid`
+
+Recorded previously as "not yet proven to be reachable in practice". It is reachable trivially: a
+`[DisplayName]` containing no format placeholders produces `string.Format("Adds numbers", 1, 2)` —
+the same string for every row of a `[Theory]`. Every row was therefore reported under one node
+identity and the rows collapsed into a single node, so a failing row could be reported as passing
+because a later row overwrote its result. Editors and CI systems key a test's history off this
+value.
+
+**Fixed.** `ProvaTest.UniqueName` now carries a structural name that the generator always emits —
+class, method and the default row suffix — independently of any `[DisplayName]`. A label the user is
+free to make ambiguous must never be a test's identity. The adapter assigns node identities from
+that name and, for registrations built by hand or by an older generator, disambiguates genuine
+collisions with a deterministic `#2`, `#3` ordinal rather than letting two tests share one
+identifier.
+
+### 24. `Prova.Aspire.Sample` was recorded as an empty directory
+
+**This entry was wrong, and the way it was wrong matters.** The directory is not empty: it holds
+three git-tracked projects — an Aspire app host, a service-defaults library and a test project.
+They were in no solution, so nothing compiled them and nobody looked at them.
+
+Bringing them into the solution immediately surfaced what had been hidden: a missing
+`Aspire.AppHost.Sdk` import, duplicated `<Nullable>` elements, Aspire 9.0.0 against the 13.x used
+elsewhere in the programme, `TreatWarningsAsErrors` switched off, `IsTestingPlatformApplication`
+inverted — defect 2, recurring — and, on restore, **NU1902 advisories on `KubernetesClient` and
+`OpenTelemetry.Api`**.
+
+That last point is the general lesson, and it is sharper than the one recorded earlier in this
+document:
+
+> A project outside the build graph is also outside the audit.
+
+The claim that restore was clean across the repository had been true only of projects a solution
+knew about. It is now true of the repository.
+
+**Fixed.** All three projects updated to Aspire 13.5.4, OpenTelemetry 1.19.0 and Extensions 10.10.0,
+ASPIRE004 and ASPIRE010 resolved explicitly rather than suppressed wholesale, and all three added to
+both solution files. The test project keeps `IsTestingPlatformApplication=false` deliberately — it
+needs a container runtime — but is now compiled and audited on every build.
+
+### 25. Two solution files drifted apart, and two more projects were in neither
+
+`Prova.sln` and `Prova.slnx` both exist and nothing kept them in step. The `.slnx` was three
+projects behind. Worse, `CrashSample` and `HangSample` were in *neither* file.
+
+Both samples had been broken for some time: each declared `public static async Task Main` and then
+wrote `return await ...`, which is `CS1997`. **They did not compile.** Nobody knew, because nothing
+built them.
+
+**Fixed.** Both samples compile again, target the shared framework set, and are members of both
+solutions with `IsTestingPlatformApplication=false` so that `dotnet test` does not try to run a
+sample whose entire purpose is to crash or to hang. `SolutionParityTests` now asserts that the two
+solution files list the same projects and that no project on disk is absent from a solution — the
+check that found these two, and the check that stops the next one.
+
+### 26. `Assert.Equal` compared collections by reference
+
+`Assert.Equal(new[] { 1, 2 }, new[] { 1, 2 })` **failed**. The assertion delegated to
+`EqualityComparer<T>.Default`, which compares arrays and lists by reference. Every other .NET test
+framework compares sequences element by element. An assertion that fails on equal input is worse
+than no assertion at all, because it teaches people to distrust the failure rather than the code.
+
+There was also no `Assert.NotEqual` at all, which pushed people towards `Assert.False(a == b)` — an
+assertion whose failure message says nothing about what the values actually were.
+
+**Fixed.** `Assert.Equal` compares collections element by element, recursing into nested ones, while
+still treating strings as strings. `Assert.NotEqual` is its exact opposite rather than a second,
+subtly different notion of equality. Failure messages now render collection contents, so a message
+reads `Expected: [1, 2]` rather than `Expected: System.Int32[]`.
+
+### 27. The adapter reported a hardcoded, stale version
+
+`HybridMtpAdapter.Version` returned the literal `"0.5.0"` while the package was at 0.6.0.
+
+**Fixed.** The version is read from assembly metadata. Anything a human has to remember to update
+twice eventually disagrees with itself.
+
+### 28. `--info` was not routed to the platform host
+
+The generated entry point decides between the platform host and the standalone runner by inspecting
+the arguments. `--info` was missing from that list, so asking the runner to describe itself silently
+ran the entire test suite instead.
+
+**Fixed.** `--info` now routes to the platform host, where it reports Prova's own extension and
+version alongside the platform's.
+
 ## Open
 
-### 22. The MTP adapter supports no name-based test filtering
-
-`dotnet test --filter-method '*Foo*'` is rejected with *"Unknown option '--filter-method'"* and
-exits 5 having run nothing. Only `--filter-uid` is offered, and UIDs are not discoverable without
-first listing tests. Investigating a single failure currently means running the whole project and
-reading the output.
-
-**Not fixed.** This is a usability gap rather than a correctness bug, but it is the single most
-likely thing to frustrate a new contributor.
-
-### 23. `MapToNode` uses `DisplayName` as `TestNodeUid`
-
-Display names are not guaranteed unique, particularly across data-driven rows in different
-classes. If two tests produce the same display name their MTP node identities collide. Not yet
-proven to be reachable in practice, and recorded here rather than left unmentioned.
-
-### 24. `Prova.Aspire.Sample` is an empty directory
-
-It contains no project file. Either the sample was never written or it was removed without
-deleting the folder.
-
+Nothing is open in Prova.
 ## Verification
 
 | Framework | Result |

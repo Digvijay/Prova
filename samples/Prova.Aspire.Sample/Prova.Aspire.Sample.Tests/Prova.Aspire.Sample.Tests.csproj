@@ -6,21 +6,32 @@
     <ImplicitUsings>enable</ImplicitUsings>
     <Nullable>enable</Nullable>
     <IsTestProject>true</IsTestProject>
+
+    <!-- Prova's generator emits the entry point, so the platform must not emit its own. -->
     <GenerateTestingPlatformEntryPoint>false</GenerateTestingPlatformEntryPoint>
-    <TestingPlatformDotnetTestSupport>false</TestingPlatformDotnetTestSupport>
-    <UseMicrosoftTestingPlatformRunner>true</UseMicrosoftTestingPlatformRunner>
+
+    <!--
+      Deliberately excluded from the solution-wide `dotnet test` run, in the same way as
+      CrashSample and HangSample. This sample starts a real Redis container through
+      Aspire, so it cannot run on a machine without a container runtime and would fail the
+      build for reasons unrelated to Prova.
+
+      It is still in the solution so that it is compiled, analysed and dependency-audited on
+      every CI run. Run it explicitly, with a container runtime available:
+
+          dotnet run (project: samples/Prova.Aspire.Sample/Prova.Aspire.Sample.Tests)
+    -->
     <IsTestingPlatformApplication>false</IsTestingPlatformApplication>
-    <TreatWarningsAsErrors>false</TreatWarningsAsErrors>
   </PropertyGroup>
 
   <ItemGroup>
     <ProjectReference Include="..\..\..\src\Prova.Core\Prova.Core.csproj" />
     <ProjectReference Include="..\..\..\src\Prova.Generators\Prova.Generators.csproj" OutputItemType="Analyzer" ReferenceOutputAssembly="false" />
-    <ProjectReference Include="..\Prova.Aspire.Sample.AppHost\Prova.Aspire.Sample.AppHost.csproj" />
+    <ProjectReference Include="..\Prova.Aspire.Sample.AppHost\Prova.Aspire.Sample.AppHost.csproj" IsAspireProjectResource="false" />
   </ItemGroup>
 
   <ItemGroup>
-    <PackageReference Include="Aspire.Hosting.Testing" Version="9.0.0" />
+    <PackageReference Include="Aspire.Hosting.Testing" Version="13.5.4" />
   </ItemGroup>
 
 </Project>

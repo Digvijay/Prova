@@ -142,12 +142,120 @@ namespace Prova
         }
 
         /// <summary>Verifies that two objects are equal.</summary>
+        /// <typeparam name="T">The type of the values being compared.</typeparam>
+        /// <param name="expected">The expected value.</param>
+        /// <param name="actual">The actual value.</param>
+        /// <remarks>
+        /// Collections are compared element by element. The default equality comparer compares
+        /// arrays and lists by reference, so <c>Assert.Equal(new[] { 1, 2 }, new[] { 1, 2 })</c>
+        /// would otherwise fail — an assertion that fails on equal input is worse than no
+        /// assertion at all, because it teaches people to distrust the failure.
+        /// </remarks>
         public static void Equal<T>(T expected, T actual)
         {
-            if (!System.Collections.Generic.EqualityComparer<T>.Default.Equals(expected, actual))
+            if (!AreEqual(expected, actual))
             {
-                throw new AssertException($"Assert.Equal() Failure\nExpected: {expected}\nActual:   {actual}");
+                throw new AssertException($"Assert.Equal() Failure\nExpected: {Describe(expected)}\nActual:   {Describe(actual)}");
             }
+        }
+
+        /// <summary>Verifies that two objects are not equal.</summary>
+        /// <typeparam name="T">The type of the values being compared.</typeparam>
+        /// <param name="expected">The value the actual value must differ from.</param>
+        /// <param name="actual">The actual value.</param>
+        /// <remarks>
+        /// Uses the same collection-aware comparison as <see cref="Equal{T}"/>, so the two are
+        /// exact opposites rather than two subtly different notions of equality.
+        /// </remarks>
+        public static void NotEqual<T>(T expected, T actual)
+        {
+            if (AreEqual(expected, actual))
+            {
+                throw new AssertException($"Assert.NotEqual() Failure\nExpected: not {Describe(expected)}\nActual:       {Describe(actual)}");
+            }
+        }
+
+        private static bool AreEqual<T>(T expected, T actual)
+        {
+            // Strings are enumerable, but comparing them character by character would only lose
+            // the far better message the default comparer already produces.
+            if (expected is not string
+                && expected is System.Collections.IEnumerable expectedSequence
+                && actual is System.Collections.IEnumerable actualSequence)
+            {
+                return SequencesEqual(expectedSequence, actualSequence);
+            }
+
+            return System.Collections.Generic.EqualityComparer<T>.Default.Equals(expected, actual);
+        }
+
+        private static bool SequencesEqual(System.Collections.IEnumerable expected, System.Collections.IEnumerable actual)
+        {
+            var expectedEnumerator = expected.GetEnumerator();
+            var actualEnumerator = actual.GetEnumerator();
+
+            try
+            {
+                while (true)
+                {
+                    var hasExpected = expectedEnumerator.MoveNext();
+                    var hasActual = actualEnumerator.MoveNext();
+
+                    if (hasExpected != hasActual)
+                    {
+                        return false;
+                    }
+
+                    if (!hasExpected)
+                    {
+                        return true;
+                    }
+
+                    // Recurse so that nested collections compare by value too.
+                    if (!AreEqual<object?>(expectedEnumerator.Current, actualEnumerator.Current))
+                    {
+                        return false;
+                    }
+                }
+            }
+            finally
+            {
+                (expectedEnumerator as IDisposable)?.Dispose();
+                (actualEnumerator as IDisposable)?.Dispose();
+            }
+        }
+
+        private static string Describe(object? value)
+        {
+            if (value is null)
+            {
+                return "null";
+            }
+
+            if (value is string text)
+            {
+                return text;
+            }
+
+            if (value is System.Collections.IEnumerable sequence)
+            {
+                var items = new System.Collections.Generic.List<string>();
+                foreach (var item in sequence)
+                {
+                    items.Add(Describe(item));
+
+                    // A failure message is for reading, not for dumping the whole collection.
+                    if (items.Count == 10)
+                    {
+                        items.Add("...");
+                        break;
+                    }
+                }
+
+                return "[" + string.Join(", ", items) + "]";
+            }
+
+            return value.ToString() ?? "null";
         }
 
         /// <summary>Verifies that an object is null.</summary>

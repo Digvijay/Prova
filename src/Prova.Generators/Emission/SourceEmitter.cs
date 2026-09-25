@@ -191,7 +191,7 @@ namespace Prova.Generators.Emission
             sb.AppendLine("                args ??= global::System.Array.Empty<string>();");
             sb.AppendLine("                bool hasCoverage = args.Any(a => a == \"--coverage\");");
             sb.AppendLine("                var filteredArgs = args.Where(a => a != \"--coverage\").ToArray();");
-            sb.AppendLine("                bool isMtp = args.Any(a => a == \"--list-tests\" || a == \"--server\" || a.StartsWith(\"--client-port\") || a == \"--report-trx\" || hasCoverage || a == \"--help\" || a == \"-?\" || a == \"-h\" || a == \"--crashdump\" || a == \"--hangdump\" || a.StartsWith(\"--hangdump-timeout\"));");
+            sb.AppendLine("                bool isMtp = args.Any(a => a == \"--list-tests\" || a == \"--server\" || a.StartsWith(\"--client-port\") || a == \"--report-trx\" || hasCoverage || a == \"--help\" || a == \"-?\" || a == \"-h\" || a == \"--info\" || a == \"--crashdump\" || a == \"--hangdump\" || a.StartsWith(\"--hangdump-timeout\"));");
             sb.AppendLine();
             sb.AppendLine("                if (isMtp)");
             sb.AppendLine("                {");
@@ -235,9 +235,15 @@ namespace Prova.Generators.Emission
             sb.AppendLine("            var builder = await global::Microsoft.Testing.Platform.Builder.TestApplication.CreateBuilderAsync(args);");
             sb.AppendLine("            builder.AddCrashDumpProvider();");
             sb.AppendLine("            builder.AddHangDumpProvider();");
+            sb.AppendLine("            // Name-based filtering. The platform only offers --filter-uid, and a UID");
+            sb.AppendLine("            // cannot be guessed without listing the tests first.");
+            sb.AppendLine("            builder.CommandLine.AddProvider(() => new global::Prova.ProvaFilterCommandLineProvider());");
             sb.AppendLine("            builder.RegisterTestFramework(");
             sb.AppendLine("                _ => new ProvaCapabilities(),");
-            sb.AppendLine("                (cap, _) => new HybridMtpAdapter(GetTests(), cap));");
+            sb.AppendLine("                (cap, sp) => new HybridMtpAdapter(");
+            sb.AppendLine("                    GetTests(),");
+            sb.AppendLine("                    cap,");
+            sb.AppendLine("                    (global::Microsoft.Testing.Platform.CommandLine.ICommandLineOptions?)sp.GetService(typeof(global::Microsoft.Testing.Platform.CommandLine.ICommandLineOptions))));");
             sb.AppendLine("            using var app = await builder.BuildAsync();");
             sb.AppendLine("            int exitCode = await app.RunAsync();");
             sb.AppendLine();
@@ -267,6 +273,10 @@ namespace Prova.Generators.Emission
             sb.AppendLine("                    if (!test.Properties.ContainsKey(prop.Key)) test.Properties[prop.Key] = prop.Value;");
             sb.AppendLine("                }");
             sb.AppendLine("            }");
+            sb.AppendLine("            ");
+            sb.AppendLine("            // Name filtering, applied before anything else so that the value of a");
+            sb.AppendLine("            // filter option is never also read as a bare keyword below.");
+            sb.AppendLine("            activeTests = global::Prova.TestFilter.Apply(activeTests, args, out args).ToList();");
             sb.AppendLine("            ");
             sb.AppendLine("            // CLI Filtering logic");
             sb.AppendLine("            var filterArgs = args.Where(a => a.StartsWith(\"--filter=\")).Select(a => a.Substring(\"--filter=\".Length)).ToList();");
@@ -1162,7 +1172,14 @@ namespace Prova.Generators.Emission
                 displayNameExpr = "$\"" + concreteClassName + "." + concreteMethodName + escapedSuffix + "\"";
             }
 
+            // The structural name is always the default display name, whether or not the user
+            // supplied a [DisplayName]. It is what gives each registration a distinct identity;
+            // a custom display name may legitimately be identical across every data row.
+            var structuralSuffix = displayNameSuffix.Replace("\"", "\\\"");
+            var uniqueNameExpr = "$\"" + concreteClassName + "." + concreteMethodName + structuralSuffix + "\"";
+
             sb.AppendLine($"                DisplayName = {displayNameExpr},");
+            sb.AppendLine($"                UniqueName = {uniqueNameExpr},");
             sb.AppendLine($"                FullName = $\"{concreteClassName}.{concreteMethodName}\",");
             sb.AppendLine($"                ClassName = \"{concreteClassName}\",");
             sb.AppendLine($"                CoverageId = {probeId},");

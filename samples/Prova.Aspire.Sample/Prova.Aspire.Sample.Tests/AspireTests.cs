@@ -4,38 +4,44 @@ using Prova;
 
 namespace Prova.Aspire.Sample.Tests
 {
+    /// <summary>
+    /// Demonstrates running Prova against a .NET Aspire distributed application.
+    /// </summary>
+    /// <remarks>
+    /// This sample starts a real Redis container, so it requires a container runtime and is
+    /// excluded from the solution-wide test run. See the project file for how to run it.
+    /// </remarks>
     public class AspireTests : IAsyncLifetime
     {
         private DistributedApplication? _app;
 
+        private DistributedApplication App =>
+            _app ?? throw new InvalidOperationException(
+                $"{nameof(InitializeAsync)} did not run, so the distributed application was never started.");
+
         public async Task InitializeAsync()
         {
-            // Create the builder wrapped in a way suitable for tests
-            // Note: DistributedApplicationTestingBuilder handles finding the app host entry point
-            var builder = await DistributedApplicationTestingBuilder.CreateAsync<Projects.Prova_Aspire_Sample_AppHost>();
-            
-            // Build the application
+            var builder = await DistributedApplicationTestingBuilder
+                .CreateAsync<Projects.Prova_Aspire_Sample_AppHost>();
+
             _app = await builder.BuildAsync();
-            
-            // Start the application
             await _app.StartAsync();
         }
 
         [Fact]
         public async Task Redis_Resource_Is_Running()
         {
-            Assert.NotNull(_app, "DistributedApplication should not be null");
+            var connectionString = await App.GetConnectionStringAsync("cache");
 
-            // Verify we can get the connection string for Redis
-            var connectionString = await _app.GetConnectionStringAsync("cache");
-            
             Assert.NotNull(connectionString, "Redis connection string should not be null");
-            Assert.True(connectionString.Contains("redis"), "Connection string should contain redis");
+            Assert.True(
+                connectionString!.Contains("redis", StringComparison.OrdinalIgnoreCase),
+                "Connection string should identify a Redis resource");
         }
 
         public async Task DisposeAsync()
         {
-            if (_app != null)
+            if (_app is not null)
             {
                 await _app.DisposeAsync();
             }
