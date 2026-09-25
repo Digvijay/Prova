@@ -1,9 +1,12 @@
 <Project>
+
+  <Import Project="Directory.TargetFrameworks.props" />
+
   <PropertyGroup>
     <Authors>Digvijay Chauhan</Authors>
     <Company>Digvijay Chauhan</Company>
     <Product>Prova</Product>
-    <Version>0.5.0</Version>
+    <Version>0.6.0</Version>
     <Copyright>Copyright © 2026 Digvijay Chauhan</Copyright>
     <PackageLicenseExpression>MIT</PackageLicenseExpression>
     <RepositoryUrl>https://github.com/Digvijay/Prova</RepositoryUrl>
@@ -12,7 +15,6 @@
     
     <!-- Build Configuration -->
     <LangVersion>latest</LangVersion>
-    <TargetFramework>net10.0</TargetFramework>
     <Nullable>enable</Nullable>
     <ImplicitUsings>enable</ImplicitUsings>
     <TreatWarningsAsErrors>false</TreatWarningsAsErrors>
@@ -21,12 +23,25 @@
     <IsAotCompatible Condition="'$(TargetFrameworkIdentifier)' == '.NETCoreApp'">true</IsAotCompatible>
     
     <!-- Enable high quality analysis -->
-    <AnalysisLevel>latest</AnalysisLevel>
+    <!--
+      Pinned deliberately. <AnalysisLevel>latest</AnalysisLevel> means "whatever the newest SDK on
+      the build machine enforces", so installing a new SDK can fail a build that has not changed.
+      Raise it deliberately and fix the new diagnostics in the same commit.
+    -->
+    <AnalysisLevel>10.0</AnalysisLevel>
     <AnalysisMode>Recommended</AnalysisMode>
     <EnforceCodeStyleInBuild>true</EnforceCodeStyleInBuild>
     <NoWarn>$(NoWarn);CA1707;CA1822;NU5104</NoWarn>
     
     <!-- Deterministic Builds -->
     <Deterministic>true</Deterministic>
+  </PropertyGroup>
+
+  <!--
+    Only projects under src/ ship as packages. Without this, `dotnet pack` on the solution
+    produces sample and test packages that were never meant to be published.
+  -->
+  <PropertyGroup Condition="!$(MSBuildProjectDirectory.Contains('$(MSBuildThisFileDirectory)src'))">
+    <IsPackable>false</IsPackable>
   </PropertyGroup>
 </Project>

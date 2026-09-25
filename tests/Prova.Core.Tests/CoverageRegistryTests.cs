@@ -8,6 +8,15 @@ namespace Prova.Core.Tests
     /// <summary>
     /// Tests for the CoverageRegistry and LCOV emission.
     /// </summary>
+    /// <remarks>
+    /// CoverageRegistry is a static singleton that the generated runner also writes to: it
+    /// calls Initialize once at startup and Hit(probeId) for every test it executes. These
+    /// tests call Initialize themselves to shrink the table and then assert on exact hit
+    /// counts, so any other test running concurrently corrupts the result. A resource key is
+    /// not enough - the contending writer is the framework's own instrumentation, which
+    /// declares no key - so these tests require full exclusivity.
+    /// </remarks>
+    [DoNotParallelize]
     public class CoverageRegistryTests
     {
         private static readonly string[] TestMetadata = new[] { "Test" };

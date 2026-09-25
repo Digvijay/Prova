@@ -1,4 +1,4 @@
-﻿<Project Sdk="Microsoft.NET.Sdk">
+<Project Sdk="Microsoft.NET.Sdk">
 
   <ItemGroup>
     <ProjectReference Include="..\..\src\Prova.Testcontainers\Prova.Testcontainers.csproj" />
@@ -7,7 +7,7 @@
 
   <ItemGroup>
     <PackageReference Include="Npgsql" Version="10.0.1" />
-    <PackageReference Include="Testcontainers.PostgreSql" Version="4.10.0" />
+    <PackageReference Include="Testcontainers.PostgreSql" Version="4.15.0" />
   </ItemGroup>
 
   <PropertyGroup>

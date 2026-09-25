@@ -1,7 +1,7 @@
 <Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
-    <TargetFramework>net10.0</TargetFramework>
+    <TargetFrameworks>$(ToolkitTestTargetFrameworks)</TargetFrameworks>
     <ImplicitUsings>enable</ImplicitUsings>
     <Nullable>enable</Nullable>
     <GenerateTestingPlatformEntryPoint>false</GenerateTestingPlatformEntryPoint>
@@ -11,7 +11,14 @@
     <IsPackable>false</IsPackable>
     <OutputType>Exe</OutputType>
     <TestingPlatformDotnetTestSupport>true</TestingPlatformDotnetTestSupport>
-    <IsTestingPlatformApplication>false</IsTestingPlatformApplication>
+    <!--
+      This MUST be true. `dotnet test` uses IsTestingPlatformApplication to decide which
+      projects to run; setting it to false excluded this project from discovery, so
+      `dotnet test` reported "No test projects were found" and exited without running a
+      single test. GenerateTestingPlatformEntryPoint stays false because Prova's own
+      TestRunnerGenerator emits the entry point.
+    -->
+    <IsTestingPlatformApplication>true</IsTestingPlatformApplication>
   </PropertyGroup>
 
   <ItemGroup>

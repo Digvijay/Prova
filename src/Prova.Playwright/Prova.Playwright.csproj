@@ -1,15 +1,18 @@
-﻿<Project Sdk="Microsoft.NET.Sdk">
+<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
-    <TargetFramework>net10.0</TargetFramework>
+    <TargetFrameworks>$(ToolkitLibraryTargetFrameworks)</TargetFrameworks>
     <ImplicitUsings>enable</ImplicitUsings>
     <Nullable>enable</Nullable>
     <IsAotCompatible>true</IsAotCompatible>
     <RootNamespace>Prova.Playwright</RootNamespace>
     <IsPackable>true</IsPackable>
     <IsTestProject>false</IsTestProject>
+    <!-- Shipping library, not a test app. dotnet test keys off IsTestingPlatformApplication;
+         without this, these libraries were picked up as runnable test projects and the whole
+         solution-level dotnet test aborted with "Ensure you have a runnable project type". -->
+    <IsTestingPlatformApplication>false</IsTestingPlatformApplication>
     <EnableMicrosoftTestingPlatform>false</EnableMicrosoftTestingPlatform>
-    <Version>0.4.0</Version>
 
     <PackageId>Prova.Playwright</PackageId>
     <Description>Playwright integration for the Prova testing framework.</Description>

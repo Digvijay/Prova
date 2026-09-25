@@ -49,7 +49,7 @@ namespace Prova.Analyzers
         private const string MessageFormat_MSTestClassCleanup = "Use '[AfterClass]' instead of '[ClassCleanup]'";
         private const string MessageFormat_MSTestTestClass = "Remove '[TestClass]'. Prova does not require this attribute.";
         private const string MessageFormat_TestContext = "Use 'Prova.TestContext.Current' instead of injecting 'TestContext'";
-        
+
         private const string Description = "Prova provides better performance and reliability.";
         private const string Category = "Migration";
 
@@ -74,7 +74,7 @@ namespace Prova.Analyzers
         private static readonly DiagnosticDescriptor RuleTestContext = new DiagnosticDescriptor(DiagnosticIdTestContext, Title, MessageFormat_TestContext, Category, DiagnosticSeverity.Warning, isEnabledByDefault: true, description: Description);
 
         public override ImmutableArray<DiagnosticDescriptor> SupportedDiagnostics => ImmutableArray.Create(
-            Rule, RuleNUnitUsing, RuleNUnitAttribute, RuleNUnitTestCase, RuleXunitClassFixture, 
+            Rule, RuleNUnitUsing, RuleNUnitAttribute, RuleNUnitTestCase, RuleXunitClassFixture,
             RuleNUnitOneTimeSetUp, RuleNUnitSetUp, RuleNUnitTearDown, RuleNUnitOneTimeTearDown,
             RuleMSTestUsing, RuleMSTestTestMethod, RuleMSTestDataTestMethod, RuleMSTestDataRow,
             RuleMSTestTestInitialize, RuleMSTestTestCleanup, RuleMSTestClassInitialize, RuleMSTestClassCleanup, RuleMSTestTestClass, RuleTestContext);
@@ -105,7 +105,7 @@ namespace Prova.Analyzers
             var usingDirective = (UsingDirectiveSyntax)context.Node;
             if (usingDirective.Name == null) return;
             var name = usingDirective.Name.ToString();
-            
+
             // Check if it is "using Xunit;" or "using Xunit.*"
             if (name.StartsWith("Xunit", StringComparison.Ordinal))
             {

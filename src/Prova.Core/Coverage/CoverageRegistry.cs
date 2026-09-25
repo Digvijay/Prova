@@ -53,7 +53,7 @@ namespace Prova
         public static void EmitLcov(string filePath)
         {
             var sb = new StringBuilder();
-            
+
             // Group hits by file
             var fileGroups = _metadata
                 .Select((m, i) => new { Metadata = m, Index = i })
@@ -62,7 +62,7 @@ namespace Prova
             foreach (var group in fileGroups)
             {
                 sb.AppendLine(global::System.Globalization.CultureInfo.InvariantCulture, $"SF:{group.Key}");
-                
+
                 int totalLines = 0;
                 int hitLines = 0;
 

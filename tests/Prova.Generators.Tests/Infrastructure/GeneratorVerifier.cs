@@ -8,7 +8,6 @@ using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
 using Prova;
 using Prova.Generators;
-using Xunit;
 
 namespace Prova.Generators.Tests
 {
@@ -18,7 +17,7 @@ namespace Prova.Generators.Tests
         {
             // 1. Create Compilation
             var syntaxTree = CSharpSyntaxTree.ParseText(source);
-            
+
             var references = new List<MetadataReference>
             {
                 MetadataReference.CreateFromFile(typeof(object).Assembly.Location),
@@ -26,6 +25,7 @@ namespace Prova.Generators.Tests
                 MetadataReference.CreateFromFile(typeof(Task).Assembly.Location),
                 MetadataReference.CreateFromFile(typeof(IEnumerable<>).Assembly.Location),
                 MetadataReference.CreateFromFile(typeof(ProvaTest).Assembly.Location),
+                MetadataReference.CreateFromFile(typeof(global::Prova.FsCheck.PropertyAttribute).Assembly.Location),
                 MetadataReference.CreateFromFile(Assembly.Load("System.Runtime").Location),
                 MetadataReference.CreateFromFile(Assembly.Load("netstandard").Location)
             };
@@ -39,14 +39,14 @@ namespace Prova.Generators.Tests
             // 2. Run Generator
             var generator = new TestRunnerGenerator();
             GeneratorDriver driver = CSharpGeneratorDriver.Create(generator);
-            
+
             driver = driver.RunGenerators(compilation);
             var result = driver.GetRunResult();
 
             // 3. Verify
             // The generator emits 2 sources: TestRunnerExecutor.g.cs and Program.g.cs
             var runResult = result.Results[0];
-            
+
             if (runResult.GeneratedSources.Length < 1)
             {
                 Assert.Fail($"Expected at least 1 generated source, but found {runResult.GeneratedSources.Length}. Parsing errors: {string.Join("\n", result.Diagnostics)}");
@@ -60,7 +60,7 @@ namespace Prova.Generators.Tests
             }
 
             var generatedSourceText = executorSource.SourceText!.ToString();
-            
+
             // Normalize line endings for comparison
             var expected = expectedGeneratedSource.Replace("\r\n", "\n").Trim();
             var actual = generatedSourceText.Replace("\r\n", "\n").Trim();
@@ -82,7 +82,7 @@ namespace Prova.Generators.Tests
         {
             // 1. Create Compilation
             var syntaxTree = CSharpSyntaxTree.ParseText(source);
-            
+
             var references = new List<MetadataReference>
             {
                 MetadataReference.CreateFromFile(typeof(object).Assembly.Location),
@@ -90,6 +90,7 @@ namespace Prova.Generators.Tests
                 MetadataReference.CreateFromFile(typeof(Task).Assembly.Location),
                 MetadataReference.CreateFromFile(typeof(IEnumerable<>).Assembly.Location),
                 MetadataReference.CreateFromFile(typeof(ProvaTest).Assembly.Location),
+                MetadataReference.CreateFromFile(typeof(global::Prova.FsCheck.PropertyAttribute).Assembly.Location),
                 MetadataReference.CreateFromFile(Assembly.Load("System.Runtime").Location),
                 MetadataReference.CreateFromFile(Assembly.Load("netstandard").Location)
             };
@@ -103,14 +104,14 @@ namespace Prova.Generators.Tests
             // 2. Run Generator
             var generator = new TestRunnerGenerator();
             GeneratorDriver driver = CSharpGeneratorDriver.Create(generator);
-            
+
             driver = driver.RunGenerators(compilation);
             var result = driver.GetRunResult();
 
             // 3. Verify
             // The generator emits 2 sources: TestRunnerExecutor.g.cs and Program.g.cs
             var runResult = result.Results[0];
-            
+
             if (runResult.GeneratedSources.Length < 1)
             {
                 Assert.Fail($"Expected at least 1 generated source, but found {runResult.GeneratedSources.Length}. Diagnostics: {string.Join("\n", result.Diagnostics)}");

@@ -12,7 +12,7 @@ namespace Prova.FsCheck.Sample
         {
             var reversed = Enumerable.Reverse(list).ToList();
             var doubleReversed = Enumerable.Reverse(reversed).ToList();
-            
+
             // Should be equal
             // Using basic assertion or manual check
             bool equal = list.SequenceEqual(doubleReversed);

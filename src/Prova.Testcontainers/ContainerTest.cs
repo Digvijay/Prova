@@ -1,6 +1,6 @@
+using System.Threading.Tasks;
 using DotNet.Testcontainers.Containers;
 using Prova;
-using System.Threading.Tasks;
 
 namespace Prova.Testcontainers
 {

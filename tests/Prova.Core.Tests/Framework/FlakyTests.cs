@@ -33,7 +33,7 @@ namespace Prova.Core.Tests.Framework
         [Fact]
         public static void NormalTest()
         {
-             Assert.True(true);
+            Assert.True(true);
         }
 
         /*

@@ -13,7 +13,10 @@
   </ItemGroup>
 
   <ItemGroup>
-    <Analyzer Include="..\..\src\Prova.Generators\bin\Debug\netstandard2.0\Prova.Generators.dll" OutputItemType="Analyzer" ReferenceOutputAssembly="false" />
+    <!-- Was a hardcoded <Analyzer Include="...\bin\Debug\netstandard2.0\Prova.Generators.dll" />,
+         which only resolved after a Debug build and broke every Release build. A ProjectReference
+         with OutputItemType="Analyzer" lets MSBuild resolve the generator for any configuration. -->
+    <ProjectReference Include="..\..\src\Prova.Generators\Prova.Generators.csproj" OutputItemType="Analyzer" ReferenceOutputAssembly="false" />
   </ItemGroup>
 
 </Project>

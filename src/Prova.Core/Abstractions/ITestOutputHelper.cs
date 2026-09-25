@@ -7,7 +7,7 @@ namespace Prova
     {
         /// <summary>Writes a line of text to the test output.</summary>
         void WriteLine(string message);
-        
+
         /// <summary>Writes a formatted line of text to the test output.</summary>
         void WriteLine(string format, params object[] args);
 

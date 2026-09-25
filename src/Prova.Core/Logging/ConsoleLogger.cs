@@ -50,7 +50,7 @@ namespace Prova.Logging
         /// <inheritdoc />
         public void LogError(string message)
         {
-             if (_isGitHubActions)
+            if (_isGitHubActions)
             {
                 // GitHub Actions Error Syntax: ::error::{message}
                 Console.WriteLine($"::error::{message}");

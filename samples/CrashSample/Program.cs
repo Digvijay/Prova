@@ -6,7 +6,7 @@ public class Program
 {
     public static async Task Main(string[] args)
     {
-        await Prova.TestRunnerExecutor.RunAllAsync(args);
+        return await Prova.TestRunnerExecutor.RunAllAsync(args);
     }
 }
 

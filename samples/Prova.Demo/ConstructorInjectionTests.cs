@@ -44,10 +44,10 @@ namespace Prova.Demo
         {
             if (_service == null)
                 throw new InvalidOperationException("Service was not injected");
-            
+
             var msg = _service.GetMessage();
             Console.WriteLine($"Service says: {msg}");
-            
+
             if (msg != "Hello from DI")
                 throw new InvalidOperationException($"Expected 'Hello from DI' but got '{msg}'");
         }

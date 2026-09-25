@@ -7,7 +7,7 @@ namespace Prova
     {
         /// <summary>Called immediately after the class has been instantiated.</summary>
         Task InitializeAsync();
-        
+
         /// <summary>Called when the test class is about to be disposed.</summary>
         Task DisposeAsync();
     }

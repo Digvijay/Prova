@@ -1,15 +1,18 @@
 <Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
-    <TargetFramework>net10.0</TargetFramework>
+    <TargetFrameworks>$(ToolkitLibraryTargetFrameworks)</TargetFrameworks>
     <ImplicitUsings>enable</ImplicitUsings>
     <Nullable>enable</Nullable>
     <IsAotCompatible>true</IsAotCompatible>
     <RootNamespace>Prova.AspNetCore</RootNamespace>
     <IsPackable>true</IsPackable>
     <IsTestProject>false</IsTestProject>
+    <!-- Shipping library, not a test app. dotnet test keys off IsTestingPlatformApplication;
+         without this, these libraries were picked up as runnable test projects and the whole
+         solution-level dotnet test aborted with "Ensure you have a runnable project type". -->
+    <IsTestingPlatformApplication>false</IsTestingPlatformApplication>
     <EnableMicrosoftTestingPlatform>false</EnableMicrosoftTestingPlatform>
-    <Version>0.4.0</Version>
 
     <PackageId>Prova.AspNetCore</PackageId>
     <Description>ASP.NET Core integration for the Prova testing framework.</Description>
@@ -29,7 +32,11 @@
 
   <ItemGroup>
     <FrameworkReference Include="Microsoft.AspNetCore.App" />
-    <PackageReference Include="Microsoft.AspNetCore.Mvc.Testing" Version="10.0.0-preview.1.25120.3" />
+    <!-- Was pinned to 10.0.0-preview.1.25120.3: a shipping library depending on an abandoned
+         preview build, which also pinned the whole package to net10.0. Use the stable release
+         matching each target framework instead. -->
+    <PackageReference Include="Microsoft.AspNetCore.Mvc.Testing" Version="8.0.2" Condition="'$(TargetFramework)' == 'net8.0'" />
+    <PackageReference Include="Microsoft.AspNetCore.Mvc.Testing" Version="10.0.12" Condition="'$(TargetFramework)' != 'net8.0'" />
     <ProjectReference Include="..\Prova.Core\Prova.Core.csproj" />
   </ItemGroup>
 

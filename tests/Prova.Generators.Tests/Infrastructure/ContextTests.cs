@@ -1,4 +1,3 @@
-using Xunit;
 using Prova.Generators.Tests;
 
 namespace Prova.Generators.Tests

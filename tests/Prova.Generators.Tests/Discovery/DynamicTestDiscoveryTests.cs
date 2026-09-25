@@ -1,10 +1,13 @@
-using Xunit;
 using Prova.Generators.Tests;
 
 namespace Prova.Generators.Tests
 {
     public class DynamicTestDiscoveryTests
     {
+        /// <summary>
+        /// Per docs/dynamic-tests.md, [TestFactory] marks a <c>public static</c> method that
+        /// accepts a <see cref="Prova.DynamicTestBuilder"/> and registers tests on it.
+        /// </summary>
         [Fact]
         public void TestFactory_Generates_DynamicDiscovery()
         {
@@ -12,21 +15,21 @@ namespace Prova.Generators.Tests
 namespace Prova.Generators.Tests
 {
     using Prova;
-    using System.Collections.Generic;
+    using System.Threading.Tasks;
     
     public class MyTests
     {
         [TestFactory]
-        public IEnumerable<DynamicTestBuilder> MyFactory()
+        public static void MyFactory(DynamicTestBuilder builder)
         {
-            yield return DynamicTestBuilder.Create(""Dynamic1"", () => Task.CompletedTask);
+            builder.Add(""Dynamic1"", () => Task.CompletedTask);
         }
     }
 }";
 
-            // Verify factory call in GetTests
-            GeneratorVerifier.VerifyContains(source, "foreach (var dynamicTest in new MyTests().MyFactory())");
-            GeneratorVerifier.VerifyContains(source, "yield return dynamicTest.Build();");
+            // The builder is created once and handed to every discovered factory.
+            GeneratorVerifier.VerifyContains(source, "var builder = new Prova.DynamicTestBuilder();");
+            GeneratorVerifier.VerifyContains(source, "Prova.Generators.Tests.MyTests.MyFactory(builder);");
         }
     }
 }

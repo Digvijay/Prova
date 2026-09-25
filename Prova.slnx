@@ -1,17 +1,29 @@
 <Solution>
   <Folder Name="/src/">
-    <Project Path="src/Prova.Core/Prova.Core.csproj" />
-    <Project Path="src/Prova.Generators/Prova.Generators.csproj" />
     <Project Path="src/Prova.Analyzers/Prova.Analyzers.csproj" />
+    <Project Path="src/Prova.AspNetCore/Prova.AspNetCore.csproj" />
+    <Project Path="src/Prova.Core/Prova.Core.csproj" />
+    <Project Path="src/Prova.FsCheck/Prova.FsCheck.csproj" />
+    <Project Path="src/Prova.Generators/Prova.Generators.csproj" />
+    <Project Path="src/Prova.Playwright/Prova.Playwright.csproj" />
+    <Project Path="src/Prova.Testcontainers/Prova.Testcontainers.csproj" />
   </Folder>
   <Folder Name="/tests/">
+    <Project Path="tests/Prova.Analyzers.Tests/Prova.Analyzers.Tests.csproj" />
     <Project Path="tests/Prova.Core.Tests/Prova.Core.Tests.csproj" />
     <Project Path="tests/Prova.Generators.Tests/Prova.Generators.Tests.csproj" />
-    <Project Path="tests/Prova.Analyzers.Tests/Prova.Analyzers.Tests.csproj" />
   </Folder>
   <Folder Name="/samples/">
+    <Project Path="samples/LoggingSample/LoggingSample.csproj" />
+    <Project Path="samples/Prova.AspNetCore.Sample/Prova.AspNetCore.Sample.csproj" />
     <Project Path="samples/Prova.Demo/Prova.Demo.csproj" />
+    <Project Path="samples/Prova.FsCheck.Sample/Prova.FsCheck.Sample.csproj" />
     <Project Path="samples/Prova.MtpSample/Prova.MtpSample.csproj" />
+    <Project Path="samples/Prova.Playwright.Sample/Prova.Playwright.Sample.csproj" />
     <Project Path="samples/Prova.Skugga.Demo/Prova.Skugga.Demo.csproj" />
+    <Project Path="samples/Prova.Testcontainers.Sample/Prova.Testcontainers.Sample.csproj" />
+    <Project Path="samples/ScriptingSample/ScriptingSample.csproj" />
+    <Project Path="samples/StateSharingSample/StateSharingSample.csproj" />
+    <Project Path="samples/VariantSample/VariantSample.csproj" />
   </Folder>
 </Solution>

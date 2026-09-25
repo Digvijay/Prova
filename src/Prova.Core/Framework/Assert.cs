@@ -39,19 +39,19 @@ namespace Prova
         /// <summary>Verifies that a collection contains a given item.</summary>
         public static void Contains<T>(T expected, System.Collections.Generic.IEnumerable<T> collection)
         {
-             if (!System.Linq.Enumerable.Contains(collection, expected))
-             {
-                 throw new AssertException($"Assert.Contains() Failure\nCollection did not contain expected item: {expected}");
-             }
+            if (!System.Linq.Enumerable.Contains(collection, expected))
+            {
+                throw new AssertException($"Assert.Contains() Failure\nCollection did not contain expected item: {expected}");
+            }
         }
-        
+
         /// <summary>Verifies that a collection does not contain a given item.</summary>
         public static void DoesNotContain<T>(T expected, System.Collections.Generic.IEnumerable<T> collection)
         {
-             if (System.Linq.Enumerable.Contains(collection, expected))
-             {
-                 throw new AssertException($"Assert.DoesNotContain() Failure\nCollection contained unexpected item: {expected}");
-             }
+            if (System.Linq.Enumerable.Contains(collection, expected))
+            {
+                throw new AssertException($"Assert.DoesNotContain() Failure\nCollection contained unexpected item: {expected}");
+            }
         }
 
         /// <summary>Verifies that a collection is empty.</summary>
@@ -73,7 +73,7 @@ namespace Prova
                 throw new AssertException("Assert.NotEmpty() Failure\nCollection was empty");
             }
         }
-        
+
         /// <summary>Verifies that a collection contains exactly one item.</summary>
 #pragma warning disable CA1720
         public static void Single(System.Collections.IEnumerable collection)
@@ -98,7 +98,7 @@ namespace Prova
                 throw new AssertException($"Assert.IsType() Failure\nExpected: {expectedType.Name}\nActual:   {item?.GetType().Name ?? "(null)"}");
             }
         }
-        
+
         /// <summary>Verifies that an object is not of the given type.</summary>
         public static void IsNotType<T>(object? item)
         {
@@ -149,7 +149,7 @@ namespace Prova
                 throw new AssertException($"Assert.Equal() Failure\nExpected: {expected}\nActual:   {actual}");
             }
         }
-        
+
         /// <summary>Verifies that an object is null.</summary>
         public static void Null(object? item)
         {

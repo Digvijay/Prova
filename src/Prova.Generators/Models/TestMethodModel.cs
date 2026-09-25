@@ -5,11 +5,11 @@ namespace Prova.Generators.Models
     internal sealed record HookInfo(string Name, bool IsAsync, string? ExecutorType = null);
 
     internal sealed record TestMethodModel(
-        string ClassName, 
-        string MethodName, 
-        bool IsAsync, 
+        string ClassName,
+        string MethodName,
+        bool IsAsync,
         bool ReturnsVoid,
-        bool IsTheory, 
+        bool IsTheory,
         List<string[]> TestData,
         List<string> Dependencies,
         List<string> FixtureTypes,

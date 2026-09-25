@@ -26,7 +26,7 @@ namespace Prova.Core.Tests.Framework
         [Fact]
         public static async Task Sleep1()
         {
-             await Task.Delay(1000);
+            await Task.Delay(1000);
         }
     }
 }

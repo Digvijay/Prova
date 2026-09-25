@@ -1,9 +1,9 @@
-using Prova;
 using System;
 using System.Threading.Tasks;
+using Prova;
 
 // Run tests
-await Prova.TestRunnerExecutor.RunAllAsync(args);
+return await Prova.TestRunnerExecutor.RunAllAsync(args);
 
 public class LogTests
 {

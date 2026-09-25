@@ -74,9 +74,9 @@ namespace Prova.Playwright
         {
             if (_browser == null)
             {
-                 // Should have been initialized by BeforeAll, but double check
-                 // In case of parallel execution or missed hook (unlikely)
-                 await GlobalSetup();
+                // Should have been initialized by BeforeAll, but double check
+                // In case of parallel execution or missed hook (unlikely)
+                await GlobalSetup();
             }
 
             Context = await _browser!.NewContextAsync();

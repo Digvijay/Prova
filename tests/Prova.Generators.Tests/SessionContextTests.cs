@@ -1,5 +1,4 @@
 using System.Threading.Tasks;
-using Xunit;
 using Prova.Generators.Tests;
 
 namespace Prova.Generators.Tests.Session

@@ -1,34 +1,38 @@
-﻿<Project Sdk="Microsoft.NET.Sdk">
+<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
-    <TargetFramework>net10.0</TargetFramework>
+    <TargetFrameworks>$(ToolkitTestTargetFrameworks)</TargetFrameworks>
     <EnablePreviewFeatures>true</EnablePreviewFeatures>
     <ImplicitUsings>enable</ImplicitUsings>
     <Nullable>enable</Nullable>
     <IsPackable>false</IsPackable>
-    <GenerateProgramFile>false</GenerateProgramFile>
     <OutputType>Exe</OutputType>
     <IsTestProject>true</IsTestProject>
-    <IsTestingPlatformApplication>false</IsTestingPlatformApplication>
+    <!--
+      Must be true. When this was false the project was excluded from `dotnet test`
+      discovery entirely.
+    -->
+    <IsTestingPlatformApplication>true</IsTestingPlatformApplication>
     <TestingPlatformDotnetTestSupport>true</TestingPlatformDotnetTestSupport>
+    <!--
+      Prova's own TestRunnerGenerator emits the entry point for this project.
+    -->
+    <GenerateTestingPlatformEntryPoint>false</GenerateTestingPlatformEntryPoint>
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="coverlet.collector" Version="6.0.4" />
-
     <PackageReference Include="Microsoft.CodeAnalysis.CSharp.Workspaces" Version="4.8.0" />
-    <PackageReference Include="Microsoft.NET.Test.Sdk" Version="17.14.1" />
-    <PackageReference Include="xunit" Version="2.9.3" />
-    <PackageReference Include="xunit.runner.visualstudio" Version="3.1.4" />
-  </ItemGroup>
-
-  <ItemGroup>
-    <Using Include="Xunit" />
+    <PackageReference Include="Microsoft.Testing.Extensions.TrxReport" Version="2.0.2" />
   </ItemGroup>
 
   <ItemGroup>
     <ProjectReference Include="..\..\src\Prova.Generators\Prova.Generators.csproj" />
     <ProjectReference Include="..\..\src\Prova.Core\Prova.Core.csproj" />
+    <!-- Referenced so the generator-verification compilation can bind Prova.FsCheck's
+         [Property] attribute. Without it the attribute is an error type, the generator
+         discovers no tests, and emission tests silently assert against an empty run. -->
+    <ProjectReference Include="..\..\src\Prova.FsCheck\Prova.FsCheck.csproj" />
+    <ProjectReference Include="..\..\src\Prova.Generators\Prova.Generators.csproj" OutputItemType="Analyzer" ReferenceOutputAssembly="false" />
   </ItemGroup>
 
 </Project>

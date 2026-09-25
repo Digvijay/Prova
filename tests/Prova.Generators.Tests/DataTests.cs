@@ -1,5 +1,4 @@
 using System;
-using Xunit;
 
 namespace Prova.Generators.Tests
 {
@@ -38,7 +37,7 @@ public class MyDataTests
                 "MyDataTests.DataTest",
                 "instance.DataTest((int)dataRow[0])"
             };
-            
+
             GeneratorVerifier.VerifyContains(source, expectedSnippets);
         }
     }

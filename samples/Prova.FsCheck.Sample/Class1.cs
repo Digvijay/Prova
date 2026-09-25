@@ -1,4 +1,4 @@
-﻿namespace Prova.FsCheck.Sample;
+namespace Prova.FsCheck.Sample;
 
 public class Class1
 {

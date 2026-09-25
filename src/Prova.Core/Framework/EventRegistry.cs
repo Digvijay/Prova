@@ -22,7 +22,7 @@ namespace Prova
             {
                 if (receiver is ITestStartEventReceiver start)
                     _startReceivers.Add(start);
-                
+
                 if (receiver is ITestEndEventReceiver end)
                     _endReceivers.Add(end);
             }
@@ -37,7 +37,7 @@ namespace Prova
             {
                 if (receiver is ITestStartEventReceiver start)
                     _startReceivers.Remove(start);
-                
+
                 if (receiver is ITestEndEventReceiver end)
                     _endReceivers.Remove(end);
             }

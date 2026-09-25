@@ -1,8 +1,8 @@
-using Prova;
 using System.Threading.Tasks;
+using Prova;
 
 // Run tests
-await Prova.TestRunnerExecutor.RunAllAsync(args);
+return await Prova.TestRunnerExecutor.RunAllAsync(args);
 
 // Define tests
 public class VariantTests

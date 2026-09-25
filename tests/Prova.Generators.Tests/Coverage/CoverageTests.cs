@@ -1,5 +1,4 @@
 using System;
-using Xunit;
 
 namespace Prova.Generators.Tests
 {
@@ -16,7 +15,7 @@ public class MyTests
     [Fact]
     public void Test1() {}
 }";
-            
+
             // Should contain the hit probe with ID 0
             GeneratorVerifier.VerifyContains(source, "CoverageRegistry.Hit(0);");
         }
@@ -32,10 +31,10 @@ public class MyTests
     [Fact]
     public void Test1() {}
 }";
-            
+
             // Should contain the InitializeCoverage call
             GeneratorVerifier.VerifyContains(source, "InitializeCoverage();");
-            
+
             // Should contain the metadata for the test
             GeneratorVerifier.VerifyContains(source, "var metadata = new string[1] {");
             GeneratorVerifier.VerifyContains(source, "\"MyTests.Test1\",");
@@ -52,7 +51,7 @@ public class MyTests
     [Fact]
     public void Test1() {}
 }";
-            
+
             // Should contain the EmitLcov logic in RunSimpleAsync or RunMtpAsync
             GeneratorVerifier.VerifyContains(source, "if (hasCoverage)");
             GeneratorVerifier.VerifyContains(source, "CoverageRegistry.EmitLcov(\"coverage.lcov\");");

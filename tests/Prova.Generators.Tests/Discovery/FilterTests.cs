@@ -1,4 +1,3 @@
-using Xunit;
 using Prova.Generators.Tests;
 
 namespace Prova.Generators.Tests
@@ -19,8 +18,9 @@ namespace Prova.Generators.Tests
         public void Test1() {}
     }
 }";
-            // Verify GetTests includes FullName
-            GeneratorVerifier.VerifyContains(source, "FullName = \"Prova.Generators.Tests.MyTests.Test1\"");
+            // Verify GetTests includes FullName. The generator emits it as an interpolated
+            // string so variant and data-row suffixes can be appended uniformly.
+            GeneratorVerifier.VerifyContains(source, "FullName = $\"Prova.Generators.Tests.MyTests.Test1\"");
         }
     }
 }

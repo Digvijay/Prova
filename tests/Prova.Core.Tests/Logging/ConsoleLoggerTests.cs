@@ -5,6 +5,13 @@ using Prova.Logging;
 namespace Prova.Core.Tests.Logging
 {
     /// <summary>Tests for the ConsoleLogger.</summary>
+    /// <remarks>
+    /// Every test here swaps <see cref="Console.Out"/>, which is process-global and is also
+    /// written to by the test runner itself while other tests execute. Sharing a resource key
+    /// only serialises these three tests against each other, so full exclusivity is used to
+    /// keep the captured output attributable to the logger call under test.
+    /// </remarks>
+    [DoNotParallelize]
     public sealed class ConsoleLoggerTests
     {
         /// <summary>

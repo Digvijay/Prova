@@ -65,10 +65,10 @@ namespace Prova.Core.Tests
         [Fact]
         public static async Task ThrowsAsyncTest()
         {
-            await Assert.ThrowsAsync<InvalidOperationException>(async () => 
+            await Assert.ThrowsAsync<InvalidOperationException>(async () =>
             {
                 await Task.Yield();
-                throw new InvalidOperationException("Boom Async"); 
+                throw new InvalidOperationException("Boom Async");
             });
         }
     }

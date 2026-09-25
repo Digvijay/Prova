@@ -1,5 +1,59 @@
 # Changelog
 
+## [v0.6.0] - Correctness, coverage and multi-targeting
+
+**Status:** unreleased
+
+This release is the result of auditing Prova for open-source submission. It fixes a set of
+defects that allowed the framework to report success while doing nothing, and it widens the
+supported surface to the current LTS.
+
+See `docs/known-issues.md` for the full ledger, including the three issues still open.
+
+### Fixed — the framework reported success while doing nothing
+-   **`dotnet test` exited 0 even when tests failed.** The generated runner computed an exit code
+    and discarded it. Now threaded end-to-end through `RunMtpAsync`, `RunSimpleAsync`,
+    `RunAllAsync` and the emitted `Program.g.cs`.
+-   **CI ran zero tests.** `IsTestingPlatformApplication` was inverted on both the shipping
+    libraries and the test projects.
+-   **`dotnet test` did not work at all on the .NET 10 SDK.** `global.json` now opts in to the
+    Microsoft.Testing.Platform runner.
+-   **The generator injected an entry point into class libraries** (CS8805). It now requires an
+    executable `OutputKind`.
+
+### Fixed — public APIs that compiled and did nothing
+-   **`[BeforeAll]`, `[BeforeEach]`, `[AfterAll]` and `[AfterEach]` never ran.** Hook attributes
+    were matched by exact type name, so every derived alias was silently dropped.
+-   **Concurrency isolation attributes were ignored** by `HybridMtpAdapter`.
+-   **`[ArgumentDisplayFormatter]` was ignored on `[Matrix]`** default display names.
+-   **The migration code fix corrupted line endings** and lost indentation when inserting
+    `[Theory]`.
+
+### Fixed — tests that existed but never ran
+-   `Prova.Generators.Tests` executed 11 of its 66 tests; all 74 now run.
+-   `Prova.Analyzers.Tests` was absent from the solution and unrunnable under MTP; migrated to
+    MSTest 4.4.1 and `DefaultVerifier`, and its 13 tests now run.
+-   An orphaned `FsCheckEmissionTests.cs` outside any project was ported in; doing so revealed
+    that the generator-verification compilation never referenced `Prova.FsCheck`.
+-   Six sample projects were in no solution, two of which could not build in Release.
+
+### Fixed — supply chain, packaging and portability
+-   **NU1903**: `Testcontainers` 4.15.0 resolves the high-severity `SSH.NET` advisories.
+-   `Prova.AspNetCore` no longer depends on an abandoned `Mvc.Testing` preview build.
+-   Package versions unified; `dotnet pack` no longer produces sample and test packages.
+-   `AnalysisLevel` pinned to `10.0`; `global.json` rolls forward to new majors.
+-   Added `.gitattributes`; the repository is now `dotnet format` clean.
+
+### Changed
+-   **Multi-targeting.** All five shipping libraries now target **net8.0 and net10.0**, with
+    **net11.0** available behind `INCLUDE_PREVIEW_TFM=true`. Both primary test projects run on
+    every framework the libraries ship.
+-   **CI** runs a Linux/Windows matrix across net8.0 and net10.0, tests the whole solution,
+    collects coverage, verifies formatting, packs, and has an advisory net11.0 preview leg.
+
+### Added
+-   `CODE_OF_CONDUCT.md`, `SUPPORT.md`, `CODEOWNERS`, `dependabot.yml`, a pull request template,
+    and `docs/known-issues.md`.
 ## [v0.5.0] - MTP-Native Theory Unrolling
 
 **Released:** 2026-03-02

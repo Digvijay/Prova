@@ -3,7 +3,6 @@ using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
 using Prova.Generators.Analysis;
 using Prova.Generators.Emission;
-using Xunit;
 
 namespace Prova.Generators.Tests
 {
@@ -45,7 +44,9 @@ namespace Prova.Demo
         public void Test2(int i, string s) { }
     }
 }";
-            GeneratorVerifier.VerifyContains(source, "DisplayName = string.Format(\"Value {0} is {1}\", i, s)");
+            // InlineData rows are unrolled at compile time, so the row values are baked
+            // into the format call rather than referenced by parameter name.
+            GeneratorVerifier.VerifyContains(source, "DisplayName = string.Format(\"Value {0} is {1}\", 1, \"A\")");
         }
 
         [Fact]

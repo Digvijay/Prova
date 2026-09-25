@@ -1,5 +1,4 @@
 using System;
-using Xunit;
 
 namespace Prova.Generators.Tests
 {
@@ -28,7 +27,7 @@ public class MyTimeoutTests
                 "instance = new MyTimeoutTests()",
                 "await instance.SlowTest()"
             };
-            
+
             GeneratorVerifier.VerifyContains(source, expectedSnippets);
         }
     }

@@ -21,7 +21,7 @@ namespace DemoApp
     public class PaymentProcessor
     {
         private readonly IPaymentGateway _gateway;
-        
+
         /// <summary>Initializes a new instance of the <see cref="PaymentProcessor"/> class.</summary>
         /// <param name="gateway">The payment gateway to use.</param>
         public PaymentProcessor(IPaymentGateway gateway) => _gateway = gateway;
@@ -44,7 +44,7 @@ namespace DemoApp
         public PaymentTests()
         {
             // Manual stubbing for the demo since we don't have a real proxy generator here
-            _gatewayMock.MockObject = new Skugga.DummyPaymentGateway((call) => _gatewayMock.RecordCall(call)); 
+            _gatewayMock.MockObject = new Skugga.DummyPaymentGateway((call) => _gatewayMock.RecordCall(call));
         }
 
         /// <summary>
@@ -55,7 +55,7 @@ namespace DemoApp
         {
             var processor = new PaymentProcessor(_gatewayMock.MockObject);
             processor.Process(100m);
-            
+
             // NO MANUAL VERIFY CALL NEEDED! 
             // _gatewayMock.VerifyAll() is injected by the compiler.
         }

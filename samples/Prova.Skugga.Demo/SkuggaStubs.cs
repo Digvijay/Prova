@@ -19,14 +19,14 @@ namespace Skugga
         {
             if (_receivedCalls.Count == 0)
             {
-               // If we expected calls but got none, strictly speaking for this demo we might warn,
-               // but simpler: if we verified, we assume success if no exception thrown.
-               // However, let's print what we verified to prove we are real.
-               System.Console.WriteLine($"    [Skugga] Warning: No calls recorded for {this.GetType().Name}.");
+                // If we expected calls but got none, strictly speaking for this demo we might warn,
+                // but simpler: if we verified, we assume success if no exception thrown.
+                // However, let's print what we verified to prove we are real.
+                System.Console.WriteLine($"    [Skugga] Warning: No calls recorded for {this.GetType().Name}.");
             }
             else
             {
-                foreach(var call in _receivedCalls)
+                foreach (var call in _receivedCalls)
                 {
                     System.Console.WriteLine($"    [Skugga] Verified Call: {call}");
                 }

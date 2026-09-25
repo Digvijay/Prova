@@ -1,10 +1,8 @@
 using System.Threading.Tasks;
 using Microsoft.CodeAnalysis.CSharp.Testing;
 using Microsoft.CodeAnalysis.Testing;
-using Microsoft.CodeAnalysis.Testing.Verifiers;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Prova.Analyzers;
-using Verify = Microsoft.CodeAnalysis.CSharp.Testing.MSTest.AnalyzerVerifier<Prova.Analyzers.MigrationAnalyzer>;
 
 namespace Prova.Analyzers.Tests
 {
@@ -21,11 +19,11 @@ namespace Xunit { public class MockAssert {} }
 
 public class TestClass { }";
 
-            var expected = CSharpAnalyzerVerifier<MigrationAnalyzer, MSTestVerifier>.Diagnostic(MigrationAnalyzer.DiagnosticId)
+            var expected = CSharpAnalyzerVerifier<MigrationAnalyzer, DefaultVerifier>.Diagnostic(MigrationAnalyzer.DiagnosticId)
                 .WithLocation(2, 1)
                 .WithArguments("using Xunit");
 
-            await CSharpAnalyzerVerifier<MigrationAnalyzer, MSTestVerifier>.VerifyAnalyzerAsync(test, expected);
+            await CSharpAnalyzerVerifier<MigrationAnalyzer, DefaultVerifier>.VerifyAnalyzerAsync(test, expected);
         }
 
         [TestMethod]
@@ -39,10 +37,10 @@ public class TestClass
     public void MyTest() { }
 }";
 
-            var expected = CSharpAnalyzerVerifier<MigrationAnalyzer, MSTestVerifier>.Diagnostic(MigrationAnalyzer.DiagnosticIdNUnitAttribute)
+            var expected = CSharpAnalyzerVerifier<MigrationAnalyzer, DefaultVerifier>.Diagnostic(MigrationAnalyzer.DiagnosticIdNUnitAttribute)
                 .WithLocation(5, 6);
 
-            var analyzerTest = new CSharpAnalyzerTest<MigrationAnalyzer, MSTestVerifier>
+            var analyzerTest = new CSharpAnalyzerTest<MigrationAnalyzer, DefaultVerifier>
             {
                 TestCode = test,
                 CompilerDiagnostics = CompilerDiagnostics.None
@@ -71,11 +69,11 @@ public class TestClass
 "\n" +
 "public class TestClass { }";
 
-            var expected = CSharpAnalyzerVerifier<MigrationAnalyzer, MSTestVerifier>.Diagnostic(MigrationAnalyzer.DiagnosticId)
+            var expected = CSharpAnalyzerVerifier<MigrationAnalyzer, DefaultVerifier>.Diagnostic(MigrationAnalyzer.DiagnosticId)
                 .WithLocation(1, 1)
                 .WithArguments("using Xunit");
 
-            await CSharpCodeFixVerifier<MigrationAnalyzer, MigrationCodeFixProvider, MSTestVerifier>.VerifyCodeFixAsync(test, expected, fixtest);
+            await CSharpCodeFixVerifier<MigrationAnalyzer, MigrationCodeFixProvider, DefaultVerifier>.VerifyCodeFixAsync(test, expected, fixtest);
         }
 
         [TestMethod]
@@ -93,10 +91,10 @@ public class TestClass
 "\n" +
 "public class TestClass { }";
 
-            var expected = CSharpAnalyzerVerifier<MigrationAnalyzer, MSTestVerifier>.Diagnostic(MigrationAnalyzer.DiagnosticIdNUnitUsing)
+            var expected = CSharpAnalyzerVerifier<MigrationAnalyzer, DefaultVerifier>.Diagnostic(MigrationAnalyzer.DiagnosticIdNUnitUsing)
                 .WithLocation(1, 1);
 
-            var codeFixTest = new CSharpCodeFixTest<MigrationAnalyzer, MigrationCodeFixProvider, MSTestVerifier>
+            var codeFixTest = new CSharpCodeFixTest<MigrationAnalyzer, MigrationCodeFixProvider, DefaultVerifier>
             {
                 TestCode = test,
                 FixedCode = fixtest,
@@ -117,7 +115,7 @@ public class TestClass
     [Test]
     public void MyTest() { }
 }";
-            
+
             var fixtest = @"
 using Prova;
 public class TestClass
@@ -126,10 +124,10 @@ public class TestClass
     public void MyTest() { }
 }";
 
-            var expected = CSharpAnalyzerVerifier<MigrationAnalyzer, MSTestVerifier>.Diagnostic(MigrationAnalyzer.DiagnosticIdNUnitAttribute)
+            var expected = CSharpAnalyzerVerifier<MigrationAnalyzer, DefaultVerifier>.Diagnostic(MigrationAnalyzer.DiagnosticIdNUnitAttribute)
                 .WithLocation(5, 6);
 
-            var codeFixTest = new CSharpCodeFixTest<MigrationAnalyzer, MigrationCodeFixProvider, MSTestVerifier>
+            var codeFixTest = new CSharpCodeFixTest<MigrationAnalyzer, MigrationCodeFixProvider, DefaultVerifier>
             {
                 TestCode = test,
                 FixedCode = fixtest,
@@ -151,7 +149,7 @@ public class TestClass
     [TestCase(2)]
     public void MyTest(int i) { }
 }";
-            
+
             var fixtest = @"
 using Prova;
 public class TestClass
@@ -163,12 +161,12 @@ public class TestClass
 }";
 
             // Expect a diagnostic for each TestCase
-            var expected1 = CSharpAnalyzerVerifier<MigrationAnalyzer, MSTestVerifier>.Diagnostic(MigrationAnalyzer.DiagnosticIdNUnitTestCase)
+            var expected1 = CSharpAnalyzerVerifier<MigrationAnalyzer, DefaultVerifier>.Diagnostic(MigrationAnalyzer.DiagnosticIdNUnitTestCase)
                 .WithLocation(5, 6);
-            var expected2 = CSharpAnalyzerVerifier<MigrationAnalyzer, MSTestVerifier>.Diagnostic(MigrationAnalyzer.DiagnosticIdNUnitTestCase)
+            var expected2 = CSharpAnalyzerVerifier<MigrationAnalyzer, DefaultVerifier>.Diagnostic(MigrationAnalyzer.DiagnosticIdNUnitTestCase)
                 .WithLocation(6, 6);
 
-            var codeFixTest = new CSharpCodeFixTest<MigrationAnalyzer, MigrationCodeFixProvider, MSTestVerifier>
+            var codeFixTest = new CSharpCodeFixTest<MigrationAnalyzer, MigrationCodeFixProvider, DefaultVerifier>
             {
                 TestCode = test,
                 FixedCode = fixtest,
@@ -187,13 +185,13 @@ public class TestClass
             var test = @"
 using Xunit;
 public class MyTest : IClassFixture<MyFixture> { }";
-            
-            var expectedUsing = CSharpAnalyzerVerifier<MigrationAnalyzer, MSTestVerifier>.Diagnostic(MigrationAnalyzer.DiagnosticId)
+
+            var expectedUsing = CSharpAnalyzerVerifier<MigrationAnalyzer, DefaultVerifier>.Diagnostic(MigrationAnalyzer.DiagnosticId)
                 .WithLocation(2, 1);
-            var expectedFixture = CSharpAnalyzerVerifier<MigrationAnalyzer, MSTestVerifier>.Diagnostic(MigrationAnalyzer.DiagnosticIdXunitClassFixture)
+            var expectedFixture = CSharpAnalyzerVerifier<MigrationAnalyzer, DefaultVerifier>.Diagnostic(MigrationAnalyzer.DiagnosticIdXunitClassFixture)
                 .WithLocation(3, 23);
 
-            var analyzerTest = new CSharpAnalyzerTest<MigrationAnalyzer, MSTestVerifier>
+            var analyzerTest = new CSharpAnalyzerTest<MigrationAnalyzer, DefaultVerifier>
             {
                 TestCode = test,
                 CompilerDiagnostics = CompilerDiagnostics.None
@@ -207,26 +205,26 @@ public class MyTest : IClassFixture<MyFixture> { }";
         [TestMethod]
         public async Task Fix_IClassFixture_RemovesInterface()
         {
-             var test = "using Xunit;\n" +
+            var test = "using Xunit;\n" +
 "public class MyTest : IClassFixture<MyFixture> { }";
 
             // The code fix provider will also fix the using statement iteratively
             var fixtest = "using Prova;\n" +
 "public class MyTest { }";
 
-            var expectedUsing = CSharpAnalyzerVerifier<MigrationAnalyzer, MSTestVerifier>.Diagnostic(MigrationAnalyzer.DiagnosticId)
+            var expectedUsing = CSharpAnalyzerVerifier<MigrationAnalyzer, DefaultVerifier>.Diagnostic(MigrationAnalyzer.DiagnosticId)
                 .WithLocation(1, 1);
-            var expectedFixture = CSharpAnalyzerVerifier<MigrationAnalyzer, MSTestVerifier>.Diagnostic(MigrationAnalyzer.DiagnosticIdXunitClassFixture)
+            var expectedFixture = CSharpAnalyzerVerifier<MigrationAnalyzer, DefaultVerifier>.Diagnostic(MigrationAnalyzer.DiagnosticIdXunitClassFixture)
                 .WithLocation(2, 23);
 
-            var codeFixTest = new CSharpCodeFixTest<MigrationAnalyzer, MigrationCodeFixProvider, MSTestVerifier>
+            var codeFixTest = new CSharpCodeFixTest<MigrationAnalyzer, MigrationCodeFixProvider, DefaultVerifier>
             {
                 TestCode = test,
                 FixedCode = fixtest,
                 NumberOfFixAllIterations = 2,
                 CompilerDiagnostics = CompilerDiagnostics.None
             };
-            
+
             // Input has both
             codeFixTest.ExpectedDiagnostics.Add(expectedUsing);
             codeFixTest.ExpectedDiagnostics.Add(expectedFixture);
@@ -251,19 +249,19 @@ public class MyTest : IClassFixture<MyFixture> { }";
 "    public void Setup() { }\n" +
 "}";
 
-            var expectedUsing = CSharpAnalyzerVerifier<MigrationAnalyzer, MSTestVerifier>.Diagnostic(MigrationAnalyzer.DiagnosticIdNUnitUsing)
+            var expectedUsing = CSharpAnalyzerVerifier<MigrationAnalyzer, DefaultVerifier>.Diagnostic(MigrationAnalyzer.DiagnosticIdNUnitUsing)
                 .WithLocation(1, 1);
-            var expectedSetup = CSharpAnalyzerVerifier<MigrationAnalyzer, MSTestVerifier>.Diagnostic(MigrationAnalyzer.DiagnosticIdNUnitOneTimeSetUp)
+            var expectedSetup = CSharpAnalyzerVerifier<MigrationAnalyzer, DefaultVerifier>.Diagnostic(MigrationAnalyzer.DiagnosticIdNUnitOneTimeSetUp)
                 .WithLocation(4, 6);
 
-            var codeFixTest = new CSharpCodeFixTest<MigrationAnalyzer, MigrationCodeFixProvider, MSTestVerifier>
+            var codeFixTest = new CSharpCodeFixTest<MigrationAnalyzer, MigrationCodeFixProvider, DefaultVerifier>
             {
                 TestCode = test,
                 FixedCode = fixtest,
                 NumberOfFixAllIterations = 2,
                 CompilerDiagnostics = CompilerDiagnostics.None
             };
-            
+
             codeFixTest.ExpectedDiagnostics.Add(expectedUsing);
             codeFixTest.ExpectedDiagnostics.Add(expectedSetup);
 
@@ -287,19 +285,19 @@ public class MyTest : IClassFixture<MyFixture> { }";
 "    public void Setup() { }\n" +
 "}";
 
-            var expectedUsing = CSharpAnalyzerVerifier<MigrationAnalyzer, MSTestVerifier>.Diagnostic(MigrationAnalyzer.DiagnosticIdNUnitUsing)
+            var expectedUsing = CSharpAnalyzerVerifier<MigrationAnalyzer, DefaultVerifier>.Diagnostic(MigrationAnalyzer.DiagnosticIdNUnitUsing)
                 .WithLocation(1, 1);
-            var expectedSetup = CSharpAnalyzerVerifier<MigrationAnalyzer, MSTestVerifier>.Diagnostic(MigrationAnalyzer.DiagnosticIdNUnitSetUp)
+            var expectedSetup = CSharpAnalyzerVerifier<MigrationAnalyzer, DefaultVerifier>.Diagnostic(MigrationAnalyzer.DiagnosticIdNUnitSetUp)
                 .WithLocation(4, 6);
 
-            var codeFixTest = new CSharpCodeFixTest<MigrationAnalyzer, MigrationCodeFixProvider, MSTestVerifier>
+            var codeFixTest = new CSharpCodeFixTest<MigrationAnalyzer, MigrationCodeFixProvider, DefaultVerifier>
             {
                 TestCode = test,
                 FixedCode = fixtest,
                 NumberOfFixAllIterations = 2,
                 CompilerDiagnostics = CompilerDiagnostics.None
             };
-            
+
             codeFixTest.ExpectedDiagnostics.Add(expectedUsing);
             codeFixTest.ExpectedDiagnostics.Add(expectedSetup);
 
@@ -323,19 +321,19 @@ public class MyTest : IClassFixture<MyFixture> { }";
 "    public void Teardown() { }\n" +
 "}";
 
-            var expectedUsing = CSharpAnalyzerVerifier<MigrationAnalyzer, MSTestVerifier>.Diagnostic(MigrationAnalyzer.DiagnosticIdNUnitUsing)
+            var expectedUsing = CSharpAnalyzerVerifier<MigrationAnalyzer, DefaultVerifier>.Diagnostic(MigrationAnalyzer.DiagnosticIdNUnitUsing)
                 .WithLocation(1, 1);
-            var expectedTeardown = CSharpAnalyzerVerifier<MigrationAnalyzer, MSTestVerifier>.Diagnostic(MigrationAnalyzer.DiagnosticIdNUnitTearDown)
+            var expectedTeardown = CSharpAnalyzerVerifier<MigrationAnalyzer, DefaultVerifier>.Diagnostic(MigrationAnalyzer.DiagnosticIdNUnitTearDown)
                 .WithLocation(4, 6);
 
-            var codeFixTest = new CSharpCodeFixTest<MigrationAnalyzer, MigrationCodeFixProvider, MSTestVerifier>
+            var codeFixTest = new CSharpCodeFixTest<MigrationAnalyzer, MigrationCodeFixProvider, DefaultVerifier>
             {
                 TestCode = test,
                 FixedCode = fixtest,
                 NumberOfFixAllIterations = 2,
                 CompilerDiagnostics = CompilerDiagnostics.None
             };
-            
+
             codeFixTest.ExpectedDiagnostics.Add(expectedUsing);
             codeFixTest.ExpectedDiagnostics.Add(expectedTeardown);
 
@@ -359,19 +357,19 @@ public class MyTest : IClassFixture<MyFixture> { }";
 "    public void Cleanup() { }\n" +
 "}";
 
-            var expectedUsing = CSharpAnalyzerVerifier<MigrationAnalyzer, MSTestVerifier>.Diagnostic(MigrationAnalyzer.DiagnosticIdNUnitUsing)
+            var expectedUsing = CSharpAnalyzerVerifier<MigrationAnalyzer, DefaultVerifier>.Diagnostic(MigrationAnalyzer.DiagnosticIdNUnitUsing)
                 .WithLocation(1, 1);
-            var expectedCleanup = CSharpAnalyzerVerifier<MigrationAnalyzer, MSTestVerifier>.Diagnostic(MigrationAnalyzer.DiagnosticIdNUnitOneTimeTearDown)
+            var expectedCleanup = CSharpAnalyzerVerifier<MigrationAnalyzer, DefaultVerifier>.Diagnostic(MigrationAnalyzer.DiagnosticIdNUnitOneTimeTearDown)
                 .WithLocation(4, 6);
 
-            var codeFixTest = new CSharpCodeFixTest<MigrationAnalyzer, MigrationCodeFixProvider, MSTestVerifier>
+            var codeFixTest = new CSharpCodeFixTest<MigrationAnalyzer, MigrationCodeFixProvider, DefaultVerifier>
             {
                 TestCode = test,
                 FixedCode = fixtest,
                 NumberOfFixAllIterations = 2,
                 CompilerDiagnostics = CompilerDiagnostics.None
             };
-            
+
             codeFixTest.ExpectedDiagnostics.Add(expectedUsing);
             codeFixTest.ExpectedDiagnostics.Add(expectedCleanup);
 
@@ -430,24 +428,24 @@ public class MyTests
     public static void GlobalCleanup() { }
 }";
 
-            var codeFixTest = new CSharpCodeFixTest<MigrationAnalyzer, MigrationCodeFixProvider, MSTestVerifier>
+            var codeFixTest = new CSharpCodeFixTest<MigrationAnalyzer, MigrationCodeFixProvider, DefaultVerifier>
             {
                 TestCode = test,
                 FixedCode = fixtest,
                 NumberOfFixAllIterations = 9,
                 CompilerDiagnostics = CompilerDiagnostics.None
             };
-            
-            codeFixTest.ExpectedDiagnostics.Add(CSharpAnalyzerVerifier<MigrationAnalyzer, MSTestVerifier>.Diagnostic(MigrationAnalyzer.DiagnosticIdMSTestUsing).WithLocation(1, 1));
-            codeFixTest.ExpectedDiagnostics.Add(CSharpAnalyzerVerifier<MigrationAnalyzer, MSTestVerifier>.Diagnostic(MigrationAnalyzer.DiagnosticIdMSTestTestClass).WithLocation(2, 2));
-            codeFixTest.ExpectedDiagnostics.Add(CSharpAnalyzerVerifier<MigrationAnalyzer, MSTestVerifier>.Diagnostic(MigrationAnalyzer.DiagnosticIdMSTestClassInitialize).WithLocation(5, 6));
-            codeFixTest.ExpectedDiagnostics.Add(CSharpAnalyzerVerifier<MigrationAnalyzer, MSTestVerifier>.Diagnostic(MigrationAnalyzer.DiagnosticIdMSTestTestInitialize).WithLocation(8, 6));
-            codeFixTest.ExpectedDiagnostics.Add(CSharpAnalyzerVerifier<MigrationAnalyzer, MSTestVerifier>.Diagnostic(MigrationAnalyzer.DiagnosticIdMSTestTestMethod).WithLocation(11, 6));
-            codeFixTest.ExpectedDiagnostics.Add(CSharpAnalyzerVerifier<MigrationAnalyzer, MSTestVerifier>.Diagnostic(MigrationAnalyzer.DiagnosticIdMSTestDataTestMethod).WithLocation(14, 6));
-            codeFixTest.ExpectedDiagnostics.Add(CSharpAnalyzerVerifier<MigrationAnalyzer, MSTestVerifier>.Diagnostic(MigrationAnalyzer.DiagnosticIdMSTestDataRow).WithLocation(15, 6));
-            codeFixTest.ExpectedDiagnostics.Add(CSharpAnalyzerVerifier<MigrationAnalyzer, MSTestVerifier>.Diagnostic(MigrationAnalyzer.DiagnosticIdMSTestDataRow).WithLocation(16, 6));
-            codeFixTest.ExpectedDiagnostics.Add(CSharpAnalyzerVerifier<MigrationAnalyzer, MSTestVerifier>.Diagnostic(MigrationAnalyzer.DiagnosticIdMSTestTestCleanup).WithLocation(19, 6));
-            codeFixTest.ExpectedDiagnostics.Add(CSharpAnalyzerVerifier<MigrationAnalyzer, MSTestVerifier>.Diagnostic(MigrationAnalyzer.DiagnosticIdMSTestClassCleanup).WithLocation(22, 6));
+
+            codeFixTest.ExpectedDiagnostics.Add(CSharpAnalyzerVerifier<MigrationAnalyzer, DefaultVerifier>.Diagnostic(MigrationAnalyzer.DiagnosticIdMSTestUsing).WithLocation(1, 1));
+            codeFixTest.ExpectedDiagnostics.Add(CSharpAnalyzerVerifier<MigrationAnalyzer, DefaultVerifier>.Diagnostic(MigrationAnalyzer.DiagnosticIdMSTestTestClass).WithLocation(2, 2));
+            codeFixTest.ExpectedDiagnostics.Add(CSharpAnalyzerVerifier<MigrationAnalyzer, DefaultVerifier>.Diagnostic(MigrationAnalyzer.DiagnosticIdMSTestClassInitialize).WithLocation(5, 6));
+            codeFixTest.ExpectedDiagnostics.Add(CSharpAnalyzerVerifier<MigrationAnalyzer, DefaultVerifier>.Diagnostic(MigrationAnalyzer.DiagnosticIdMSTestTestInitialize).WithLocation(8, 6));
+            codeFixTest.ExpectedDiagnostics.Add(CSharpAnalyzerVerifier<MigrationAnalyzer, DefaultVerifier>.Diagnostic(MigrationAnalyzer.DiagnosticIdMSTestTestMethod).WithLocation(11, 6));
+            codeFixTest.ExpectedDiagnostics.Add(CSharpAnalyzerVerifier<MigrationAnalyzer, DefaultVerifier>.Diagnostic(MigrationAnalyzer.DiagnosticIdMSTestDataTestMethod).WithLocation(14, 6));
+            codeFixTest.ExpectedDiagnostics.Add(CSharpAnalyzerVerifier<MigrationAnalyzer, DefaultVerifier>.Diagnostic(MigrationAnalyzer.DiagnosticIdMSTestDataRow).WithLocation(15, 6));
+            codeFixTest.ExpectedDiagnostics.Add(CSharpAnalyzerVerifier<MigrationAnalyzer, DefaultVerifier>.Diagnostic(MigrationAnalyzer.DiagnosticIdMSTestDataRow).WithLocation(16, 6));
+            codeFixTest.ExpectedDiagnostics.Add(CSharpAnalyzerVerifier<MigrationAnalyzer, DefaultVerifier>.Diagnostic(MigrationAnalyzer.DiagnosticIdMSTestTestCleanup).WithLocation(19, 6));
+            codeFixTest.ExpectedDiagnostics.Add(CSharpAnalyzerVerifier<MigrationAnalyzer, DefaultVerifier>.Diagnostic(MigrationAnalyzer.DiagnosticIdMSTestClassCleanup).WithLocation(22, 6));
 
             await codeFixTest.RunAsync();
         }

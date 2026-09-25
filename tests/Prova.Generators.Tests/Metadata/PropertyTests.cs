@@ -1,4 +1,3 @@
-using Xunit;
 using Prova.Generators.Tests;
 
 namespace Prova.Generators.Tests
@@ -21,8 +20,8 @@ namespace Prova.Generators.Tests
     }
 }";
             // Verify Registration includes Properties
-            GeneratorVerifier.VerifyContains(source, "Properties = new global::System.Collections.Generic.Dictionary<string, string>");
-            GeneratorVerifier.VerifyContains(source, "[\"Category\"] = \"Fast\"");
+            GeneratorVerifier.VerifyContains(source, "Properties = new Dictionary<string, string>");
+            GeneratorVerifier.VerifyContains(source, "{ \"Category\", \"Fast\" }");
         }
     }
 }

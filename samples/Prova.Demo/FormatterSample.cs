@@ -1,7 +1,7 @@
-using Prova;
 using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
+using Prova;
 
 namespace Prova.Demo
 {
@@ -19,9 +19,9 @@ namespace Prova.Demo
     {
         [Fact]
         [DisplayName("Value {0} is Hex {0}")]
-        public void MatrixHexDisplay([Matrix(10, 255)] [ArgumentDisplayFormatter(typeof(HexFormatter))] int value)
+        public void MatrixHexDisplay([Matrix(10, 255)][ArgumentDisplayFormatter(typeof(HexFormatter))] int value)
         {
-             // Test logic
+            // Test logic
         }
 
         public static IEnumerable<object[]> GetInts()
@@ -35,7 +35,7 @@ namespace Prova.Demo
         [DisplayName("Hex Check: {0}")]
         public void MemberDataHexDisplay([ArgumentDisplayFormatter(typeof(HexFormatter))] int value)
         {
-             // Test logic
+            // Test logic
         }
     }
 }

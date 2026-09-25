@@ -16,14 +16,30 @@ namespace Prova.Core.Tests.Framework
         [Before]
         public void Setup() => EventRegistry.Clear();
 
-        /// <summary>Mock receiver for start events.</summary>
+        /// <summary>
+        /// Mock receiver for start events.
+        /// </summary>
+        /// <remarks>
+        /// Receivers are registered into the process-wide EventRegistry that the running
+        /// framework itself dispatches through, so an unrelated test completing nearby can
+        /// deliver an event to this receiver and overwrite the recorded values. Filtering
+        /// on the exact ProvaTest instance under test makes the assertions independent of
+        /// runner timing.
+        /// </remarks>
         private sealed class MockStartReceiver : ITestStartEventReceiver
         {
+            public ProvaTest? Expected { get; set; }
+
             public ProvaTest? LastTest { get; private set; }
             public int Calls { get; private set; }
 
             public Task OnTestStartAsync(ProvaTest test)
             {
+                if (Expected is not null && !ReferenceEquals(Expected, test))
+                {
+                    return Task.CompletedTask;
+                }
+
                 LastTest = test;
                 Calls++;
                 return Task.CompletedTask;
@@ -31,8 +47,11 @@ namespace Prova.Core.Tests.Framework
         }
 
         /// <summary>Mock receiver for end events.</summary>
+        /// <remarks>See <see cref="MockStartReceiver"/> for why events are filtered.</remarks>
         private sealed class MockEndReceiver : ITestEndEventReceiver
         {
+            public ProvaTest? Expected { get; set; }
+
             public ProvaTest? LastTest { get; private set; }
             public TestResult LastResult { get; private set; }
             public long LastDuration { get; private set; }
@@ -40,6 +59,11 @@ namespace Prova.Core.Tests.Framework
 
             public Task OnTestEndAsync(ProvaTest test, TestResult result, long durationMs)
             {
+                if (Expected is not null && !ReferenceEquals(Expected, test))
+                {
+                    return Task.CompletedTask;
+                }
+
                 LastTest = test;
                 LastResult = result;
                 LastDuration = durationMs;
@@ -56,8 +80,9 @@ namespace Prova.Core.Tests.Framework
         {
             // Arrange
             var receiver = new MockStartReceiver();
-            EventRegistry.Register(receiver);
             var test = new ProvaTest { DisplayName = "Test1", ExecuteDelegate = () => Task.FromResult<string?>(null) };
+            receiver.Expected = test;
+            EventRegistry.Register(receiver);
 
             // Act
             await EventRegistry.DispatchStartAsync(test);
@@ -75,8 +100,9 @@ namespace Prova.Core.Tests.Framework
         {
             // Arrange
             var receiver = new MockEndReceiver();
-            EventRegistry.Register(receiver);
             var test = new ProvaTest { DisplayName = "Test2", ExecuteDelegate = () => Task.FromResult<string?>(null) };
+            receiver.Expected = test;
+            EventRegistry.Register(receiver);
 
             // Act
             await EventRegistry.DispatchEndAsync(test, TestResult.Passed, 123);
@@ -97,9 +123,11 @@ namespace Prova.Core.Tests.Framework
             // Arrange
             var receiver1 = new MockStartReceiver();
             var receiver2 = new MockStartReceiver();
+            var test = new ProvaTest { DisplayName = "MultiTest", ExecuteDelegate = () => Task.FromResult<string?>(null) };
+            receiver1.Expected = test;
+            receiver2.Expected = test;
             EventRegistry.Register(receiver1);
             EventRegistry.Register(receiver2);
-            var test = new ProvaTest { DisplayName = "MultiTest", ExecuteDelegate = () => Task.FromResult<string?>(null) };
 
             // Act
             await EventRegistry.DispatchStartAsync(test);

@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
@@ -33,7 +34,7 @@ namespace Prova
             _tests = tests;
             _capabilities = capabilities;
             _config = Configuration.ConfigLoader.Load();
-            
+
             // Merge Global Properties from config
             foreach (var test in _tests)
             {
@@ -90,18 +91,68 @@ namespace Prova
                 // Bounded Parallelism (CRITICAL)
                 int? specMax = _tests.Select(t => t.MaxParallel).Where(m => m.HasValue).Min();
                 int maxParallel = _config.MaxParallel ?? specMax ?? Environment.ProcessorCount;
-                
+
                 using var semaphore = new SemaphoreSlim(maxParallel);
+
+                // Isolation primitives. Previously this adapter honoured only the global
+                // concurrency limit, so [DoNotParallelize], [NotInParallel(...)] and
+                // [ParallelLimiter(...)] were silently ignored whenever tests ran through
+                // `dotnet test` / Microsoft.Testing.Platform - which is the documented and
+                // CI path. Tests that declared they needed isolation still ran concurrently,
+                // producing intermittent failures and corrupting shared state. The standalone
+                // generated runner already implemented these; the semantics are mirrored here.
+                using var exclusiveLock = new SemaphoreSlim(1, 1);
+                var resourceSemaphores = new ConcurrentDictionary<string, SemaphoreSlim>();
+
                 var tasks = new List<Task>();
 
                 foreach (var test in _tests)
                 {
+                    if (test.DoNotParallelize)
+                    {
+                        // Drain everything already scheduled so this test truly runs alone.
+                        await Task.WhenAll(tasks).ConfigureAwait(false);
+                        tasks.Clear();
+                    }
+
                     await semaphore.WaitAsync(context.CancellationToken);
 
                     tasks.Add(Task.Run(async () =>
                     {
+                        var heldResources = new List<SemaphoreSlim>();
+                        var hasExclusiveLock = false;
                         try
                         {
+                            if (test.DoNotParallelize)
+                            {
+                                await exclusiveLock.WaitAsync(context.CancellationToken).ConfigureAwait(false);
+                                hasExclusiveLock = true;
+                            }
+                            else
+                            {
+                                // Resource constraints are acquired in a stable order to
+                                // avoid deadlock between tests holding overlapping keys.
+                                if (test.ResourceConstraints is { Count: > 0 })
+                                {
+                                    foreach (var res in test.ResourceConstraints.Where(static x => x != null).OrderBy(static x => x, StringComparer.Ordinal))
+                                    {
+                                        var sem = resourceSemaphores.GetOrAdd(res!, static _ => new SemaphoreSlim(1, 1));
+                                        await sem.WaitAsync(context.CancellationToken).ConfigureAwait(false);
+                                        heldResources.Add(sem);
+                                    }
+                                }
+
+                                if (test.ParallelLimiters is { Count: > 0 })
+                                {
+                                    foreach (var (key, limit) in test.ParallelLimiters.OrderBy(static x => x.Key, StringComparer.Ordinal))
+                                    {
+                                        var sem = resourceSemaphores.GetOrAdd(key, _ => new SemaphoreSlim(limit, limit));
+                                        await sem.WaitAsync(context.CancellationToken).ConfigureAwait(false);
+                                        heldResources.Add(sem);
+                                    }
+                                }
+                            }
+
                             if (test.SkipReason != null)
                             {
                                 await EventRegistry.DispatchEndAsync(test, TestResult.Skipped, 0);
@@ -114,9 +165,26 @@ namespace Prova
                         }
                         finally
                         {
+                            for (int i = heldResources.Count - 1; i >= 0; i--)
+                            {
+                                heldResources[i].Release();
+                            }
+
+                            if (hasExclusiveLock)
+                            {
+                                exclusiveLock.Release();
+                            }
+
                             semaphore.Release();
                         }
                     }, context.CancellationToken));
+
+                    if (test.DoNotParallelize)
+                    {
+                        // Let the isolated test complete before scheduling anything else.
+                        await Task.WhenAll(tasks).ConfigureAwait(false);
+                        tasks.Clear();
+                    }
                 }
 
                 await Task.WhenAll(tasks);
@@ -130,7 +198,7 @@ namespace Prova
             await EventRegistry.DispatchStartAsync(test);
 
             // Report InProgress
-            var inProgressNode = MapToNode(test); 
+            var inProgressNode = MapToNode(test);
             inProgressNode.Properties.Add(InProgressTestNodeStateProperty.CachedInstance);
             await messageBus.PublishAsync(this, new TestNodeUpdateMessage(sessionUid, inProgressNode));
 
@@ -147,15 +215,15 @@ namespace Prova
                 try
                 {
                     string? output = await test.ExecuteDelegate();
-                    
+
                     sw.Stop();
                     var passedNode = MapToNode(test);
                     passedNode.Properties.Add(PassedTestNodeStateProperty.CachedInstance);
                     passedNode.Properties.Add(new TimingProperty(new TimingInfo(DateTimeOffset.Now - sw.Elapsed, DateTimeOffset.Now, sw.Elapsed)));
-                    
+
                     if (!string.IsNullOrEmpty(output))
                     {
-                         passedNode.Properties.Add(new StandardOutputProperty(output));
+                        passedNode.Properties.Add(new StandardOutputProperty(output));
                     }
 
                     await messageBus.PublishAsync(this, new TestNodeUpdateMessage(sessionUid, passedNode));

@@ -22,7 +22,7 @@ namespace Prova.Core.Tests
         /// <inheritdoc />
         public async Task DisposeAsync()
         {
-             await Task.Delay(10);
+            await Task.Delay(10);
             Console.WriteLine("AsyncTests Disposed");
         }
 

@@ -1,0 +1,9 @@
+# .editorconfig declares end_of_line = lf for this repository. Without a .gitattributes,
+# Git's autocrlf handling rewrites checkouts to CRLF on Windows, so the working tree can
+# never satisfy the repository's own formatting rules and `dotnet format --verify-no-changes`
+# fails on Windows agents while passing on Linux.
+* text=auto eol=lf
+
+*.png binary
+*.ico binary
+*.snk binary

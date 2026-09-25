@@ -1,9 +1,9 @@
-using Prova;
-using System.Threading.Tasks;
 using System;
+using System.Threading.Tasks;
+using Prova;
 
 // Script-style entry point
-await Prova.TestRunnerExecutor.RunAllAsync(args);
+return await Prova.TestRunnerExecutor.RunAllAsync(args);
 
 namespace StateSharing
 {
@@ -34,7 +34,7 @@ namespace StateSharing
         {
             // This test is order-dependent if reliant on other tests (anti-pattern usually), 
             // but fine for demonstrating the bag exists.
-            
+
             TestContext.GlobalState.Set("TestRunId", 12345);
             var id = TestContext.GlobalState.Get<int>("TestRunId");
             Assert.Equal(12345, id);

@@ -16,10 +16,10 @@ namespace Prova.Demo
             Assert.Contains(2, list);
             Assert.DoesNotContain(4, list);
             Assert.NotEmpty(list);
-            
+
             var empty = new List<int>();
             Assert.Empty(empty);
-            
+
             var single = new List<string> { "Solo" };
             Assert.Single(single);
         }
@@ -61,7 +61,7 @@ namespace Prova.Demo
         public void ExceptionAssertions()
         {
             Assert.Throws<InvalidOperationException>(() => throw new InvalidOperationException("Boom"));
-            
+
             var ex = Assert.Throws<InvalidOperationException>(() => throw new InvalidOperationException("Catch me"));
             Assert.Equal("Catch me", ex.Message);
         }
@@ -70,7 +70,7 @@ namespace Prova.Demo
         [Fact]
         public async Task AsyncExceptionAssertions()
         {
-            await Assert.ThrowsAsync<TaskCanceledException>(async () => 
+            await Assert.ThrowsAsync<TaskCanceledException>(async () =>
             {
                 await Task.Yield();
                 throw new TaskCanceledException();

@@ -30,7 +30,7 @@ namespace Prova.Core.Tests.Framework
             Assert.Single(One);
             Assert.Empty(Array.Empty<int>());
         }
-        
+
         /// <summary>Test type assertions.</summary>
         [Fact]
         public static void TypeTest()
