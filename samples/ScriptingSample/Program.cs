@@ -9,9 +9,10 @@ Console.WriteLine("🚀 Running Scripted Tests...");
 // Prova.Configuration.Config.DefaultTimeoutMs = 500;
 
 // Execute Tests
-return await Prova.TestRunnerExecutor.RunAllAsync(args);
+var exitCode = await Prova.TestRunnerExecutor.RunAllAsync(args);
 
 Console.WriteLine("✅ Script Completed.");
+return exitCode;
 
 // Test Definitions in the same file
 namespace Scripting

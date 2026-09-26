@@ -320,16 +320,62 @@ ran the entire test suite instead.
 **Fixed.** `--info` now routes to the platform host, where it reports Prova's own extension and
 version alongside the platform's.
 
+### 29. Every Microsoft.Testing.Platform extension other than the dump providers was ignored
+
+Prova generates its own entry point, so the one Microsoft.Testing.Platform would have generated is
+disabled. That generated entry point is where the platform registers the extensions a project
+references (code coverage, TRX reports, retry). Prova's replacement registered only the crash-dump
+and hang-dump providers by hand. Referencing any other extension had no effect: its command-line
+options were rejected as unknown, and the run exited with code 5 having executed zero tests.
+
+Prova also removed `--coverage` from the arguments to drive its own LCOV output, so even a
+correctly registered coverage extension would never have seen the switch.
+
+Found by running the CI workflow's own test command locally before pushing it: that command could
+not have passed on any runner.
+
+**Fixed.** The generator detects the `SelfRegisteredExtensions` class that
+`Microsoft.Testing.Platform.MSBuild` generates and calls it, so every referenced extension is
+registered the way the platform intends. It falls back to the dump providers when that class is
+absent. `--coverage` is left to the platform extension whenever the extension is referenced. Six
+tests in `PlatformExtensionTests` pin both paths.
+
+### 30. The CI coverage step could not run
+
+The workflow collected coverage with `--collect:"XPlat Code Coverage"`, a VSTest data-collector
+switch. Microsoft.Testing.Platform rejects it, so the test step would have failed on its first run
+with zero tests executed.
+
+**Fixed.** CI uses `--coverage --coverage-output-format cobertura`, and each test project
+references `Microsoft.Testing.Extensions.CodeCoverage`. That fix depended on defect 29.
+
+### 31. A sample demonstrated nothing, and two did not build cleanly
+
+`samples/VariantSample` exists to show `[TestVariant]`, but both attributes and both assertions
+were commented out, and its second test had no `[Fact]`, so it never ran. The sample passed while
+demonstrating no variant behaviour at all. Separately, the .NET 11 RC1 build reported `CA1050` in
+`VariantSample` and `LoggingSample` (types in the global namespace) and `CS0162` in
+`ScriptingSample`, whose "Script Completed" line followed a `return` and could never print.
+
+**Fixed.** The variant sample runs its test once per variant and asserts the variant name: three
+tests pass, where one did before. Both samples declare a namespace, and the scripting sample
+returns its exit code after printing. The solution builds with zero warnings on SDK 10 and RC1.
+
 ## Open
 
 Nothing is open in Prova.
+
 ## Verification
 
-| Framework | Result |
-| --- | --- |
-| net8.0 | `Prova.Core.Tests` and `Prova.Generators.Tests` pass |
-| net10.0 | All three test projects pass |
-| net11.0 RC1 | 114 tests pass (`Prova.Core.Tests` 40, `Prova.Generators.Tests` 74) |
+Run with the .NET 11 RC1 SDK (`11.0.100-rc.1.26425.128`) and the preview framework enabled, so
+every framework below was built and tested in one pass:
 
-Solution-wide: **241 tests, 0 failed, 8 skipped, exit code 0**, with `dotnet format whitespace`
-and `dotnet format style` both clean.
+| Framework | `Prova.Core.Tests` | `Prova.Generators.Tests` | `Prova.Analyzers.Tests` |
+| --- | --- | --- | --- |
+| net8.0 | 66 passed, 4 skipped | 83 passed | — |
+| net10.0 | 66 passed, 4 skipped | 83 passed | 13 passed |
+| net11.0 RC1 | 66 passed, 4 skipped | 83 passed | — |
+
+Solution-wide: **460 passed, 0 failed, 12 skipped, exit code 0**. The four skips per framework are
+deliberate: three are tests written to fail, kept to confirm by hand that failures are reported,
+and one exercises skip reporting itself.

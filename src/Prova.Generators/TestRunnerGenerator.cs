@@ -69,16 +69,19 @@ namespace Prova.Generators
                 .Combine(assemblyHooks)
                 .Combine(globalHooks)
                 .Combine(globalParallel)
-                .Combine(testFactories);
+                .Combine(testFactories)
+                .Combine(context.CompilationProvider.Select(static (c, _) => PlatformExtensions.From(c)));
 
             context.RegisterSourceOutput(combined, static (spc, source) =>
             {
-                var tests = source.Left.Left.Left.Left.Left;
-                var configs = source.Left.Left.Left.Left.Right;
-                var hooks = source.Left.Left.Left.Right;
-                var globals = source.Left.Left.Right;
-                var globalMaxParallel = source.Left.Right;
-                var factories = source.Right.ToList();
+                var platform = source.Right;
+                var rest = source.Left;
+                var tests = rest.Left.Left.Left.Left.Left;
+                var configs = rest.Left.Left.Left.Left.Right;
+                var hooks = rest.Left.Left.Left.Right;
+                var globals = rest.Left.Left.Right;
+                var globalMaxParallel = rest.Left.Right;
+                var factories = rest.Right.ToList();
 
                 var configMethods = configs.ToList();
                 var beforeAssembly = hooks.Where(h => h?.HookType == "Before").Select(h => (h?.Method, h?.IsAsync ?? false, h?.ExecutorType)).ToList();
@@ -90,7 +93,7 @@ namespace Prova.Generators
                 var beforeEveryClass = globals.Where(g => g?.HookType == "Before" && g?.Scope == 1).Select(g => (g?.Method, g?.IsAsync ?? false, g?.ExecutorType)).ToList();
                 var afterEveryClass = globals.Where(g => g?.HookType == "After" && g?.Scope == 1).Select(g => (g?.Method, g?.IsAsync ?? false, g?.ExecutorType)).ToList();
 
-                SourceEmitter.Execute(spc, tests, configMethods, beforeAssembly, afterAssembly, beforeEveryTest, afterEveryTest, beforeEveryClass, afterEveryClass, globalMaxParallel, factories);
+                SourceEmitter.Execute(spc, tests, configMethods, beforeAssembly, afterAssembly, beforeEveryTest, afterEveryTest, beforeEveryClass, afterEveryClass, globalMaxParallel, factories, platform);
             });
 
             // Automatic Entry Point: Emit Program.g.cs if no Main method is detected in user code

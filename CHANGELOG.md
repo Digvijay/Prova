@@ -8,7 +8,7 @@ This release is the result of auditing Prova for open-source submission. It fixe
 defects that allowed the framework to report success while doing nothing, and it widens the
 supported surface to the current LTS.
 
-See `docs/known-issues.md` for the full ledger, including the three issues still open.
+See `docs/known-issues.md` for the full ledger. Nothing in it is open.
 
 ### Fixed — the framework reported success while doing nothing
 -   **`dotnet test` exited 0 even when tests failed.** The generated runner computed an exit code
@@ -28,6 +28,11 @@ See `docs/known-issues.md` for the full ledger, including the three issues still
 -   **`[ArgumentDisplayFormatter]` was ignored on `[Matrix]`** default display names.
 -   **The migration code fix corrupted line endings** and lost indentation when inserting
     `[Theory]`.
+-   **Every Microsoft.Testing.Platform extension except the dump providers was ignored.** The
+    generated entry point now calls `SelfRegisteredExtensions`, so code coverage, TRX and retry
+    register as the platform intends, and `--coverage` is no longer stripped when the coverage
+    extension is present. Previously their options were rejected and the run executed zero tests.
+-   **The CI coverage step could not run:** it passed the VSTest-only `--collect` switch.
 
 ### Fixed — tests that existed but never ran
 -   `Prova.Generators.Tests` executed 11 of its 66 tests; all 74 now run.
@@ -36,6 +41,9 @@ See `docs/known-issues.md` for the full ledger, including the three issues still
 -   An orphaned `FsCheckEmissionTests.cs` outside any project was ported in; doing so revealed
     that the generator-verification compilation never referenced `Prova.FsCheck`.
 -   Six sample projects were in no solution, two of which could not build in Release.
+-   `VariantSample` had its `[TestVariant]` attributes and assertions commented out and demonstrated
+    nothing; it now runs three variant tests. Two samples warned under the .NET 11 SDK
+    (`CA1050`, `CS0162`).
 
 ### Fixed — supply chain, packaging and portability
 -   **NU1903**: `Testcontainers` 4.15.0 resolves the high-severity `SSH.NET` advisories.

@@ -78,6 +78,37 @@ namespace Prova.Generators.Tests
             VerifyContains(source, new[] { expectedSnippet });
         }
 
+        /// <summary>Runs the generator and returns TestRunnerExecutor.g.cs with normalised line endings.</summary>
+        public static string Generate(string source)
+        {
+            var references = new List<MetadataReference>
+            {
+                MetadataReference.CreateFromFile(typeof(object).Assembly.Location),
+                MetadataReference.CreateFromFile(typeof(Console).Assembly.Location),
+                MetadataReference.CreateFromFile(typeof(Task).Assembly.Location),
+                MetadataReference.CreateFromFile(typeof(IEnumerable<>).Assembly.Location),
+                MetadataReference.CreateFromFile(typeof(ProvaTest).Assembly.Location),
+                MetadataReference.CreateFromFile(Assembly.Load("System.Runtime").Location),
+                MetadataReference.CreateFromFile(Assembly.Load("netstandard").Location)
+            };
+
+            var compilation = CSharpCompilation.Create(
+                "TestProject",
+                new[] { CSharpSyntaxTree.ParseText(source) },
+                references,
+                new CSharpCompilationOptions(OutputKind.ConsoleApplication));
+
+            GeneratorDriver driver = CSharpGeneratorDriver.Create(new TestRunnerGenerator());
+            var result = driver.RunGenerators(compilation).GetRunResult();
+            var executor = result.Results[0].GeneratedSources.FirstOrDefault(s => s.HintName == "TestRunnerExecutor.g.cs");
+            if (executor.SourceText == null)
+            {
+                Assert.Fail("TestRunnerExecutor.g.cs was not generated.");
+            }
+
+            return executor.SourceText!.ToString().Replace("\r\n", "\n");
+        }
+
         public static void VerifyContains(string source, string[] expectedSnippets)
         {
             // 1. Create Compilation

@@ -27,6 +27,9 @@
 
   <ItemGroup>
     <ProjectReference Include="..\..\src\Prova.Generators\Prova.Generators.csproj" />
+    <!-- Generates SelfRegisteredExtensions, through which Prova's entry point registers coverage and TRX. -->
+    <PackageReference Include="Microsoft.Testing.Platform.MSBuild" Version="2.0.2" />
+    <PackageReference Include="Microsoft.Testing.Extensions.CodeCoverage" Version="18.3.2" />
     <ProjectReference Include="..\..\src\Prova.Core\Prova.Core.csproj" />
     <!-- Referenced so the generator-verification compilation can bind Prova.FsCheck's
          [Property] attribute. Without it the attribute is an error type, the generator

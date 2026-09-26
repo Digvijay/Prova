@@ -19,7 +19,8 @@ namespace Prova.Generators.Emission
             List<(string? Method, bool IsAsync, string? ExecutorType)>? beforeEveryClass = null,
             List<(string? Method, bool IsAsync, string? ExecutorType)>? afterEveryClass = null,
             int? globalMaxParallel = null,
-            List<string?>? factories = null)
+            List<string?>? factories = null,
+            PlatformExtensions platform = default)
         {
             if (methods.IsDefaultOrEmpty && (factories == null || factories.Count == 0)) return;
 
@@ -189,9 +190,20 @@ namespace Prova.Generators.Emission
 
             sb.AppendLine("            try {");
             sb.AppendLine("                args ??= global::System.Array.Empty<string>();");
-            sb.AppendLine("                bool hasCoverage = args.Any(a => a == \"--coverage\");");
-            sb.AppendLine("                var filteredArgs = args.Where(a => a != \"--coverage\").ToArray();");
-            sb.AppendLine("                bool isMtp = args.Any(a => a == \"--list-tests\" || a == \"--server\" || a.StartsWith(\"--client-port\") || a == \"--report-trx\" || hasCoverage || a == \"--help\" || a == \"-?\" || a == \"-h\" || a == \"--info\" || a == \"--crashdump\" || a == \"--hangdump\" || a.StartsWith(\"--hangdump-timeout\"));");
+            if (platform.HasPlatformCoverage)
+            {
+                // Microsoft.Testing.Extensions.CodeCoverage owns --coverage. Stripping it here, as
+                // Prova does for its own LCOV output, would hide it from the extension the user
+                // referenced, which then reports nothing.
+                sb.AppendLine("                bool hasCoverage = false;");
+                sb.AppendLine("                var filteredArgs = args;");
+            }
+            else
+            {
+                sb.AppendLine("                bool hasCoverage = args.Any(a => a == \"--coverage\");");
+                sb.AppendLine("                var filteredArgs = args.Where(a => a != \"--coverage\").ToArray();");
+            }
+            sb.AppendLine("                bool isMtp = args.Any(a => a == \"--list-tests\" || a == \"--server\" || a.StartsWith(\"--client-port\") || a == \"--report-trx\" || a == \"--coverage\" || a == \"--help\" || a == \"-?\" || a == \"-h\" || a == \"--info\" || a == \"--crashdump\" || a == \"--hangdump\" || a.StartsWith(\"--hangdump-timeout\"));");
             sb.AppendLine();
             sb.AppendLine("                if (isMtp)");
             sb.AppendLine("                {");
@@ -233,8 +245,17 @@ namespace Prova.Generators.Emission
             sb.AppendLine("        private static async global::System.Threading.Tasks.Task<int> RunMtpAsync(string[] args, bool hasCoverage)");
             sb.AppendLine("        {");
             sb.AppendLine("            var builder = await global::Microsoft.Testing.Platform.Builder.TestApplication.CreateBuilderAsync(args);");
-            sb.AppendLine("            builder.AddCrashDumpProvider();");
-            sb.AppendLine("            builder.AddHangDumpProvider();");
+            if (platform.SelfRegisteredExtensionsType != null)
+            {
+                // Registers every extension the project references, crash and hang dump included,
+                // exactly as the platform's own generated entry point would.
+                sb.AppendLine($"            {platform.SelfRegisteredExtensionsType}.AddSelfRegisteredExtensions(builder, args);");
+            }
+            else
+            {
+                sb.AppendLine("            builder.AddCrashDumpProvider();");
+                sb.AppendLine("            builder.AddHangDumpProvider();");
+            }
             sb.AppendLine("            // Name-based filtering. The platform only offers --filter-uid, and a UID");
             sb.AppendLine("            // cannot be guessed without listing the tests first.");
             sb.AppendLine("            builder.CommandLine.AddProvider(() => new global::Prova.ProvaFilterCommandLineProvider());");
