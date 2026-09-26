@@ -39,7 +39,7 @@ Tests run in parallel by default (`Task.WhenAll`), utilizing all available cores
     <TargetFramework>net10.0</TargetFramework>
   </PropertyGroup>
   <ItemGroup>
-    <PackageReference Include="Prova" Version="0.5.0" />
+    <PackageReference Include="Prova" Version="0.6.0" />
   </ItemGroup>
 </Project>
 ```

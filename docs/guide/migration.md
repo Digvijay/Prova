@@ -10,7 +10,7 @@ Prova includes a Roslyn Analyzer and Code Fix provider to help you migrate your 
 Add the Prova package to your test project.
 
 ```xml
-<PackageReference Include="Prova" Version="0.4.0" />
+<PackageReference Include="Prova" Version="0.6.0" />
 ```
 
 ### 2. Run the Fixer
