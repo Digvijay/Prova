@@ -128,7 +128,19 @@ jobs:
           INCLUDE_PREVIEW_TFM: 'true'
         run: dotnet build Prova.sln --no-restore --configuration Release
 
+      # The .NET 11 preview SDK's in-box Microsoft.Testing.Platform test driver can be newer
+      # than the latest published Microsoft.Testing.Platform NuGet package (the version every
+      # project here references), which breaks the driver/testhost handshake with a
+      # MissingMethodException on NamedPipeServer.GetPipeName ("Handshake failures" in the run
+      # summary). There is no newer package to bump to yet
+      # (https://www.nuget.org/packages/Microsoft.Testing.Platform lists 2.4.1 as latest), so
+      # this step is allowed to fail without turning the whole job red; the job-level
+      # continue-on-error above still covers the Restore/Build steps. Remove this once a
+      # Microsoft.Testing.Platform release compatible with the net11.0 preview SDK ships, and
+      # re-check whether failures are still limited to "Handshake failures" rather than actual
+      # test regressions.
       - name: Test (including net11.0)
+        continue-on-error: true
         env:
           INCLUDE_PREVIEW_TFM: 'true'
         run: dotnet test Prova.sln --no-build --configuration Release
