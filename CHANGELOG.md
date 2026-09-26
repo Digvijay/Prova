@@ -87,6 +87,12 @@ See `docs/known-issues.md` for the full ledger. Nothing in it is open.
     every framework the libraries ship.
 -   **CI** runs a Linux/Windows matrix across net8.0 and net10.0, tests the whole solution,
     collects coverage, verifies formatting, packs, and has an advisory net11.0 preview leg.
+-   **Dependency servicing.** GitHub Actions moved to `actions/setup-dotnet@v6`,
+    `actions/upload-artifact@v7`, `actions/setup-node@v7`, `actions/upload-pages-artifact@v5`
+    and `actions/deploy-pages@v5`; `Prova.AspNetCore` uses `Microsoft.AspNetCore.Mvc.Testing`
+    8.0.31 for `net8.0`; Roslyn analyzer/generator tooling uses the 5.9 package line; Microsoft
+    Testing Platform extensions use 2.4.1 with Code Coverage 18.11.2; `Prova.Playwright` uses
+    Microsoft.Playwright 1.63.0.
 
 ### Added
 -   `CODE_OF_CONDUCT.md`, `SUPPORT.md`, `CODEOWNERS`, `dependabot.yml`, a pull request template,
