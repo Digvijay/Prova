@@ -6,7 +6,8 @@
     <EnforceExtendedAnalyzerRules>true</EnforceExtendedAnalyzerRules>
     <RootNamespace>Prova.Analyzers</RootNamespace>
     <IsPackable>false</IsPackable> <!-- Bundled in main package -->
-    <NoWarn>RS2008</NoWarn>
+    <!-- This package deliberately ships analyzer diagnostics and IDE code fixes from one assembly. The code-fix provider requires Workspaces, while command-line compilation only executes the DiagnosticAnalyzer. -->
+    <NoWarn>RS2008;RS1038</NoWarn>
   </PropertyGroup>
 
   <ItemGroup>
