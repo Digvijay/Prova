@@ -3,20 +3,67 @@ using System;
 namespace Prova.Logging
 {
     /// <summary>
+    /// The build host whose annotation syntax <see cref="ConsoleLogger"/> should emit.
+    /// </summary>
+    public enum ConsoleLogHost
+    {
+        /// <summary>A plain terminal: human-readable prefixes and colour.</summary>
+        Plain = 0,
+
+        /// <summary>GitHub Actions: <c>::warning::</c> and <c>::error::</c> workflow commands.</summary>
+        GitHubActions = 1,
+
+        /// <summary>Azure Pipelines: <c>##vso[task.logissue]</c> logging commands.</summary>
+        AzureDevOps = 2,
+    }
+
+    /// <summary>
     /// A logger that writes to the console.
     /// </summary>
     public class ConsoleLogger : ITestLogger
     {
-        private readonly bool _isGitHubActions;
-        private readonly bool _isAzureDevOps;
+        private readonly ConsoleLogHost _host;
 
         /// <summary>
-        /// Initializes a new instance of the <see cref="ConsoleLogger"/> class.
+        /// Initializes a new instance of the <see cref="ConsoleLogger"/> class, detecting the
+        /// build host from the environment.
         /// </summary>
         public ConsoleLogger()
+            : this(DetectHost())
         {
-            _isGitHubActions = Environment.GetEnvironmentVariable("GITHUB_ACTIONS") == "true";
-            _isAzureDevOps = !string.IsNullOrEmpty(Environment.GetEnvironmentVariable("TF_BUILD"));
+        }
+
+        /// <summary>
+        /// Initializes a new instance of the <see cref="ConsoleLogger"/> class for a specific host.
+        /// </summary>
+        /// <param name="host">The annotation syntax to emit.</param>
+        /// <remarks>
+        /// The parameterless constructor reads ambient environment variables, so its behaviour
+        /// changes depending on where the process runs. Anything that needs to assert on the
+        /// output — including this library's own tests — should name the host instead.
+        /// </remarks>
+        public ConsoleLogger(ConsoleLogHost host)
+        {
+            _host = host;
+        }
+
+        /// <summary>
+        /// Determines the build host from the ambient environment.
+        /// </summary>
+        /// <returns>The detected host, or <see cref="ConsoleLogHost.Plain"/>.</returns>
+        public static ConsoleLogHost DetectHost()
+        {
+            if (Environment.GetEnvironmentVariable("GITHUB_ACTIONS") == "true")
+            {
+                return ConsoleLogHost.GitHubActions;
+            }
+
+            if (!string.IsNullOrEmpty(Environment.GetEnvironmentVariable("TF_BUILD")))
+            {
+                return ConsoleLogHost.AzureDevOps;
+            }
+
+            return ConsoleLogHost.Plain;
         }
 
         /// <inheritdoc />
@@ -28,45 +75,43 @@ namespace Prova.Logging
         /// <inheritdoc />
         public void LogWarning(string message)
         {
-            if (_isGitHubActions)
+            switch (_host)
             {
-                // GitHub Actions Warning Syntax: ::warning::{message}
-                Console.WriteLine($"::warning::{message}");
-            }
-            else if (_isAzureDevOps)
-            {
-                // Azure DevOps Warning Syntax: ##vso[task.logissue type=warning]{message}
-                Console.WriteLine($"##vso[task.logissue type=warning]{message}");
-            }
-            else
-            {
-                var color = Console.ForegroundColor;
-                Console.ForegroundColor = ConsoleColor.Yellow;
-                Console.WriteLine($"[WARN] {message}");
-                Console.ForegroundColor = color;
+                case ConsoleLogHost.GitHubActions:
+                    Console.WriteLine($"::warning::{message}");
+                    break;
+                case ConsoleLogHost.AzureDevOps:
+                    Console.WriteLine($"##vso[task.logissue type=warning]{message}");
+                    break;
+                default:
+                    WriteInColour(ConsoleColor.Yellow, $"[WARN] {message}");
+                    break;
             }
         }
 
         /// <inheritdoc />
         public void LogError(string message)
         {
-            if (_isGitHubActions)
+            switch (_host)
             {
-                // GitHub Actions Error Syntax: ::error::{message}
-                Console.WriteLine($"::error::{message}");
+                case ConsoleLogHost.GitHubActions:
+                    Console.WriteLine($"::error::{message}");
+                    break;
+                case ConsoleLogHost.AzureDevOps:
+                    Console.WriteLine($"##vso[task.logissue type=error]{message}");
+                    break;
+                default:
+                    WriteInColour(ConsoleColor.Red, $"[ERR] {message}");
+                    break;
             }
-            else if (_isAzureDevOps)
-            {
-                // Azure DevOps Error Syntax: ##vso[task.logissue type=error]{message}
-                Console.WriteLine($"##vso[task.logissue type=error]{message}");
-            }
-            else
-            {
-                var color = Console.ForegroundColor;
-                Console.ForegroundColor = ConsoleColor.Red;
-                Console.WriteLine($"[ERR] {message}");
-                Console.ForegroundColor = color;
-            }
+        }
+
+        private static void WriteInColour(ConsoleColor colour, string line)
+        {
+            var original = Console.ForegroundColor;
+            Console.ForegroundColor = colour;
+            Console.WriteLine(line);
+            Console.ForegroundColor = original;
         }
     }
 }

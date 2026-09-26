@@ -361,6 +361,70 @@ demonstrating no variant behaviour at all. Separately, the .NET 11 RC1 build rep
 tests pass, where one did before. Both samples declare a namespace, and the scripting sample
 returns its exit code after printing. The solution builds with zero warnings on SDK 10 and RC1.
 
+### 32. `ConsoleLogger` asserted one behaviour and shipped two
+
+The logger chooses its output syntax from ambient environment variables: `GITHUB_ACTIONS=true`
+selects GitHub's `::error::` workflow commands, `TF_BUILD` selects Azure Pipelines'
+`##vso[task.logissue]` commands, and otherwise it writes `[ERR]` in colour. Three behaviours,
+all deliberate, all documented.
+
+`ConsoleLoggerTests` constructed `new ConsoleLogger()` and asserted `[ERR]`. On a developer
+machine none of those variables is set, so the test passed. On GitHub Actions the test process
+inherits `GITHUB_ACTIONS=true`, the logger correctly emitted `::error::error message`, and the
+test failed. The first CI run on a hosted runner failed on exactly this, in both
+`LogWarning_WritesToConsole_WithWarnPrefix` and `LogError_WritesToConsole_WithErrPrefix`.
+
+The tempting fixes are both wrong. Unsetting the variables inside the test mutates process-global
+state that the runner itself reads. Relaxing the assertion to accept either form stops the test
+from checking anything.
+
+**Fixed.** The environment read is now a seam rather than a constructor side effect: a public
+`ConsoleLogHost` enum, a `ConsoleLogger(ConsoleLogHost)` constructor, and a static
+`ConsoleLogger.DetectHost()` that performs the detection. The parameterless constructor still
+detects, so nothing downstream changes. **Tests:** `tests/Prova.Core.Tests/Logging/ConsoleLoggerTests.cs`
+now names the host and asserts all three syntaxes — seven tests where three stood — plus one test
+that covers `DetectHost()` itself, including that GitHub Actions wins when both variables are set.
+Verified by running the whole suite with `GITHUB_ACTIONS=true` and `TF_BUILD=True` exported: 329
+passed, 0 failed, identical to a clean shell. The general lesson is the same one entry 27 records
+about the hardcoded version — a value the code reads from its surroundings must be injectable, or
+the tests can only ever assert whichever surroundings they happen to run in.
+
+### 33. Five files used CRLF line endings in a repository that requires LF
+
+`dotnet format whitespace --verify-no-changes` runs in CI. It failed on the first hosted run with
+`FINALNEWLINE` in `samples/LoggingSample/Program.cs` and `samples/VariantSample/Program.cs`, and
+once those were given a trailing newline it failed again with 282 `ENDOFLINE` errors across five
+files: the two samples, `src/Prova.Generators/PlatformExtensions.cs`,
+`tests/Prova.Core.Tests/Logging/ConsoleLoggerTests.cs` and
+`tests/Prova.Generators.Tests/PlatformExtensionTests.cs`.
+
+Every one of them was added during this review, on Windows, with CRLF endings, into a repository
+whose `.editorconfig` requires LF. The check never ran locally because it is a CI step, and CI had
+never run on a hosted runner.
+
+**Fixed.** All five converted to LF with a trailing newline. `dotnet format whitespace Prova.sln
+--verify-no-changes` and `dotnet format style Prova.sln --verify-no-changes --severity warn` — the
+exact commands CI runs — both exit 0.
+
+### 34. The publish workflow could ship a package whose assemblies disagree with it
+
+`publish.yml` builds the solution, then packs with `--no-build` while overriding
+`/p:Version=${TAG_NAME#v}`. The assemblies inside the package are stamped from `<Version>` in
+`Directory.Build.props`; the package itself is stamped from the tag. Nothing compared the two. A
+tag of `v0.7.0` against a `Directory.Build.props` still reading `0.6.0` would have published a
+package called 0.7.0 containing assemblies that identify themselves as 0.6.0, and the run would
+have been green.
+
+The same workflow also ran no tests. It restored, built and pushed to nuget.org, so any defect that
+the suite catches would have reached consumers anyway.
+
+**Fixed.** The workflow now extracts the declared version from `Directory.Build.props` and fails
+with an explicit error if it differs from the tag, runs `dotnet test` on the built artefacts before
+packing, installs the .NET 8 SDK alongside 10 so the net8.0 target is genuinely exercised, and
+declares `permissions: contents: read`. The version check was verified against the real file, and
+the build-then-test-with-`--no-build` sequence was run locally in the order CI runs it: 329 passed,
+0 failed.
+
 ## Open
 
 Nothing is open in Prova.
@@ -372,10 +436,14 @@ every framework below was built and tested in one pass:
 
 | Framework | `Prova.Core.Tests` | `Prova.Generators.Tests` | `Prova.Analyzers.Tests` |
 | --- | --- | --- | --- |
-| net8.0 | 66 passed, 4 skipped | 83 passed | — |
-| net10.0 | 66 passed, 4 skipped | 83 passed | 13 passed |
-| net11.0 RC1 | 66 passed, 4 skipped | 83 passed | — |
+| net8.0 | 71 passed, 4 skipped | 83 passed | — |
+| net10.0 | 71 passed, 4 skipped | 83 passed | 13 passed |
+| net11.0 RC1 | 71 passed, 4 skipped | 83 passed | — |
 
-Solution-wide: **460 passed, 0 failed, 12 skipped, exit code 0**. The four skips per framework are
+Solution-wide: **475 passed, 0 failed, 12 skipped, exit code 0**. The four skips per framework are
 deliberate: three are tests written to fail, kept to confirm by hand that failures are reported,
 and one exercises skip reporting itself.
+
+The suite was also run in full with `GITHUB_ACTIONS=true` and `TF_BUILD=True` exported, to prove
+that no test's result depends on the environment it runs in. Both `dotnet format whitespace` and
+`dotnet format style --severity warn` exit 0 against `Prova.sln`.

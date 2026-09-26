@@ -52,6 +52,29 @@ See `docs/known-issues.md` for the full ledger. Nothing in it is open.
 -   `AnalysisLevel` pinned to `10.0`; `global.json` rolls forward to new majors.
 -   Added `.gitattributes`; the repository is now `dotnet format` clean.
 
+### Fixed — found by running CI on GitHub-hosted x64 runners for the first time
+-   **`ConsoleLogger`'s three output modes were tested as one.** The logger picks GitHub Actions
+    `::error::` commands, Azure Pipelines `##vso[task.logissue]` commands, or plain `[ERR]` text
+    from ambient environment variables. The tests asserted the plain form, which is true on a
+    laptop and false on Actions, where the test process inherits `GITHUB_ACTIONS=true`. The
+    detection is now a seam rather than a constructor side effect, and all three modes are
+    asserted explicitly. Verified by running the whole suite with `GITHUB_ACTIONS=true` and
+    `TF_BUILD=True` exported.
+-   **Five files used CRLF in a repository that requires LF**, failing the `dotnet format`
+    whitespace gate with `FINALNEWLINE` and then 282 `ENDOFLINE` errors. All converted.
+-   **`publish.yml` could ship a package whose assemblies disagreed with it.** It packed with
+    `--no-build` while overriding the package version from the git tag, so a tag that disagreed
+    with `Directory.Build.props` would have published a correctly-named package containing
+    differently-versioned assemblies, and the run would have been green. It also pushed to
+    nuget.org without running a single test. It now fails on a tag/version mismatch, runs the
+    suite on the artefacts it is about to publish, installs the .NET 8 SDK so the `net8.0` target
+    is genuinely exercised, and declares least-privilege permissions.
+
+### Added
+-   **`ConsoleLogHost`** and **`ConsoleLogger(ConsoleLogHost)`**, plus the static
+    **`ConsoleLogger.DetectHost()`**. The parameterless constructor still detects from the
+    environment, so existing use is unaffected.
+
 ### Changed
 -   **Multi-targeting.** All five shipping libraries now target **net8.0 and net10.0**, with
     **net11.0** available behind `INCLUDE_PREVIEW_TFM=true`. Both primary test projects run on

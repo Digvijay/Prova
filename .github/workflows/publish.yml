@@ -7,22 +7,21 @@ on:
   release:
     types: [published]
 
+permissions:
+  contents: read
+
 jobs:
   publish:
     runs-on: ubuntu-latest
     steps:
     - uses: actions/checkout@v4
-    
+
     - name: Setup .NET
       uses: actions/setup-dotnet@v4
       with:
-        dotnet-version: 10.0.x
-
-    - name: Restore
-      run: dotnet restore Prova.sln
-
-    - name: Build
-      run: dotnet build Prova.sln --configuration Release --no-restore
+        dotnet-version: |
+          8.0.x
+          10.0.x
 
     - name: Set Version
       run: |
@@ -33,6 +32,32 @@ jobs:
         fi
         VERSION=${TAG_NAME#v}
         echo "VERSION=$VERSION" >> $GITHUB_ENV
+
+    # The pack step below passes --no-build and overrides /p:Version from the tag. The
+    # assemblies inside the package are therefore stamped with <Version> from
+    # Directory.Build.props, while the package itself is stamped from the tag. If the two
+    # disagree, a correct-looking package ships assemblies that claim a different version
+    # and nothing downstream notices. Fail here instead.
+    - name: Verify the tag matches the version in Directory.Build.props
+      run: |
+        DECLARED=$(sed -n 's:.*<Version>\(.*\)</Version>.*:\1:p' Directory.Build.props | head -n 1)
+        echo "Tag version:      $VERSION"
+        echo "Declared version: $DECLARED"
+        if [ "$VERSION" != "$DECLARED" ]; then
+          echo "::error::Tag v$VERSION does not match <Version>$DECLARED</Version> in Directory.Build.props."
+          exit 1
+        fi
+
+    - name: Restore
+      run: dotnet restore Prova.sln
+
+    - name: Build
+      run: dotnet build Prova.sln --configuration Release --no-restore
+
+    # Publishing an untested build is how a broken package reaches consumers. The suite is
+    # fast; run it on the artefacts that are about to ship.
+    - name: Test
+      run: dotnet test Prova.slnx --configuration Release --no-build
 
     - name: Pack
       run: |
