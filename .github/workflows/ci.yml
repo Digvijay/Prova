@@ -135,9 +135,13 @@ jobs:
       # summary). There is no newer package to bump to yet
       # (https://www.nuget.org/packages/Microsoft.Testing.Platform lists 2.4.1 as latest).
       # Only that specific, known incompatibility is swallowed below; any other test failure
-      # still fails this step. Remove the special-casing once a Microsoft.Testing.Platform
-      # release compatible with the net11.0 preview SDK ships.
+      # still fails this step. This is a string match on the current exception/log wording, so
+      # it can silently stop matching (or start over-matching) if a future SDK or tooling update
+      # changes that wording -- re-verify this pattern against the current failure whenever this
+      # step starts unexpectedly passing or failing. Remove the special-casing entirely once a
+      # Microsoft.Testing.Platform release compatible with the net11.0 preview SDK ships.
       - name: Test (including net11.0)
+        shell: bash
         env:
           INCLUDE_PREVIEW_TFM: 'true'
         run: |
