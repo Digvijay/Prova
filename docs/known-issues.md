@@ -425,6 +425,35 @@ declares `permissions: contents: read`. The version check was verified against t
 the build-then-test-with-`--no-build` sequence was run locally in the order CI runs it: 329 passed,
 0 failed.
 
+### 35. Linux coverage instrumentation crashed the generator test host
+
+The first hosted Linux run after enabling solution-wide coverage did not report a failed test. It
+reported a dead host: `Prova.Generators.Tests.dll` failed for both `net8.0` and `net10.0` with
+`System.BadImageFormatException: Bad IL range` in the generated
+`Prova.TestRunnerExecutor.RunAllAsync`, followed by process exit codes 139 and 134. The summary was
+the giveaway: **329 total, 321 succeeded, 8 skipped, 0 failed, 2 error**. `Prova.Core.Tests` and
+`Prova.Analyzers.Tests` passed in the same run, and the matching Windows job passed.
+
+The surprising part is timing. The generator tests themselves had already run; the crash happened
+as the Microsoft.Testing.Platform code coverage extension instrumented the same process that loads
+Roslyn workspaces and emits verification assemblies at runtime. Removing
+the coverage switch for **only** `Prova.Generators.Tests` made the Linux job pass while leaving the
+tests themselves in the solution-wide run. The suite still passes the coverage switch globally, but
+the project sets `ProvaDisablePlatformCoverage=true`, which makes Prova remove that switch before
+registering the platform extensions in this one process.
+
+**Fixed with a caveat.** `Prova.Generators.Tests` is deliberately not coverage-instrumented in CI.
+This is narrower than disabling coverage repository-wide, and it keeps the highest-value
+assertions — 84 generator tests on `net8.0` and 84 on `net10.0` — executing on Linux and Windows.
+It does mean this one test assembly no longer contributes coverage data. CI now also lists the
+generator tests after the coverage run and fails unless both target frameworks report 84 discovered
+tests, so the exclusion cannot silently turn into another "zero tests ran" defect.
+
+Not fixed here: the underlying Linux instrumentation crash in
+`Microsoft.Testing.Extensions.CodeCoverage` is not debugged inside the extension package, and the
+Roslyn 4.8.0 test dependency is not upgraded. The evidence for this fix is scoped to this
+repository's hosted `ubuntu-latest` and `windows-latest` CI runs.
+
 ## Open
 
 Nothing is open in Prova.
@@ -436,11 +465,11 @@ every framework below was built and tested in one pass:
 
 | Framework | `Prova.Core.Tests` | `Prova.Generators.Tests` | `Prova.Analyzers.Tests` |
 | --- | --- | --- | --- |
-| net8.0 | 71 passed, 4 skipped | 83 passed | — |
-| net10.0 | 71 passed, 4 skipped | 83 passed | 13 passed |
-| net11.0 RC1 | 71 passed, 4 skipped | 83 passed | — |
+| net8.0 | 71 passed, 4 skipped | 84 passed | — |
+| net10.0 | 71 passed, 4 skipped | 84 passed | 13 passed |
+| net11.0 RC1 | 71 passed, 4 skipped | 84 passed | — |
 
-Solution-wide: **475 passed, 0 failed, 12 skipped, exit code 0**. The four skips per framework are
+Solution-wide: **478 passed, 0 failed, 12 skipped, exit code 0**. The four skips per framework are
 deliberate: three are tests written to fail, kept to confirm by hand that failures are reported,
 and one exercises skip reporting itself.
 

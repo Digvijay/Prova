@@ -70,7 +70,11 @@ namespace Prova.Generators
                 .Combine(globalHooks)
                 .Combine(globalParallel)
                 .Combine(testFactories)
-                .Combine(context.CompilationProvider.Select(static (c, _) => PlatformExtensions.From(c)));
+                .Combine(context.CompilationProvider.Combine(context.AnalyzerConfigOptionsProvider.Select(static (options, _) =>
+                {
+                    return options.GlobalOptions.TryGetValue("build_property.ProvaDisablePlatformCoverage", out var value) &&
+                        (value == "true" || value == "True" || value == "1");
+                })).Select(static (pair, _) => PlatformExtensions.From(pair.Left, pair.Right)));
 
             context.RegisterSourceOutput(combined, static (spc, source) =>
             {

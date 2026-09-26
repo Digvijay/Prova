@@ -33,6 +33,12 @@ See `docs/known-issues.md` for the full ledger. Nothing in it is open.
     register as the platform intends, and `--coverage` is no longer stripped when the coverage
     extension is present. Previously their options were rejected and the run executed zero tests.
 -   **The CI coverage step could not run:** it passed the VSTest-only `--collect` switch.
+-   **Linux coverage instrumentation crashed `Prova.Generators.Tests`.** That project runs Roslyn
+    generator verification and runtime compilation in-process; on hosted Linux the MTP code
+    coverage extension corrupted or misread that process's IL after the tests had passed, producing
+    `BadImageFormatException: Bad IL range` and host exits 139/134. Coverage is now excluded only
+    for that test assembly, and CI asserts both generator-test target frameworks still discover all
+    84 tests.
 
 ### Fixed — tests that existed but never ran
 -   `Prova.Generators.Tests` executed 11 of its 66 tests; all 74 now run.

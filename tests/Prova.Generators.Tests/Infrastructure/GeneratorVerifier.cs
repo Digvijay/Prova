@@ -6,6 +6,7 @@ using System.Reflection;
 using System.Threading.Tasks;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
+using Microsoft.CodeAnalysis.Diagnostics;
 using Prova;
 using Prova.Generators;
 
@@ -79,7 +80,7 @@ namespace Prova.Generators.Tests
         }
 
         /// <summary>Runs the generator and returns TestRunnerExecutor.g.cs with normalised line endings.</summary>
-        public static string Generate(string source)
+        public static string Generate(string source, IReadOnlyDictionary<string, string>? globalOptions = null)
         {
             var references = new List<MetadataReference>
             {
@@ -98,7 +99,9 @@ namespace Prova.Generators.Tests
                 references,
                 new CSharpCompilationOptions(OutputKind.ConsoleApplication));
 
-            GeneratorDriver driver = CSharpGeneratorDriver.Create(new TestRunnerGenerator());
+            GeneratorDriver driver = CSharpGeneratorDriver.Create(
+                generators: new[] { new TestRunnerGenerator().AsSourceGenerator() },
+                optionsProvider: globalOptions == null ? null : new TestAnalyzerConfigOptionsProvider(globalOptions));
             var result = driver.RunGenerators(compilation).GetRunResult();
             var executor = result.Results[0].GeneratedSources.FirstOrDefault(s => s.HintName == "TestRunnerExecutor.g.cs");
             if (executor.SourceText == null)
@@ -107,6 +110,46 @@ namespace Prova.Generators.Tests
             }
 
             return executor.SourceText!.ToString().Replace("\r\n", "\n");
+        }
+
+        private sealed class TestAnalyzerConfigOptionsProvider : AnalyzerConfigOptionsProvider
+        {
+            public TestAnalyzerConfigOptionsProvider(IReadOnlyDictionary<string, string> globalOptions)
+            {
+                GlobalOptions = new TestAnalyzerConfigOptions(globalOptions);
+            }
+
+            public override AnalyzerConfigOptions GlobalOptions { get; }
+
+            public override AnalyzerConfigOptions GetOptions(SyntaxTree tree) => EmptyAnalyzerConfigOptions.Instance;
+
+            public override AnalyzerConfigOptions GetOptions(AdditionalText textFile) => EmptyAnalyzerConfigOptions.Instance;
+        }
+
+        private sealed class TestAnalyzerConfigOptions : AnalyzerConfigOptions
+        {
+            private readonly IReadOnlyDictionary<string, string> options;
+
+            public TestAnalyzerConfigOptions(IReadOnlyDictionary<string, string> options)
+            {
+                this.options = options;
+            }
+
+            public override bool TryGetValue(string key, out string value)
+            {
+                return options.TryGetValue(key, out value!);
+            }
+        }
+
+        private sealed class EmptyAnalyzerConfigOptions : AnalyzerConfigOptions
+        {
+            public static readonly EmptyAnalyzerConfigOptions Instance = new EmptyAnalyzerConfigOptions();
+
+            public override bool TryGetValue(string key, out string value)
+            {
+                value = null!;
+                return false;
+            }
         }
 
         public static void VerifyContains(string source, string[] expectedSnippets)

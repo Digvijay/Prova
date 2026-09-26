@@ -18,7 +18,12 @@
       Prova's own TestRunnerGenerator emits the entry point for this project.
     -->
     <GenerateTestingPlatformEntryPoint>false</GenerateTestingPlatformEntryPoint>
+    <ProvaDisablePlatformCoverage>true</ProvaDisablePlatformCoverage>
   </PropertyGroup>
+
+  <ItemGroup>
+    <CompilerVisibleProperty Include="ProvaDisablePlatformCoverage" />
+  </ItemGroup>
 
   <ItemGroup>
     <PackageReference Include="Microsoft.CodeAnalysis.CSharp.Workspaces" Version="4.8.0" />
@@ -27,9 +32,15 @@
 
   <ItemGroup>
     <ProjectReference Include="..\..\src\Prova.Generators\Prova.Generators.csproj" />
-    <!-- Generates SelfRegisteredExtensions, through which Prova's entry point registers coverage and TRX. -->
+    <!-- Generates SelfRegisteredExtensions, through which Prova's entry point registers TRX. -->
     <PackageReference Include="Microsoft.Testing.Platform.MSBuild" Version="2.0.2" />
-    <PackageReference Include="Microsoft.Testing.Extensions.CodeCoverage" Version="18.3.2" />
+    <!--
+      Do not reference Microsoft.Testing.Extensions.CodeCoverage here. On Linux, its IL
+      instrumentation crashes this generator-verification process after the tests pass because
+      the process also loads Roslyn and emits assemblies at runtime. The CI command still passes
+      coverage solution-wide; ProvaDisablePlatformCoverage makes Prova strip that switch for only
+      this project, so the tests execute without coverage instead of taking down the host.
+    -->
     <ProjectReference Include="..\..\src\Prova.Core\Prova.Core.csproj" />
     <!-- Referenced so the generator-verification compilation can bind Prova.FsCheck's
          [Property] attribute. Without it the attribute is an error type, the generator

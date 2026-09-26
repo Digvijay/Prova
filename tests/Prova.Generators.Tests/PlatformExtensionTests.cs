@@ -86,5 +86,19 @@ namespace Microsoft.Testing.Extensions.CodeCoverage
 
             Assert.Contains("args.Where(a => a != \"--coverage\")", generated);
         }
+
+        [Fact]
+        public void ProvaDisablePlatformCoverage_strips_the_switch_but_keeps_other_extensions_registered()
+        {
+            var generated = GeneratorVerifier.Generate(
+                TestClass + SelfRegistered + CoverageHook,
+                new Dictionary<string, string>
+                {
+                    ["build_property.ProvaDisablePlatformCoverage"] = "true"
+                });
+
+            Assert.Contains("global::TestProject.SelfRegisteredExtensions.AddSelfRegisteredExtensions(builder, args);", generated);
+            Assert.Contains("args.Where(a => a != \"--coverage\")", generated);
+        }
     }
 }

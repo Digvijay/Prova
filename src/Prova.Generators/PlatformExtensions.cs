@@ -20,7 +20,7 @@ namespace Prova.Generators
     {
         private const string CoverageHook = "Microsoft.Testing.Extensions.CodeCoverage.TestingPlatformBuilderHook";
 
-        public static PlatformExtensions From(Compilation compilation)
+        public static PlatformExtensions From(Compilation compilation, bool disablePlatformCoverage)
         {
             var selfRegistered = compilation
                 .GetSymbolsWithName("SelfRegisteredExtensions", SymbolFilter.Type)
@@ -30,7 +30,7 @@ namespace Prova.Generators
             var typeName = selfRegistered?.ToDisplayString(SymbolDisplayFormat.FullyQualifiedFormat);
 
             // Coverage only reaches the platform extension if the hook that registers it is called.
-            bool hasCoverage = typeName != null && compilation.GetTypeByMetadataName(CoverageHook) != null;
+            bool hasCoverage = !disablePlatformCoverage && typeName != null && compilation.GetTypeByMetadataName(CoverageHook) != null;
 
             return new PlatformExtensions(typeName, hasCoverage);
         }

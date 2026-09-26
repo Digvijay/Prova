@@ -9,4 +9,7 @@
     <!-- Enable MTP support for dotnet test -->
     <TestingPlatformDotnetTestSupport>true</TestingPlatformDotnetTestSupport>
   </PropertyGroup>
+  <ItemGroup>
+    <CompilerVisibleProperty Include="ProvaDisablePlatformCoverage" />
+  </ItemGroup>
 </Project>
