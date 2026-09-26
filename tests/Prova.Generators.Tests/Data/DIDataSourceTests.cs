@@ -1,4 +1,3 @@
-using Xunit;
 using Prova.Generators.Tests;
 
 namespace Prova.Generators.Tests
@@ -27,9 +26,9 @@ namespace Prova.Generators.Tests
     }
 }";
 
-            // Verify provider resolution from DI and method call
-            GeneratorVerifier.VerifyContains(source, "var provider = TestRunnerExecutor.Services.Get<MyDataProvider>();");
-            GeneratorVerifier.VerifyContains(source, "foreach (var dataRow in provider.GetData())");
+            // Verify provider resolution from DI and method call (inlined, fully qualified).
+            GeneratorVerifier.VerifyContains(source, "TestRunnerExecutor.Services.Get<Prova.Generators.Tests.MyDataProvider>().GetData()");
+            GeneratorVerifier.VerifyContains(source, "foreach (var dataRow in");
         }
     }
 }

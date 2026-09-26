@@ -1,8 +1,8 @@
 using System.Collections.Generic;
 using System.Linq;
-using Prova.Generators.Models;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
+using Prova.Generators.Models;
 
 namespace Prova.Generators.Analysis
 {
@@ -19,7 +19,7 @@ namespace Prova.Generators.Analysis
             var symbol = context.SemanticModel.GetDeclaredSymbol(methodDeclaration) as IMethodSymbol;
 
             if (symbol is null) return null;
-            
+
             var classSymbol = symbol.ContainingType;
             var attributes = symbol.GetAttributes();
             var classAttributes = classSymbol.GetAttributes();
@@ -42,15 +42,15 @@ namespace Prova.Generators.Analysis
 
             var factAttr = attributes.FirstOrDefault(ad => ad.AttributeClass?.Name == "FactAttribute" || ad.AttributeClass?.ToDisplayString() == "Prova.FactAttribute");
             var theoryAttr = attributes.FirstOrDefault(ad => ad.AttributeClass?.Name == "TheoryAttribute" || ad.AttributeClass?.ToDisplayString() == "Prova.TheoryAttribute");
-            var dataSourceAttr = attributes.FirstOrDefault(ad => 
-                ad.AttributeClass?.Name == "ClassDataSourceAttribute" || ad.AttributeClass?.ToDisplayString() == "Prova.ClassDataSourceAttribute" || 
+            var dataSourceAttr = attributes.FirstOrDefault(ad =>
+                ad.AttributeClass?.Name == "ClassDataSourceAttribute" || ad.AttributeClass?.ToDisplayString() == "Prova.ClassDataSourceAttribute" ||
                 ad.AttributeClass?.Name == "MethodDataSourceAttribute" || ad.AttributeClass?.ToDisplayString() == "Prova.MethodDataSourceAttribute" ||
                 ad.AttributeClass?.Name == "DependencyInjectionDataSourceAttribute" || ad.AttributeClass?.ToDisplayString() == "Prova.DependencyInjectionDataSourceAttribute");
 
-            var classDataSourceAttr = classAttributes.FirstOrDefault(ad => 
-                ad.AttributeClass?.Name == "ClassDataSourceAttribute" || ad.AttributeClass?.ToDisplayString() == "Prova.ClassDataSourceAttribute" || 
+            var classDataSourceAttr = classAttributes.FirstOrDefault(ad =>
+                ad.AttributeClass?.Name == "ClassDataSourceAttribute" || ad.AttributeClass?.ToDisplayString() == "Prova.ClassDataSourceAttribute" ||
                 ad.AttributeClass?.Name == "DependencyInjectionDataSourceAttribute" || ad.AttributeClass?.ToDisplayString() == "Prova.DependencyInjectionDataSourceAttribute");
-            
+
             var fsCheckAttr = attributes.FirstOrDefault(ad => ad.AttributeClass?.Name == "PropertyAttribute" && (ad.AttributeClass?.ToDisplayString().StartsWith("Prova.FsCheck", global::System.StringComparison.Ordinal) == true || ad.ConstructorArguments.Length == 0));
 
             bool isFact = factAttr != null || fsCheckAttr != null;
@@ -73,36 +73,36 @@ namespace Prova.Generators.Analysis
 
             foreach (var attr in propAttributes)
             {
-                 if (attr.ConstructorArguments.Length == 2)
-                 {
-                     string key = attr.ConstructorArguments[0].Value?.ToString() ?? "";
-                     string val = attr.ConstructorArguments[1].Value?.ToString() ?? "";
-                     if (!string.IsNullOrEmpty(key))
-                     {
-                         properties[key] = val; // Last one wins if duplicate keys
-                     }
-                 }
+                if (attr.ConstructorArguments.Length == 2)
+                {
+                    string key = attr.ConstructorArguments[0].Value?.ToString() ?? "";
+                    string val = attr.ConstructorArguments[1].Value?.ToString() ?? "";
+                    if (!string.IsNullOrEmpty(key))
+                    {
+                        properties[key] = val; // Last one wins if duplicate keys
+                    }
+                }
             }
 
 
             // Exclude FsCheck PropertyAttribute from generic properties if it was picked up mistakenly (though namespace check helps)
             // But if user used simple [Property], it might clash. 
             // FsCheck Property usually has 0 args, Trait has 2.
-            
+
             var fsCheckConfig = new Dictionary<string, string>();
             if (fsCheckAttr != null)
             {
-                 foreach(var namedArg in fsCheckAttr.NamedArguments)
-                 {
-                     fsCheckConfig[namedArg.Key] = namedArg.Value.Value?.ToString() ?? "";
-                 }
+                foreach (var namedArg in fsCheckAttr.NamedArguments)
+                {
+                    fsCheckConfig[namedArg.Key] = namedArg.Value.Value?.ToString() ?? "";
+                }
             }
 
             // Focus & Retry
             bool isFocused = attributes.Any(ad => ad.AttributeClass?.Name == "FocusAttribute" || ad.AttributeClass?.ToDisplayString() == "Prova.FocusAttribute");
             if (isFocused) properties["Focus"] = "true";
             int? retryCount = null;
-            
+
             // Retry Hierarchy: Method > Class > Assembly
             var retryAttr = attributes.FirstOrDefault(ad => ad.AttributeClass?.Name == "RetryAttribute" || ad.AttributeClass?.ToDisplayString() == "Prova.RetryAttribute");
             if (retryAttr == null) retryAttr = classAttributes.FirstOrDefault(ad => ad.AttributeClass?.Name == "RetryAttribute" || ad.AttributeClass?.ToDisplayString() == "Prova.RetryAttribute");
@@ -184,13 +184,13 @@ namespace Prova.Generators.Analysis
             if (constructor != null)
             {
                 // Determine which parameters are managed by class-level data
-                int dataParamCount = classTestData.Count > 0 ? classTestData[0].Length : 
+                int dataParamCount = classTestData.Count > 0 ? classTestData[0].Length :
                                     (classMemberData.Count > 0 ? 0 : 0); // Need more logic for memberdata/classdata if they provide fixed widths
-                
+
                 // For now, we assume all constructor parameters AFTER ITestOutputHelper or Fixtures might be data-driven
                 // Actually, the SourceEmitter will handle the actual data passing.
                 // We just need to know if the dependency is a "Data" parameter.
-                
+
                 int paramIndex = 0;
                 foreach (var param in constructor.Parameters)
                 {
@@ -207,9 +207,9 @@ namespace Prova.Generators.Analysis
                     }
                     else
                     {
-                        var fixtureInterface = classSymbol.AllInterfaces.FirstOrDefault(i => 
-                            i.Name == "IClassFixture" && 
-                            i.TypeArguments.Length == 1 && 
+                        var fixtureInterface = classSymbol.AllInterfaces.FirstOrDefault(i =>
+                            i.Name == "IClassFixture" &&
+                            i.TypeArguments.Length == 1 &&
                             SymbolEqualityComparer.Default.Equals(i.TypeArguments[0], param.Type));
 
                         if (fixtureInterface != null)
@@ -238,7 +238,7 @@ namespace Prova.Generators.Analysis
                     paramIndex++;
                 }
             }
-            
+
             bool implementsAsyncLifetime = classSymbol.AllInterfaces.Any(i => i.Name == "IAsyncLifetime" || i.ToDisplayString() == "Prova.IAsyncLifetime");
             var parameterTypes = symbol.Parameters.Select(p => p.Type.ToDisplayString()).ToList();
 
@@ -250,7 +250,7 @@ namespace Prova.Generators.Analysis
                 var typeName = member.Type.ToDisplayString();
                 if (typeName.Contains("Skugga") || typeName.StartsWith("Mock<", global::System.StringComparison.Ordinal) || typeName.Contains(".Mock<"))
                 {
-                     mockFields.Add(member.Name);
+                    mockFields.Add(member.Name);
                 }
             }
 
@@ -263,7 +263,7 @@ namespace Prova.Generators.Analysis
             // 1. Check for DoNotParallelize (Method > Class)
             var doNotParallelMethod = attributes.FirstOrDefault(ad => ad.AttributeClass?.Name == "DoNotParallelizeAttribute" || ad.AttributeClass?.ToDisplayString() == "Prova.DoNotParallelizeAttribute");
             var doNotParallelClass = classAttributes.FirstOrDefault(ad => ad.AttributeClass?.Name == "DoNotParallelizeAttribute" || ad.AttributeClass?.ToDisplayString() == "Prova.DoNotParallelizeAttribute");
-            
+
             if (doNotParallelMethod != null || doNotParallelClass != null)
             {
                 doNotParallelize = true;
@@ -278,7 +278,7 @@ namespace Prova.Generators.Analysis
                 if (sequentialMethod != null) maxParallel = 1;
                 else if (sequentialClass != null) maxParallel = 1;
                 else if (sequentialAssembly != null && attributes.All(a => a.AttributeClass?.Name != "ParallelAttribute") && classAttributes.All(a => a.AttributeClass?.Name != "ParallelAttribute")) maxParallel = 1;
-                
+
                 // 3. Check for Parallel (Method > Class > Assembly)
                 if (maxParallel == null)
                 {
@@ -286,17 +286,17 @@ namespace Prova.Generators.Analysis
                     var parallelClass = classAttributes.FirstOrDefault(ad => ad.AttributeClass?.Name == "ParallelAttribute" || ad.AttributeClass?.ToDisplayString() == "Prova.ParallelAttribute");
                     var parallelAssembly = assemblyAttributes.FirstOrDefault(ad => ad.AttributeClass?.Name == "ParallelAttribute" || ad.AttributeClass?.ToDisplayString() == "Prova.ParallelAttribute");
 
-                    if (parallelMethod != null) 
+                    if (parallelMethod != null)
                     {
-                         if (parallelMethod.ConstructorArguments.Length > 0 && parallelMethod.ConstructorArguments[0].Value is int max) maxParallel = max;
+                        if (parallelMethod.ConstructorArguments.Length > 0 && parallelMethod.ConstructorArguments[0].Value is int max) maxParallel = max;
                     }
                     else if (parallelClass != null)
                     {
-                         if (parallelClass.ConstructorArguments.Length > 0 && parallelClass.ConstructorArguments[0].Value is int max) maxParallel = max;
+                        if (parallelClass.ConstructorArguments.Length > 0 && parallelClass.ConstructorArguments[0].Value is int max) maxParallel = max;
                     }
                     else if (parallelAssembly != null)
                     {
-                         if (parallelAssembly.ConstructorArguments.Length > 0 && parallelAssembly.ConstructorArguments[0].Value is int max) maxParallel = max;
+                        if (parallelAssembly.ConstructorArguments.Length > 0 && parallelAssembly.ConstructorArguments[0].Value is int max) maxParallel = max;
                     }
                 }
             }
@@ -375,66 +375,52 @@ namespace Prova.Generators.Analysis
                     if (member.DeclaredAccessibility != Accessibility.Public) continue;
 
                     var memberAttributes = member.GetAttributes();
-                    
-                    // -- Before Hooks --
-                    var beforeAttr = memberAttributes.FirstOrDefault(ad => ad.AttributeClass?.Name == "BeforeAttribute" || ad.AttributeClass?.ToDisplayString() == "Prova.BeforeAttribute");
-                    var beforeClassAttr = memberAttributes.FirstOrDefault(ad => ad.AttributeClass?.Name == "BeforeClassAttribute" || ad.AttributeClass?.ToDisplayString() == "Prova.BeforeClassAttribute");
-                    var beforeAssemblyAttr = memberAttributes.FirstOrDefault(ad => ad.AttributeClass?.Name == "BeforeAssemblyAttribute" || ad.AttributeClass?.ToDisplayString() == "Prova.BeforeAssemblyAttribute"); // Scope 2 ignored here if handled elsewhere? Actually syntax analyzer handles models.
 
-                    if ((beforeAttr != null || beforeClassAttr != null || beforeAssemblyAttr != null) && !seenBefore.Contains(member.Name) && !seenClassBefore.Contains(member.Name))
+                    // -- Before Hooks --
+                    // Matches [Before] and every alias deriving from it ([BeforeClass],
+                    // [BeforeAssembly], [BeforeAll], [BeforeEach]).
+                    var beforeAttr = memberAttributes.FirstOrDefault(ad => IsHookAttribute(ad, "BeforeAttribute"));
+
+                    if (beforeAttr != null && !seenBefore.Contains(member.Name) && !seenClassBefore.Contains(member.Name))
                     {
-                        int scope = 0;
-                        if (beforeClassAttr != null) scope = 1;
-                        else if (beforeAssemblyAttr != null) scope = 2;
-                        else
-                        {
-                            var scopeArg = beforeAttr!.ConstructorArguments.FirstOrDefault();
-                            scope = scopeArg.Value is int s ? s : 0;
-                        }
+                        int scope = GetHookScope(beforeAttr);
 
                         bool isAsync = member.IsAsync || member.ReturnType.Name == "Task" || member.ReturnType.Name == "ValueTask";
                         string? hookExecutorType = GetExecutorType(memberAttributes, classAttributes, assemblyAttributes);
 
                         if (scope == 0 && !member.IsStatic)
                         {
-                             if (seenBefore.Add(member.Name))
-                                 lifecycleBefore.Add(new HookInfo(member.Name, isAsync, hookExecutorType));
+                            if (seenBefore.Add(member.Name))
+                                lifecycleBefore.Add(new HookInfo(member.Name, isAsync, hookExecutorType));
                         }
                         else if (scope == 1 && member.IsStatic)
                         {
-                             if (seenClassBefore.Add(member.Name))
-                                 classBefore.Add(new HookInfo(member.Name, isAsync, hookExecutorType));
+                            if (seenClassBefore.Add(member.Name))
+                                classBefore.Add(new HookInfo(member.Name, isAsync, hookExecutorType));
                         }
                     }
 
                     // -- After Hooks --
-                    var afterAttr = memberAttributes.FirstOrDefault(ad => ad.AttributeClass?.Name == "AfterAttribute" || ad.AttributeClass?.ToDisplayString() == "Prova.AfterAttribute");
-                    var afterClassAttr = memberAttributes.FirstOrDefault(ad => ad.AttributeClass?.Name == "AfterClassAttribute" || ad.AttributeClass?.ToDisplayString() == "Prova.AfterClassAttribute");
-                    var afterAssemblyAttr = memberAttributes.FirstOrDefault(ad => ad.AttributeClass?.Name == "AfterAssemblyAttribute" || ad.AttributeClass?.ToDisplayString() == "Prova.AfterAssemblyAttribute");
+                    // Matches [After] and every alias deriving from it ([AfterClass],
+                    // [AfterAssembly], [AfterAll], [AfterEach]).
+                    var afterAttr = memberAttributes.FirstOrDefault(ad => IsHookAttribute(ad, "AfterAttribute"));
 
-                    if ((afterAttr != null || afterClassAttr != null || afterAssemblyAttr != null) && !seenAfter.Contains(member.Name) && !seenClassAfter.Contains(member.Name))
+                    if (afterAttr != null && !seenAfter.Contains(member.Name) && !seenClassAfter.Contains(member.Name))
                     {
-                        int scope = 0;
-                        if (afterClassAttr != null) scope = 1;
-                        else if (afterAssemblyAttr != null) scope = 2;
-                        else
-                        {
-                            var scopeArg = afterAttr!.ConstructorArguments.FirstOrDefault();
-                            scope = scopeArg.Value is int s ? s : 0;
-                        }
+                        int scope = GetHookScope(afterAttr);
 
                         bool isAsync = member.IsAsync || member.ReturnType.Name == "Task" || member.ReturnType.Name == "ValueTask";
                         string? hookExecutorType = GetExecutorType(memberAttributes, classAttributes, assemblyAttributes);
 
                         if (scope == 0 && !member.IsStatic)
                         {
-                             if (seenAfter.Add(member.Name))
-                                 lifecycleAfter.Add(new HookInfo(member.Name, isAsync, hookExecutorType));
+                            if (seenAfter.Add(member.Name))
+                                lifecycleAfter.Add(new HookInfo(member.Name, isAsync, hookExecutorType));
                         }
                         else if (scope == 1 && member.IsStatic)
                         {
-                             if (seenClassAfter.Add(member.Name))
-                                 classAfter.Add(new HookInfo(member.Name, isAsync, hookExecutorType));
+                            if (seenClassAfter.Add(member.Name))
+                                classAfter.Add(new HookInfo(member.Name, isAsync, hookExecutorType));
                         }
                     }
                 }
@@ -445,16 +431,18 @@ namespace Prova.Generators.Analysis
             // Before: Base -> Derived (Reverse the order we collected: Derived -> Base)
             lifecycleBefore.Reverse();
             classBefore.Reverse();
-            
+
             // After: Derived -> Base (Already in collected order)
 
 
             var methodVariants = CollectVariants(attributes);
             var classVariants = CollectVariants(classAttributes);
             var namedVariants = new List<string>();
-            try {
+            try
+            {
                 namedVariants = CollectNamedVariants(attributes);
-            } catch { }
+            }
+            catch { }
 
             var classTypeParams = classSymbol.TypeParameters.Select(tp => tp.Name).ToList();
             var methodTypeParams = symbol.TypeParameters.Select(tp => tp.Name).ToList();
@@ -571,7 +559,7 @@ namespace Prova.Generators.Analysis
                 {
                     string methodName = attr.ConstructorArguments[0].Value?.ToString() ?? "";
                     string? memberType = null;
-                    
+
                     var memberTypeArg = attr.NamedArguments.FirstOrDefault(na => na.Key == "MemberType");
                     ITypeSymbol? targetSymbol = containingType;
 
@@ -779,12 +767,12 @@ namespace Prova.Generators.Analysis
             {
                 var attr = param.GetAttributes().FirstOrDefault(ad => ad.AttributeClass?.Name == "ArgumentDisplayFormatterAttribute" || ad.AttributeClass?.ToDisplayString() == "Prova.ArgumentDisplayFormatterAttribute");
                 string? formatterType = null;
-                
+
                 if (attr != null && attr.ConstructorArguments.Length > 0 && attr.ConstructorArguments[0].Value is INamedTypeSymbol typeSymbol)
                 {
                     formatterType = typeSymbol.ToDisplayString();
                 }
-                
+
                 results.Add(formatterType);
             }
             return results;
@@ -804,7 +792,7 @@ namespace Prova.Generators.Analysis
             var attr = symbol.GetAttributes().FirstOrDefault(ad => ad.AttributeClass?.Name == "ConfigureServicesAttribute" || ad.AttributeClass?.ToDisplayString() == "Prova.ConfigureServicesAttribute");
             if (attr != null)
             {
-                 return $"{symbol.ContainingType.ToDisplayString()}.{symbol.Name}";
+                return $"{symbol.ContainingType.ToDisplayString()}.{symbol.Name}";
             }
             return null;
         }
@@ -815,7 +803,7 @@ namespace Prova.Generators.Analysis
             var hookExecAttr = memberAttributes.FirstOrDefault(ad => ad.AttributeClass?.Name == "ExecutorAttribute" || ad.AttributeClass?.ToDisplayString() == "Prova.ExecutorAttribute");
             if (hookExecAttr == null) hookExecAttr = classAttributes.FirstOrDefault(ad => ad.AttributeClass?.Name == "ExecutorAttribute" || ad.AttributeClass?.ToDisplayString() == "Prova.ExecutorAttribute");
             if (hookExecAttr == null) hookExecAttr = assemblyAttributes.FirstOrDefault(ad => ad.AttributeClass?.Name == "ExecutorAttribute" || ad.AttributeClass?.ToDisplayString() == "Prova.ExecutorAttribute");
-            
+
             if (hookExecAttr != null && hookExecAttr.ConstructorArguments.Length > 0)
             {
                 if (hookExecAttr.ConstructorArguments[0].Value is INamedTypeSymbol executorType)
@@ -840,16 +828,14 @@ namespace Prova.Generators.Analysis
             var attributes = symbol.GetAttributes();
             var assemblyAttributes = context.SemanticModel.Compilation.Assembly.GetAttributes();
 
-            var beforeAttr = attributes.FirstOrDefault(ad => ad.AttributeClass?.Name == "BeforeAttribute" || ad.AttributeClass?.ToDisplayString() == "Prova.BeforeAttribute");
-            var beforeAssemblyAttr = attributes.FirstOrDefault(ad => ad.AttributeClass?.Name == "BeforeAssemblyAttribute" || ad.AttributeClass?.ToDisplayString() == "Prova.BeforeAssemblyAttribute");
-            
-            var afterAttr = attributes.FirstOrDefault(ad => ad.AttributeClass?.Name == "AfterAttribute" || ad.AttributeClass?.ToDisplayString() == "Prova.AfterAttribute");
-            var afterAssemblyAttr = attributes.FirstOrDefault(ad => ad.AttributeClass?.Name == "AfterAssemblyAttribute" || ad.AttributeClass?.ToDisplayString() == "Prova.AfterAssemblyAttribute");
+            // Matches the base hook attributes and every alias deriving from them.
+            var beforeAttr = attributes.FirstOrDefault(ad => IsHookAttribute(ad, "BeforeAttribute"));
+            var afterAttr = attributes.FirstOrDefault(ad => IsHookAttribute(ad, "AfterAttribute"));
 
             string? executorType = null;
             var execAttr = attributes.FirstOrDefault(ad => ad.AttributeClass?.Name == "ExecutorAttribute" || ad.AttributeClass?.ToDisplayString() == "Prova.ExecutorAttribute");
             if (execAttr == null) execAttr = assemblyAttributes.FirstOrDefault(ad => ad.AttributeClass?.Name == "ExecutorAttribute" || ad.AttributeClass?.ToDisplayString() == "Prova.ExecutorAttribute");
-            
+
             if (execAttr != null && execAttr.ConstructorArguments.Length > 0 && execAttr.ConstructorArguments[0].Value is INamedTypeSymbol et)
             {
                 executorType = et.ToDisplayString();
@@ -857,33 +843,17 @@ namespace Prova.Generators.Analysis
 
             bool isAsync = symbol.IsAsync || symbol.ReturnType.Name == "Task" || symbol.ReturnType.Name == "ValueTask" || symbol.ReturnType.ToDisplayString().EndsWith(".Task", global::System.StringComparison.Ordinal);
 
-            if (beforeAttr != null || beforeAssemblyAttr != null)
+            if (beforeAttr != null)
             {
-                int scope = 0;
-                if (beforeAssemblyAttr != null) scope = 2;
-                else
-                {
-                    var scopeArg = beforeAttr!.ConstructorArguments.FirstOrDefault();
-                    scope = scopeArg.Value is int s ? s : 0;
-                }
-
-                if (scope == 2) // HookScope.Assembly
+                if (GetHookScope(beforeAttr) == 2) // HookScope.Assembly
                 {
                     return ($"{symbol.ContainingType.ToDisplayString()}.{symbol.Name}", "Before", isAsync, executorType);
                 }
             }
 
-            if (afterAttr != null || afterAssemblyAttr != null)
+            if (afterAttr != null)
             {
-                int scope = 0;
-                if (afterAssemblyAttr != null) scope = 2;
-                else
-                {
-                    var scopeArg = afterAttr!.ConstructorArguments.FirstOrDefault();
-                    scope = scopeArg.Value is int s ? s : 0;
-                }
-
-                if (scope == 2) // HookScope.Assembly
+                if (GetHookScope(afterAttr) == 2) // HookScope.Assembly
                 {
                     return ($"{symbol.ContainingType.ToDisplayString()}.{symbol.Name}", "After", isAsync, executorType);
                 }
@@ -895,6 +865,56 @@ namespace Prova.Generators.Analysis
         public static bool IsGlobalHookMethod(SyntaxNode node)
         {
             return node is MethodDeclarationSyntax m && m.AttributeLists.Count > 0;
+        }
+
+        /// <summary>
+        /// Determines whether an attribute is, or derives from, the given Prova hook base attribute.
+        /// </summary>
+        /// <remarks>
+        /// Matching hook attributes by exact type name silently dropped every alias that derives
+        /// from the base type - <c>[BeforeAll]</c>, <c>[BeforeEach]</c>, <c>[AfterAll]</c> and
+        /// <c>[AfterEach]</c> - so those documented attributes compiled but never ran.
+        /// Walking the base chain keeps present and future aliases working.
+        /// </remarks>
+        private static bool IsHookAttribute(AttributeData attr, string baseName)
+        {
+            for (var t = attr.AttributeClass; t != null; t = t.BaseType)
+            {
+                if (t.Name == baseName || t.ToDisplayString() == "Prova." + baseName)
+                {
+                    return true;
+                }
+            }
+
+            return false;
+        }
+
+        /// <summary>
+        /// Resolves the hook scope (0 = Test, 1 = Class, 2 = Assembly) for a hook attribute.
+        /// </summary>
+        /// <remarks>
+        /// Alias attributes pass their scope to the base constructor, so the applied attribute
+        /// carries no constructor arguments and the scope has to come from the attribute type.
+        /// </remarks>
+        private static int GetHookScope(AttributeData attr)
+        {
+            switch (attr.AttributeClass?.Name)
+            {
+                case "BeforeClassAttribute":
+                case "AfterClassAttribute":
+                case "BeforeAllAttribute":
+                case "AfterAllAttribute":
+                    return 1;
+                case "BeforeAssemblyAttribute":
+                case "AfterAssemblyAttribute":
+                    return 2;
+                case "BeforeEachAttribute":
+                case "AfterEachAttribute":
+                    return 0;
+                default:
+                    var scopeArg = attr.ConstructorArguments.FirstOrDefault();
+                    return scopeArg.Value is int s ? s : 0;
+            }
         }
 
         public static (string Method, string HookType, int Scope, bool IsAsync, string? ExecutorType)? GetGlobalHook(GeneratorSyntaxContext context)
@@ -909,7 +929,7 @@ namespace Prova.Generators.Analysis
             string? executorType = null;
             var execAttr = attributes.FirstOrDefault(ad => ad.AttributeClass?.Name == "ExecutorAttribute" || ad.AttributeClass?.ToDisplayString() == "Prova.ExecutorAttribute");
             if (execAttr == null) execAttr = assemblyAttributes.FirstOrDefault(ad => ad.AttributeClass?.Name == "ExecutorAttribute" || ad.AttributeClass?.ToDisplayString() == "Prova.ExecutorAttribute");
-            
+
             if (execAttr != null && execAttr.ConstructorArguments.Length > 0 && execAttr.ConstructorArguments[0].Value is INamedTypeSymbol et)
             {
                 executorType = et.ToDisplayString();
@@ -951,7 +971,7 @@ namespace Prova.Generators.Analysis
             var attr = symbol.GetAttributes().FirstOrDefault(ad => ad.AttributeClass?.Name == "TestFactoryAttribute" || ad.AttributeClass?.ToDisplayString() == "Prova.TestFactoryAttribute");
             if (attr != null)
             {
-                 return $"{symbol.ContainingType.ToDisplayString()}.{symbol.Name}";
+                return $"{symbol.ContainingType.ToDisplayString()}.{symbol.Name}";
             }
             return null;
         }
@@ -960,17 +980,17 @@ namespace Prova.Generators.Analysis
         {
             if (constant.IsNull) return "null";
             if (constant.Kind == TypedConstantKind.Type) return $"typeof({constant.Value})";
-            if (constant.Kind == TypedConstantKind.Array) 
+            if (constant.Kind == TypedConstantKind.Array)
             {
-                 return "new[] { " + string.Join(", ", constant.Values.Select(FormatValue)) + " }";
+                return "new[] { " + string.Join(", ", constant.Values.Select(FormatValue)) + " }";
             }
             if (constant.Kind == TypedConstantKind.Enum)
             {
                 return $"({constant.Type!.ToDisplayString()}){constant.Value}";
             }
-            
+
             var value = constant.Value;
-    if (value is string s) return $"\"{s.Replace("\\", "\\\\").Replace("\"", "\\\"").Replace("\n", "\\n").Replace("\r", "\\r")}\"";
+            if (value is string s) return $"\"{s.Replace("\\", "\\\\").Replace("\"", "\\\"").Replace("\n", "\\n").Replace("\r", "\\r")}\"";
             if (value is bool b) return b ? "true" : "false";
             if (value is float f) return $"{f}f";
             if (value is double d) return $"{d}d";
@@ -993,26 +1013,26 @@ namespace Prova.Generators.Analysis
 
         public override void VisitNamedType(INamedTypeSymbol symbol)
         {
-             foreach (var member in symbol.GetMembers())
-             {
-                 member.Accept(this);
-             }
+            foreach (var member in symbol.GetMembers())
+            {
+                member.Accept(this);
+            }
         }
 
         public override void VisitMethod(IMethodSymbol symbol)
         {
             if (symbol.IsStatic && symbol.DeclaredAccessibility == Accessibility.Public)
             {
-                 var attr = symbol.GetAttributes().FirstOrDefault(ad => ad.AttributeClass?.Name == "TestDependencyAttribute");
-                 if (attr != null)
-                 {
-                     var returnType = symbol.ReturnType.ToDisplayString();
-                     var call = $"{symbol.ContainingType.ToDisplayString()}.{symbol.Name}()";
-                     if (!Factories.ContainsKey(returnType))
-                     {
-                         Factories[returnType] = call;
-                     }
-                 }
+                var attr = symbol.GetAttributes().FirstOrDefault(ad => ad.AttributeClass?.Name == "TestDependencyAttribute");
+                if (attr != null)
+                {
+                    var returnType = symbol.ReturnType.ToDisplayString();
+                    var call = $"{symbol.ContainingType.ToDisplayString()}.{symbol.Name}()";
+                    if (!Factories.ContainsKey(returnType))
+                    {
+                        Factories[returnType] = call;
+                    }
+                }
             }
         }
     }

@@ -1,34 +1,52 @@
-﻿<Project Sdk="Microsoft.NET.Sdk">
+<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
-    <TargetFramework>net10.0</TargetFramework>
+    <TargetFrameworks>$(ToolkitTestTargetFrameworks)</TargetFrameworks>
     <EnablePreviewFeatures>true</EnablePreviewFeatures>
     <ImplicitUsings>enable</ImplicitUsings>
     <Nullable>enable</Nullable>
     <IsPackable>false</IsPackable>
-    <GenerateProgramFile>false</GenerateProgramFile>
     <OutputType>Exe</OutputType>
     <IsTestProject>true</IsTestProject>
-    <IsTestingPlatformApplication>false</IsTestingPlatformApplication>
+    <!--
+      Must be true. When this was false the project was excluded from `dotnet test`
+      discovery entirely.
+    -->
+    <IsTestingPlatformApplication>true</IsTestingPlatformApplication>
     <TestingPlatformDotnetTestSupport>true</TestingPlatformDotnetTestSupport>
+    <!--
+      Prova's own TestRunnerGenerator emits the entry point for this project.
+    -->
+    <GenerateTestingPlatformEntryPoint>false</GenerateTestingPlatformEntryPoint>
+    <ProvaDisablePlatformCoverage>true</ProvaDisablePlatformCoverage>
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="coverlet.collector" Version="6.0.4" />
-
-    <PackageReference Include="Microsoft.CodeAnalysis.CSharp.Workspaces" Version="4.8.0" />
-    <PackageReference Include="Microsoft.NET.Test.Sdk" Version="17.14.1" />
-    <PackageReference Include="xunit" Version="2.9.3" />
-    <PackageReference Include="xunit.runner.visualstudio" Version="3.1.4" />
+    <CompilerVisibleProperty Include="ProvaDisablePlatformCoverage" />
   </ItemGroup>
 
   <ItemGroup>
-    <Using Include="Xunit" />
+    <PackageReference Include="Microsoft.CodeAnalysis.CSharp.Workspaces" Version="4.8.0" />
+    <PackageReference Include="Microsoft.Testing.Extensions.TrxReport" Version="2.0.2" />
   </ItemGroup>
 
   <ItemGroup>
     <ProjectReference Include="..\..\src\Prova.Generators\Prova.Generators.csproj" />
+    <!-- Generates SelfRegisteredExtensions, through which Prova's entry point registers TRX. -->
+    <PackageReference Include="Microsoft.Testing.Platform.MSBuild" Version="2.0.2" />
+    <!--
+      Do not reference Microsoft.Testing.Extensions.CodeCoverage here. On Linux, its IL
+      instrumentation crashes this generator-verification process after the tests pass because
+      the process also loads Roslyn and emits assemblies at runtime. The CI command still passes
+      coverage solution-wide; ProvaDisablePlatformCoverage makes Prova strip that switch for only
+      this project, so the tests execute without coverage instead of taking down the host.
+    -->
     <ProjectReference Include="..\..\src\Prova.Core\Prova.Core.csproj" />
+    <!-- Referenced so the generator-verification compilation can bind Prova.FsCheck's
+         [Property] attribute. Without it the attribute is an error type, the generator
+         discovers no tests, and emission tests silently assert against an empty run. -->
+    <ProjectReference Include="..\..\src\Prova.FsCheck\Prova.FsCheck.csproj" />
+    <ProjectReference Include="..\..\src\Prova.Generators\Prova.Generators.csproj" OutputItemType="Analyzer" ReferenceOutputAssembly="false" />
   </ItemGroup>
 
 </Project>

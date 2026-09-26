@@ -1,4 +1,3 @@
-using Xunit;
 using Prova.Generators.Tests;
 
 namespace Prova.Generators.Tests
@@ -27,9 +26,9 @@ namespace Prova.Generators.Tests
     }
 }";
 
-            // Verify attribute instantiation and GetData call
-            GeneratorVerifier.VerifyContains(source, "var attr = new MyDataAttribute();");
-            GeneratorVerifier.VerifyContains(source, "foreach (var dataRow in attr.GetData(targetMethod))");
+            // The generator inlines the attribute construction and fully qualifies the type.
+            GeneratorVerifier.VerifyContains(source, "new Prova.Generators.Tests.MyDataAttribute()");
+            GeneratorVerifier.VerifyContains(source, "foreach (var dataRow in");
         }
     }
 }

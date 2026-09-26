@@ -1,9 +1,9 @@
 using System.Net.Http.Json;
-using Prova;
-using Prova.Core;
-using Prova.AspNetCore;
-using Microsoft.AspNetCore.Mvc.Testing;
 using Microsoft.AspNetCore.Hosting;
+using Microsoft.AspNetCore.Mvc.Testing;
+using Prova;
+using Prova.AspNetCore;
+using Prova.Core;
 
 namespace Prova.AspNetCore.Sample.Tests
 {
@@ -14,10 +14,12 @@ namespace Prova.AspNetCore.Sample.Tests
         [ConfigureServices]
         public static void Configure(ProvaServiceProvider services)
         {
-            services.AddSingleton<WebApplicationFactory<Program>>(() => {
+            services.AddSingleton<WebApplicationFactory<Program>>(() =>
+            {
                 var factory = new ProvaWebApplicationFactory<Program>();
                 var contentRoot = global::System.IO.Path.GetFullPath(global::System.IO.Path.Combine(global::System.AppContext.BaseDirectory, "..", "..", ".."));
-                return factory.WithWebHostBuilder(builder => {
+                return factory.WithWebHostBuilder(builder =>
+                {
                     builder.UseContentRoot(contentRoot);
                 });
             });

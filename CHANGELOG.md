@@ -1,5 +1,96 @@
 # Changelog
 
+## [v0.6.0] - Correctness, coverage and multi-targeting
+
+**Status:** unreleased
+
+This release is the result of auditing Prova for open-source submission. It fixes a set of
+defects that allowed the framework to report success while doing nothing, and it widens the
+supported surface to the current LTS.
+
+See `docs/known-issues.md` for the full ledger. Nothing in it is open.
+
+### Fixed — the framework reported success while doing nothing
+-   **`dotnet test` exited 0 even when tests failed.** The generated runner computed an exit code
+    and discarded it. Now threaded end-to-end through `RunMtpAsync`, `RunSimpleAsync`,
+    `RunAllAsync` and the emitted `Program.g.cs`.
+-   **CI ran zero tests.** `IsTestingPlatformApplication` was inverted on both the shipping
+    libraries and the test projects.
+-   **`dotnet test` did not work at all on the .NET 10 SDK.** `global.json` now opts in to the
+    Microsoft.Testing.Platform runner.
+-   **The generator injected an entry point into class libraries** (CS8805). It now requires an
+    executable `OutputKind`.
+
+### Fixed — public APIs that compiled and did nothing
+-   **`[BeforeAll]`, `[BeforeEach]`, `[AfterAll]` and `[AfterEach]` never ran.** Hook attributes
+    were matched by exact type name, so every derived alias was silently dropped.
+-   **Concurrency isolation attributes were ignored** by `HybridMtpAdapter`.
+-   **`[ArgumentDisplayFormatter]` was ignored on `[Matrix]`** default display names.
+-   **The migration code fix corrupted line endings** and lost indentation when inserting
+    `[Theory]`.
+-   **Every Microsoft.Testing.Platform extension except the dump providers was ignored.** The
+    generated entry point now calls `SelfRegisteredExtensions`, so code coverage, TRX and retry
+    register as the platform intends, and `--coverage` is no longer stripped when the coverage
+    extension is present. Previously their options were rejected and the run executed zero tests.
+-   **The CI coverage step could not run:** it passed the VSTest-only `--collect` switch.
+-   **Linux coverage instrumentation crashed `Prova.Generators.Tests`.** That project runs Roslyn
+    generator verification and runtime compilation in-process; on hosted Linux the MTP code
+    coverage extension corrupted or misread that process's IL after the tests had passed, producing
+    `BadImageFormatException: Bad IL range` and host exits 139/134. Coverage is now excluded only
+    for that test assembly, and CI asserts both generator-test target frameworks still discover all
+    84 tests.
+
+### Fixed — tests that existed but never ran
+-   `Prova.Generators.Tests` executed 11 of its 66 tests; all 74 now run.
+-   `Prova.Analyzers.Tests` was absent from the solution and unrunnable under MTP; migrated to
+    MSTest 4.4.1 and `DefaultVerifier`, and its 13 tests now run.
+-   An orphaned `FsCheckEmissionTests.cs` outside any project was ported in; doing so revealed
+    that the generator-verification compilation never referenced `Prova.FsCheck`.
+-   Six sample projects were in no solution, two of which could not build in Release.
+-   `VariantSample` had its `[TestVariant]` attributes and assertions commented out and demonstrated
+    nothing; it now runs three variant tests. Two samples warned under the .NET 11 SDK
+    (`CA1050`, `CS0162`).
+
+### Fixed — supply chain, packaging and portability
+-   **NU1903**: `Testcontainers` 4.15.0 resolves the high-severity `SSH.NET` advisories.
+-   `Prova.AspNetCore` no longer depends on an abandoned `Mvc.Testing` preview build.
+-   Package versions unified; `dotnet pack` no longer produces sample and test packages.
+-   `AnalysisLevel` pinned to `10.0`; `global.json` rolls forward to new majors.
+-   Added `.gitattributes`; the repository is now `dotnet format` clean.
+
+### Fixed — found by running CI on GitHub-hosted x64 runners for the first time
+-   **`ConsoleLogger`'s three output modes were tested as one.** The logger picks GitHub Actions
+    `::error::` commands, Azure Pipelines `##vso[task.logissue]` commands, or plain `[ERR]` text
+    from ambient environment variables. The tests asserted the plain form, which is true on a
+    laptop and false on Actions, where the test process inherits `GITHUB_ACTIONS=true`. The
+    detection is now a seam rather than a constructor side effect, and all three modes are
+    asserted explicitly. Verified by running the whole suite with `GITHUB_ACTIONS=true` and
+    `TF_BUILD=True` exported.
+-   **Five files used CRLF in a repository that requires LF**, failing the `dotnet format`
+    whitespace gate with `FINALNEWLINE` and then 282 `ENDOFLINE` errors. All converted.
+-   **`publish.yml` could ship a package whose assemblies disagreed with it.** It packed with
+    `--no-build` while overriding the package version from the git tag, so a tag that disagreed
+    with `Directory.Build.props` would have published a correctly-named package containing
+    differently-versioned assemblies, and the run would have been green. It also pushed to
+    nuget.org without running a single test. It now fails on a tag/version mismatch, runs the
+    suite on the artefacts it is about to publish, installs the .NET 8 SDK so the `net8.0` target
+    is genuinely exercised, and declares least-privilege permissions.
+
+### Added
+-   **`ConsoleLogHost`** and **`ConsoleLogger(ConsoleLogHost)`**, plus the static
+    **`ConsoleLogger.DetectHost()`**. The parameterless constructor still detects from the
+    environment, so existing use is unaffected.
+
+### Changed
+-   **Multi-targeting.** All five shipping libraries now target **net8.0 and net10.0**, with
+    **net11.0** available behind `INCLUDE_PREVIEW_TFM=true`. Both primary test projects run on
+    every framework the libraries ship.
+-   **CI** runs a Linux/Windows matrix across net8.0 and net10.0, tests the whole solution,
+    collects coverage, verifies formatting, packs, and has an advisory net11.0 preview leg.
+
+### Added
+-   `CODE_OF_CONDUCT.md`, `SUPPORT.md`, `CODEOWNERS`, `dependabot.yml`, a pull request template,
+    and `docs/known-issues.md`.
 ## [v0.5.0] - MTP-Native Theory Unrolling
 
 **Released:** 2026-03-02

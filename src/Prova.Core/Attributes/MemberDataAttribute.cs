@@ -8,7 +8,7 @@ namespace Prova
     {
         /// <summary>Gets the name of the member that provides the data.</summary>
         public string MemberName { get; }
-        
+
         /// <summary>Gets the parameters passed to the member.</summary>
         public object[]? Parameters { get; }
 

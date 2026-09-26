@@ -1,22 +1,31 @@
-using Prova;
-using System.Threading.Tasks;
 using System;
-using System.Threading;
+using System.Threading.Tasks;
+using Prova;
 
-public class Program
+namespace Prova.Samples.Hang
 {
-    public static async Task Main(string[] args)
+    /// <summary>
+    /// Entry point for a sample that hangs on purpose, so that the hang dump provider has
+    /// something to capture.
+    /// </summary>
+    public static class Program
     {
-        await Prova.TestRunnerExecutor.RunAllAsync(args);
+        /// <summary>Runs the sample.</summary>
+        /// <param name="args">The process arguments.</param>
+        /// <returns>The runner's exit code.</returns>
+        public static Task<int> Main(string[] args)
+            => Prova.TestRunnerExecutor.RunAllAsync(args);
     }
-}
 
-public class HangTests
-{
-    [Fact]
-    public async Task WillHang()
+    /// <summary>A test that does not finish promptly.</summary>
+    public class HangTests
     {
-        Console.WriteLine("About to hang...");
-        await Task.Delay(30000); // 30s
+        /// <summary>Waits long enough for the hang dump provider to trigger.</summary>
+        [Fact]
+        public async Task WillHang()
+        {
+            Console.WriteLine("About to hang...");
+            await Task.Delay(TimeSpan.FromSeconds(30)).ConfigureAwait(false);
+        }
     }
 }

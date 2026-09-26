@@ -1,5 +1,4 @@
 using System;
-using Xunit;
 
 namespace Prova.Generators.Tests
 {
@@ -81,7 +80,7 @@ public class AssemblyParallelTests
         [Fact]
         public void Assembly_Sequential_Is_Respected()
         {
-             var source = @"
+            var source = @"
 using Prova;
 
 [assembly: Sequential]

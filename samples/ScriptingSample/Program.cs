@@ -1,6 +1,6 @@
-using Prova;
 using System;
 using System.Threading.Tasks;
+using Prova;
 
 // Top-Level Statements: acts as the "Script" entry point
 Console.WriteLine("🚀 Running Scripted Tests...");
@@ -9,9 +9,10 @@ Console.WriteLine("🚀 Running Scripted Tests...");
 // Prova.Configuration.Config.DefaultTimeoutMs = 500;
 
 // Execute Tests
-await Prova.TestRunnerExecutor.RunAllAsync(args);
+var exitCode = await Prova.TestRunnerExecutor.RunAllAsync(args);
 
 Console.WriteLine("✅ Script Completed.");
+return exitCode;
 
 // Test Definitions in the same file
 namespace Scripting

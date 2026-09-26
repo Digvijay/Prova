@@ -1,7 +1,7 @@
 <Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
-    <TargetFramework>net10.0</TargetFramework>
+    <TargetFrameworks>$(ToolkitTestTargetFrameworks)</TargetFrameworks>
     <ImplicitUsings>enable</ImplicitUsings>
     <Nullable>enable</Nullable>
     <GenerateTestingPlatformEntryPoint>false</GenerateTestingPlatformEntryPoint>
@@ -11,10 +11,20 @@
     <IsPackable>false</IsPackable>
     <OutputType>Exe</OutputType>
     <TestingPlatformDotnetTestSupport>true</TestingPlatformDotnetTestSupport>
-    <IsTestingPlatformApplication>false</IsTestingPlatformApplication>
+    <!--
+      This MUST be true. `dotnet test` uses IsTestingPlatformApplication to decide which
+      projects to run; setting it to false excluded this project from discovery, so
+      `dotnet test` reported "No test projects were found" and exited without running a
+      single test. GenerateTestingPlatformEntryPoint stays false because Prova's own
+      TestRunnerGenerator emits the entry point.
+    -->
+    <IsTestingPlatformApplication>true</IsTestingPlatformApplication>
   </PropertyGroup>
 
   <ItemGroup>
+    <!-- Generates SelfRegisteredExtensions, through which Prova's entry point registers coverage and TRX. -->
+    <PackageReference Include="Microsoft.Testing.Platform.MSBuild" Version="2.0.2" />
+    <PackageReference Include="Microsoft.Testing.Extensions.CodeCoverage" Version="18.3.2" />
     <ProjectReference Include="..\..\src\Prova.Core\Prova.Core.csproj" />
     <ProjectReference Include="..\..\src\Prova.Generators\Prova.Generators.csproj" OutputItemType="Analyzer" ReferenceOutputAssembly="false" />
     <PackageReference Include="Microsoft.Testing.Extensions.TrxReport" Version="2.0.2" />

@@ -1,21 +1,31 @@
-using Prova;
-using System.Threading.Tasks;
 using System;
+using System.Threading.Tasks;
+using Prova;
 
-public class Program
+namespace Prova.Samples.Crash
 {
-    public static async Task Main(string[] args)
+    /// <summary>
+    /// Entry point for a sample that crashes on purpose, so that the crash dump provider has
+    /// something to capture.
+    /// </summary>
+    public static class Program
     {
-        await Prova.TestRunnerExecutor.RunAllAsync(args);
+        /// <summary>Runs the sample.</summary>
+        /// <param name="args">The process arguments.</param>
+        /// <returns>The runner's exit code.</returns>
+        public static Task<int> Main(string[] args)
+            => Prova.TestRunnerExecutor.RunAllAsync(args);
     }
-}
 
-public class CrashTests
-{
-    [Fact]
-    public void WillCrash()
+    /// <summary>A test that terminates the process.</summary>
+    public class CrashTests
     {
-        Console.WriteLine("About to crash...");
-        Environment.FailFast("Intentional Crash for Testing Dump Generation");
+        /// <summary>Fails fast, which the crash dump provider is expected to capture.</summary>
+        [Fact]
+        public void WillCrash()
+        {
+            Console.WriteLine("About to crash...");
+            Environment.FailFast("Intentional crash, used to exercise dump generation.");
+        }
     }
 }

@@ -1,5 +1,4 @@
 using System;
-using Xunit;
 
 namespace Prova.Generators.Tests
 {
@@ -24,7 +23,7 @@ public class MyFactTests
                 "new MyFactTests()",
                 "instance.SimpleFact()"
             };
-            
+
             GeneratorVerifier.VerifyContains(source, expectedSnippets);
         }
 
@@ -33,7 +32,6 @@ public class MyFactTests
         {
             var source = @"
 using Prova;
-using Xunit;
 
 public class MyTheoryTests
 {
@@ -49,7 +47,7 @@ public class MyTheoryTests
                 "DisplayName = $\"MyTheoryTests.Add(1, 2)\"",
                 "DisplayName = $\"MyTheoryTests.Add(3, 4)\""
             };
-            
+
             GeneratorVerifier.VerifyContains(source, expectedSnippets);
         }
 
@@ -58,7 +56,6 @@ public class MyTheoryTests
         {
             var source = @"
 using Prova;
-using Xunit;
 
 public class MyTheoryTests
 {
@@ -71,7 +68,7 @@ public class MyTheoryTests
                 "instance.TestWithString(\"MethodRowA\")",
                 "instance.TestWithString(\"Quote\\\"InSide\")"
             };
-            
+
             GeneratorVerifier.VerifyContains(source, expectedSnippets);
         }
 
@@ -80,7 +77,6 @@ public class MyTheoryTests
         {
             var source = @"
 using Prova;
-using Xunit;
 
 public class MySkipTests
 {
@@ -90,7 +86,7 @@ public class MySkipTests
             var expectedSnippets = new[] {
                 "SkipReason = \"Not ready\""
             };
-            
+
             GeneratorVerifier.VerifyContains(source, expectedSnippets);
         }
 
@@ -99,7 +95,6 @@ public class MySkipTests
         {
             var source = @"
 using Prova;
-using Xunit;
 
 public class MyFocusTests
 {
@@ -111,7 +106,7 @@ public class MyFocusTests
                 "Properties = new Dictionary<string, string>",
                 "{ \"Focus\", \"true\" }"
             };
-            
+
             GeneratorVerifier.VerifyContains(source, expectedSnippets);
         }
 
@@ -120,7 +115,6 @@ public class MyFocusTests
         {
             var source = @"
 using Prova;
-using Xunit;
 
 public class MyRetryTests
 {
@@ -131,7 +125,7 @@ public class MyRetryTests
             var expectedSnippets = new[] {
                 "RetryCount = 5"
             };
-            
+
             GeneratorVerifier.VerifyContains(source, expectedSnippets);
         }
         [Fact]
@@ -153,7 +147,7 @@ public class MyMemberDataTests
                 "string __rowDisplay = string.Join(\", \", dataRow);",
                 "DisplayName = $\"MyMemberDataTests.Add({__rowDisplay})\""
             };
-            
+
             GeneratorVerifier.VerifyContains(source, expectedSnippets);
         }
     }

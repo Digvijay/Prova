@@ -1,19 +1,22 @@
-using Prova;
 using System;
 using System.Threading.Tasks;
+using Prova;
 
 // Run tests
-await Prova.TestRunnerExecutor.RunAllAsync(args);
+return await Prova.TestRunnerExecutor.RunAllAsync(args);
 
-public class LogTests
+namespace LoggingSample
 {
-    [Fact]
-    public async Task ShouldLogExpliticly()
+    public class LogTests
     {
-        var logger = TestContext.Current.Logger;
-        logger.Log("Hello from test!");
-        logger.LogWarning("This is a warning.");
-        logger.LogError("This is an error.");
-        await Task.CompletedTask;
+        [Fact]
+        public async Task ShouldLogExplicitly()
+        {
+            var logger = TestContext.Current.Logger;
+            logger.Log("Hello from test!");
+            logger.LogWarning("This is a warning.");
+            logger.LogError("This is an error.");
+            await Task.CompletedTask;
+        }
     }
 }

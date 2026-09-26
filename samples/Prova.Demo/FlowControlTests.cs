@@ -34,12 +34,12 @@ namespace Prova.Demo
         [Culture("es-ES")]
         public void Culture_Attribute_Sets_Current_UICulture()
         {
-             var uiCulture = CultureInfo.CurrentUICulture;
-             Console.WriteLine($"Current UI Culture: {uiCulture.Name}");
-             if (uiCulture.Name != "es-ES")
-             {
-                 throw new InvalidOperationException($"Expected UI culture es-ES but got {uiCulture.Name}");
-             }
+            var uiCulture = CultureInfo.CurrentUICulture;
+            Console.WriteLine($"Current UI Culture: {uiCulture.Name}");
+            if (uiCulture.Name != "es-ES")
+            {
+                throw new InvalidOperationException($"Expected UI culture es-ES but got {uiCulture.Name}");
+            }
         }
     }
 }

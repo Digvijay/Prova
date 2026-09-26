@@ -17,8 +17,8 @@ namespace Skugga
         }
 
         /// <inheritdoc />
-        public void Charge(decimal amount) 
-        { 
+        public void Charge(decimal amount)
+        {
             _recorder?.Invoke($"Charge({amount})");
         }
     }

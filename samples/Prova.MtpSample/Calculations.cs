@@ -7,7 +7,7 @@ namespace Prova.Sample
     {
         /// <summary>Adds two numbers.</summary>
         public static int Add(int a, int b) => a + b;
-        
+
         /// <summary>Multiplies two numbers.</summary>
         public static int Multiply(int a, int b) => a * b;
 

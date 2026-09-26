@@ -1,5 +1,4 @@
 using System.Threading.Tasks;
-using Xunit;
 using Prova.Generators.Tests;
 
 namespace Prova.Generators.Tests.Attachments
@@ -23,7 +22,7 @@ public class AttachmentTest
 }";
             // Verify that we are capturing the output from the context
             GeneratorVerifier.VerifyContains(code, "stdOut = context.Output.Output ?? \"\";");
-            
+
             // Verify that we are appending the output to the final result
             GeneratorVerifier.VerifyContains(code, "var finalOutput = (string.IsNullOrEmpty(lastOutput) ? \"\" : lastOutput + System.Environment.NewLine) + stdOut;");
         }

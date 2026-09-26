@@ -1,6 +1,6 @@
-using Prova;
 using System;
 using System.Threading.Tasks;
+using Prova;
 
 namespace Prova.Demo
 {
@@ -13,7 +13,7 @@ namespace Prova.Demo
             for (int i = 1; i <= 3; i++)
             {
                 int index = i;
-                builder.Add($"Dynamic.Loop_{index}", () => 
+                builder.Add($"Dynamic.Loop_{index}", () =>
                 {
                     Console.WriteLine($"Running dynamic test {index}");
                 })
@@ -29,7 +29,7 @@ namespace Prova.Demo
             })
             .WithRetry(2)
             .WithTimeout(1000);
-            
+
             // Generate a test that fails
             builder.Add("Dynamic.FailingTest", () =>
             {

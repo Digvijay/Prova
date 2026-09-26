@@ -56,7 +56,7 @@ namespace Prova.Core.Tests
             _output.WriteLine("This is captured output from a passing test.");
             Assert.Equal(1, 1);
         }
-        
+
         /// <summary>Verifies output capture on failure.</summary>
         [Fact(Skip = "Intentional failure for framework verification")]
         public void OutputCapturedOnFailure()

@@ -1,5 +1,4 @@
 using System;
-using Xunit;
 
 namespace Prova.Generators.Tests
 {
@@ -20,13 +19,13 @@ public class MyParallelTests
     {
     }
 }";
-            
+
             var expectedSnippets = new[] {
                 "MaxParallel = 2",
                 "instance = new MyParallelTests()",
                 "instance.ParallelTest()"
             };
-            
+
             GeneratorVerifier.VerifyContains(source, expectedSnippets);
         }
     }

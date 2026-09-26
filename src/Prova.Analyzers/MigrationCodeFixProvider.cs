@@ -51,7 +51,7 @@ namespace Prova.Analyzers
             var node = root.FindNode(diagnosticSpan);
             if (node == null) return;
 
-            if (diagnosticId == MigrationAnalyzer.DiagnosticId || 
+            if (diagnosticId == MigrationAnalyzer.DiagnosticId ||
                 diagnosticId == MigrationAnalyzer.DiagnosticIdNUnitUsing ||
                 diagnosticId == MigrationAnalyzer.DiagnosticIdMSTestUsing)
             {
@@ -66,7 +66,7 @@ namespace Prova.Analyzers
                         diagnostic);
                 }
             }
-            else if (diagnosticId == MigrationAnalyzer.DiagnosticIdNUnitAttribute || 
+            else if (diagnosticId == MigrationAnalyzer.DiagnosticIdNUnitAttribute ||
                      diagnosticId == MigrationAnalyzer.DiagnosticIdNUnitOneTimeSetUp ||
                      diagnosticId == MigrationAnalyzer.DiagnosticIdNUnitSetUp ||
                      diagnosticId == MigrationAnalyzer.DiagnosticIdNUnitTearDown ||
@@ -181,6 +181,24 @@ namespace Prova.Analyzers
             }
         }
 
+        /// <summary>
+        /// Returns the end-of-line trivia already used by the document. Hardcoding "\n" here
+        /// injects a lone line feed into CRLF files, leaving the fixed source with mixed
+        /// line endings.
+        /// </summary>
+        private static SyntaxTrivia GetDocumentEndOfLine(SyntaxNode root)
+        {
+            var text = root.ToFullString();
+            var index = text.IndexOf('\n');
+            // No newline anywhere: emit elastic trivia so the formatter substitutes the
+            // workspace's configured newline. Environment.NewLine is banned here (RS1035)
+            // because analyzers must behave deterministically across hosts.
+            if (index < 0) return SyntaxFactory.ElasticCarriageReturnLineFeed;
+            return index > 0 && text[index - 1] == '\r'
+                ? SyntaxFactory.CarriageReturnLineFeed
+                : SyntaxFactory.LineFeed;
+        }
+
         private static async Task<Document> MigrateUsingToProvaAsync(Document document, UsingDirectiveSyntax usingDirective, CancellationToken cancellationToken)
         {
             var root = await document.GetSyntaxRootAsync(cancellationToken).ConfigureAwait(false) as CompilationUnitSyntax;
@@ -193,8 +211,10 @@ namespace Prova.Analyzers
             // Add "using Prova;" if not exists
             if (!newRoot.Usings.Any(u => u.Name?.ToString() == "Prova"))
             {
+                var eol = GetDocumentEndOfLine(root);
                 var provaUsing = SyntaxFactory.UsingDirective(SyntaxFactory.ParseName("Prova"))
-                    .WithTrailingTrivia(SyntaxFactory.EndOfLine("\n"));
+                    .NormalizeWhitespace("    ", eol.ToFullString(), elasticTrivia: false)
+                    .WithTrailingTrivia(eol);
                 newRoot = newRoot.AddUsings(provaUsing);
             }
 
@@ -203,14 +223,14 @@ namespace Prova.Analyzers
 
         private static async Task<Document> ReplaceAttributeAsync(Document document, AttributeSyntax attribute, string networkName, CancellationToken cancellationToken)
         {
-             var root = await document.GetSyntaxRootAsync(cancellationToken).ConfigureAwait(false);
-             if (root == null) return document;
-             
-             // Replace Name with newName (e.g. "Fact")
-             var newAttribute = attribute.WithName(SyntaxFactory.ParseName(networkName));
-             
-             var newRoot = root.ReplaceNode(attribute, newAttribute);
-             return document.WithSyntaxRoot(newRoot!);
+            var root = await document.GetSyntaxRootAsync(cancellationToken).ConfigureAwait(false);
+            if (root == null) return document;
+
+            // Replace Name with newName (e.g. "Fact")
+            var newAttribute = attribute.WithName(SyntaxFactory.ParseName(networkName));
+
+            var newRoot = root.ReplaceNode(attribute, newAttribute);
+            return document.WithSyntaxRoot(newRoot!);
         }
 
         private static async Task<Document> MigrateTestCaseAsync(Document document, AttributeSyntax attribute, CancellationToken cancellationToken)
@@ -220,11 +240,11 @@ namespace Prova.Analyzers
 
             var methodDeclaration = attribute.FirstAncestorOrSelf<MethodDeclarationSyntax>();
             if (methodDeclaration == null) return document;
-            
+
             // 1. Convert [TestCase(...)] to [InlineData(...)]
             var inlineDataAttribute = attribute
                 .WithName(SyntaxFactory.ParseName("InlineData"));
-                // Note: We keep the argument list as is, since Prova InlineData syntax matches NUnit TestCase for basic args.
+            // Note: We keep the argument list as is, since Prova InlineData syntax matches NUnit TestCase for basic args.
 
             // 2. Ensure [Theory] exists
             var hasTheory = methodDeclaration.AttributeLists
@@ -234,11 +254,11 @@ namespace Prova.Analyzers
             // We need to replace the attribute properly in the list
             var methodInOldRoot = methodDeclaration;
             var listContainingAttribute = methodInOldRoot.AttributeLists.First(al => al.Attributes.Contains(attribute));
-            
+
             // Create new attribute list with InlineData instead of TestCase
             var newAttributes = listContainingAttribute.Attributes.Replace(attribute, inlineDataAttribute);
             var newList = listContainingAttribute.WithAttributes(newAttributes);
-            
+
             var methodWithNewAttribute = methodInOldRoot.ReplaceNode(listContainingAttribute, newList);
 
             // Now handle [Theory]
@@ -251,7 +271,7 @@ namespace Prova.Analyzers
             var allTestCases = methodDeclaration.AttributeLists
                 .SelectMany(al => al.Attributes)
                 .Where(a => a.Name?.ToString() == "TestCase" || (a.Name?.ToString().EndsWith("TestCaseAttribute", StringComparison.Ordinal) ?? false));
-            
+
             bool isFirstTestCase = allTestCases.FirstOrDefault() == attribute;
 
             if (testAttribute != null)
@@ -263,12 +283,25 @@ namespace Prova.Analyzers
             {
                 // Add [Theory] if it doesn't exist and we didn't just replace Test/Fact
                 var theoryAttribute = SyntaxFactory.Attribute(SyntaxFactory.ParseName("Theory"));
+                var eol = GetDocumentEndOfLine(root);
+                // Nodes built with SyntaxFactory carry elastic trivia, which the formatter later
+                // expands using its own default newline rather than the document's. Normalise it
+                // away first so the explicit trivia below is what actually ships.
                 var theoryList = SyntaxFactory.AttributeList(SyntaxFactory.SingletonSeparatedList(theoryAttribute))
-                    .WithTrailingTrivia(SyntaxFactory.EndOfLine("\n"));
-                
-                // Insert at the beginning (index 0) so it appears before InlineData
+                    .NormalizeWhitespace("    ", eol.ToFullString(), elasticTrivia: false);
+
+                // Take over the indentation of the attribute list currently in first position and
+                // leave that list indented on the following line, so the inserted [Theory] lines
+                // up with its siblings instead of being emitted at column zero.
+                var firstList = methodWithNewAttribute.AttributeLists[0];
+                var leading = firstList.GetLeadingTrivia();
+                var indent = SyntaxFactory.TriviaList(
+                    leading.Where(t => t.IsKind(SyntaxKind.WhitespaceTrivia)).Reverse().Take(1).Reverse());
+
                 methodWithNewAttribute = methodWithNewAttribute.WithAttributeLists(
-                    methodWithNewAttribute.AttributeLists.Insert(0, theoryList));
+                    methodWithNewAttribute.AttributeLists
+                        .Replace(firstList, firstList.WithLeadingTrivia(indent))
+                        .Insert(0, theoryList.WithLeadingTrivia(leading).WithTrailingTrivia(eol)));
             }
 
             var finalRoot = root.ReplaceNode(methodInOldRoot, methodWithNewAttribute);
@@ -279,7 +312,7 @@ namespace Prova.Analyzers
         {
             var root = await document.GetSyntaxRootAsync(cancellationToken).ConfigureAwait(false);
             if (root == null) return document;
-            
+
             var baseList = baseType.Parent as BaseListSyntax;
             if (baseList == null) return document;
 

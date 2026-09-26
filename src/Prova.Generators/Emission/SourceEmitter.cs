@@ -1,25 +1,26 @@
+using System;
 using System.Collections.Generic;
 using System.Collections.Immutable;
 using System.Linq;
 using System.Text;
-using Prova.Generators.Models;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.Text;
-using System;
+using Prova.Generators.Models;
 
 namespace Prova.Generators.Emission
 {
     internal static class SourceEmitter
     {
-        public static void Execute(SourceProductionContext context, ImmutableArray<TestMethodModel?> methods, List<string?> configMethods, 
-            List<(string? Method, bool IsAsync, string? ExecutorType)> beforeAssembly, 
+        public static void Execute(SourceProductionContext context, ImmutableArray<TestMethodModel?> methods, List<string?> configMethods,
+            List<(string? Method, bool IsAsync, string? ExecutorType)> beforeAssembly,
             List<(string? Method, bool IsAsync, string? ExecutorType)> afterAssembly,
             List<(string? Method, bool IsAsync, string? ExecutorType)>? beforeEveryTest = null,
             List<(string? Method, bool IsAsync, string? ExecutorType)>? afterEveryTest = null,
             List<(string? Method, bool IsAsync, string? ExecutorType)>? beforeEveryClass = null,
             List<(string? Method, bool IsAsync, string? ExecutorType)>? afterEveryClass = null,
             int? globalMaxParallel = null,
-            List<string?>? factories = null)
+            List<string?>? factories = null,
+            PlatformExtensions platform = default)
         {
             if (methods.IsDefaultOrEmpty && (factories == null || factories.Count == 0)) return;
 
@@ -141,7 +142,8 @@ namespace Prova.Generators.Emission
             sb.AppendLine("        /// Runs all tests.");
             sb.AppendLine("        /// </summary>");
             sb.AppendLine("        /// <param name=\"args\">The command line arguments.</param>");
-            sb.AppendLine("        public static async global::System.Threading.Tasks.Task RunAllAsync(string[]? args = null)");
+            sb.AppendLine("        /// <returns>A process exit code: 0 when every test passed, non-zero otherwise.</returns>");
+            sb.AppendLine("        public static async global::System.Threading.Tasks.Task<int> RunAllAsync(string[]? args = null)");
             sb.AppendLine("        {");
             sb.AppendLine("            // Initialize Coverage");
             sb.AppendLine("            InitializeCoverage();");
@@ -188,63 +190,95 @@ namespace Prova.Generators.Emission
 
             sb.AppendLine("            try {");
             sb.AppendLine("                args ??= global::System.Array.Empty<string>();");
-            sb.AppendLine("                bool hasCoverage = args.Any(a => a == \"--coverage\");");
-            sb.AppendLine("                var filteredArgs = args.Where(a => a != \"--coverage\").ToArray();");
-            sb.AppendLine("                bool isMtp = args.Any(a => a == \"--list-tests\" || a == \"--server\" || a.StartsWith(\"--client-port\") || a == \"--report-trx\" || hasCoverage || a == \"--help\" || a == \"-?\" || a == \"-h\" || a == \"--crashdump\" || a == \"--hangdump\" || a.StartsWith(\"--hangdump-timeout\"));");
+            if (platform.HasPlatformCoverage)
+            {
+                // Microsoft.Testing.Extensions.CodeCoverage owns --coverage. Stripping it here, as
+                // Prova does for its own LCOV output, would hide it from the extension the user
+                // referenced, which then reports nothing.
+                sb.AppendLine("                bool hasCoverage = false;");
+                sb.AppendLine("                var filteredArgs = args;");
+            }
+            else
+            {
+                sb.AppendLine("                bool hasCoverage = args.Any(a => a == \"--coverage\");");
+                sb.AppendLine("                var filteredArgs = args.Where(a => a != \"--coverage\").ToArray();");
+            }
+            sb.AppendLine("                bool isMtp = args.Any(a => a == \"--list-tests\" || a == \"--server\" || a.StartsWith(\"--client-port\") || a == \"--report-trx\" || a == \"--coverage\" || a == \"--help\" || a == \"-?\" || a == \"-h\" || a == \"--info\" || a == \"--crashdump\" || a == \"--hangdump\" || a.StartsWith(\"--hangdump-timeout\"));");
             sb.AppendLine();
             sb.AppendLine("                if (isMtp)");
             sb.AppendLine("                {");
-            sb.AppendLine("                    await RunMtpAsync(filteredArgs, hasCoverage);");
+            sb.AppendLine("                    return await RunMtpAsync(filteredArgs, hasCoverage);");
             sb.AppendLine("                }");
             sb.AppendLine("                else");
             sb.AppendLine("                {");
-            sb.AppendLine("                    await RunSimpleAsync(filteredArgs, hasCoverage);");
+            sb.AppendLine("                    return await RunSimpleAsync(filteredArgs, hasCoverage);");
             sb.AppendLine("                }");
             sb.AppendLine("            } finally {");
-                // Dispose Class Fixtures
-                foreach (var fixture in allFixtures)
-                {
-                    sb.AppendLine($"                try {{ var inst_{fixture.Replace(".", "_")} = Services.GetService(typeof({fixture})); if (inst_{fixture.Replace(".", "_")} is IAsyncLifetime al_disp_{fixture.Replace(".", "_")}) await al_disp_{fixture.Replace(".", "_")}.DisposeAsync(); else if (inst_{fixture.Replace(".", "_")} is global::System.IDisposable d_disp_{fixture.Replace(".", "_")}) d_disp_{fixture.Replace(".", "_")}.Dispose(); }} catch {{ }}");
-                }
+            // Dispose Class Fixtures
+            foreach (var fixture in allFixtures)
+            {
+                sb.AppendLine($"                try {{ var inst_{fixture.Replace(".", "_")} = Services.GetService(typeof({fixture})); if (inst_{fixture.Replace(".", "_")} is IAsyncLifetime al_disp_{fixture.Replace(".", "_")}) await al_disp_{fixture.Replace(".", "_")}.DisposeAsync(); else if (inst_{fixture.Replace(".", "_")} is global::System.IDisposable d_disp_{fixture.Replace(".", "_")}) d_disp_{fixture.Replace(".", "_")}.Dispose(); }} catch {{ }}");
+            }
 
-                foreach (var hook in afterAssembly)
-                {
-                    if (string.IsNullOrEmpty(hook.Method)) continue;
-                    string executorType = hook.ExecutorType != null ? $"typeof({hook.ExecutorType})" : "null";
-                    string hookAction = hook.IsAsync ? $"async () => await {hook.Method}()" : $"() => {{ {hook.Method}(); return global::System.Threading.Tasks.Task.CompletedTask; }}";
-                    sb.AppendLine($"                try {{ await TestRunnerExecutor.InvokeHookHelper({hookAction}, \"{hook.Method}\", {executorType}); }} catch {{ }}");
-                }
-                
-                sb.AppendLine("                var sessionOutput = sessionContext.Output.Output;");
-                sb.AppendLine("                if (!string.IsNullOrEmpty(sessionOutput))");
-                sb.AppendLine("                {");
-                sb.AppendLine("                    global::System.Console.WriteLine(\"Session Output:\");");
-                sb.AppendLine("                    global::System.Console.WriteLine(sessionOutput);");
-                sb.AppendLine("                }");
+            foreach (var hook in afterAssembly)
+            {
+                if (string.IsNullOrEmpty(hook.Method)) continue;
+                string executorType = hook.ExecutorType != null ? $"typeof({hook.ExecutorType})" : "null";
+                string hookAction = hook.IsAsync ? $"async () => await {hook.Method}()" : $"() => {{ {hook.Method}(); return global::System.Threading.Tasks.Task.CompletedTask; }}";
+                sb.AppendLine($"                try {{ await TestRunnerExecutor.InvokeHookHelper({hookAction}, \"{hook.Method}\", {executorType}); }} catch {{ }}");
+            }
 
-                sb.AppendLine("                Prova.TestContext.Current = null!;");
-                sb.AppendLine("                Services.Dispose();");
+            sb.AppendLine("                var sessionOutput = sessionContext.Output.Output;");
+            sb.AppendLine("                if (!string.IsNullOrEmpty(sessionOutput))");
+            sb.AppendLine("                {");
+            sb.AppendLine("                    global::System.Console.WriteLine(\"Session Output:\");");
+            sb.AppendLine("                    global::System.Console.WriteLine(sessionOutput);");
+            sb.AppendLine("                }");
+
+            sb.AppendLine("                Prova.TestContext.Current = null!;");
+            sb.AppendLine("                Services.Dispose();");
             sb.AppendLine("            }");
             sb.AppendLine("        }");
             sb.AppendLine();
-            sb.AppendLine("        private static async global::System.Threading.Tasks.Task RunMtpAsync(string[] args, bool hasCoverage)");
+            sb.AppendLine("        // Returns the platform's exit code. Discarding it made `dotnet test`");
+            sb.AppendLine("        // report success while tests were failing, so CI stayed green on a red suite.");
+            sb.AppendLine("        private static async global::System.Threading.Tasks.Task<int> RunMtpAsync(string[] args, bool hasCoverage)");
             sb.AppendLine("        {");
             sb.AppendLine("            var builder = await global::Microsoft.Testing.Platform.Builder.TestApplication.CreateBuilderAsync(args);");
-            sb.AppendLine("            builder.AddCrashDumpProvider();");
-            sb.AppendLine("            builder.AddHangDumpProvider();");
+            if (platform.SelfRegisteredExtensionsType != null)
+            {
+                // Registers every extension the project references, crash and hang dump included,
+                // exactly as the platform's own generated entry point would.
+                sb.AppendLine($"            {platform.SelfRegisteredExtensionsType}.AddSelfRegisteredExtensions(builder, args);");
+            }
+            else
+            {
+                sb.AppendLine("            builder.AddCrashDumpProvider();");
+                sb.AppendLine("            builder.AddHangDumpProvider();");
+            }
+            sb.AppendLine("            // Name-based filtering. The platform only offers --filter-uid, and a UID");
+            sb.AppendLine("            // cannot be guessed without listing the tests first.");
+            sb.AppendLine("            builder.CommandLine.AddProvider(() => new global::Prova.ProvaFilterCommandLineProvider());");
             sb.AppendLine("            builder.RegisterTestFramework(");
             sb.AppendLine("                _ => new ProvaCapabilities(),");
-            sb.AppendLine("                (cap, _) => new HybridMtpAdapter(GetTests(), cap));");
+            sb.AppendLine("                (cap, sp) => new HybridMtpAdapter(");
+            sb.AppendLine("                    GetTests(),");
+            sb.AppendLine("                    cap,");
+            sb.AppendLine("                    (global::Microsoft.Testing.Platform.CommandLine.ICommandLineOptions?)sp.GetService(typeof(global::Microsoft.Testing.Platform.CommandLine.ICommandLineOptions))));");
             sb.AppendLine("            using var app = await builder.BuildAsync();");
-            sb.AppendLine("            await app.RunAsync();");
+            sb.AppendLine("            int exitCode = await app.RunAsync();");
             sb.AppendLine();
             sb.AppendLine("            if (hasCoverage)");
             sb.AppendLine("            {");
             sb.AppendLine("                CoverageRegistry.EmitLcov(\"coverage.lcov\");");
             sb.AppendLine("            }");
+            sb.AppendLine();
+            sb.AppendLine("            return exitCode;");
             sb.AppendLine("        }");
             sb.AppendLine();
-            sb.AppendLine("        private static async global::System.Threading.Tasks.Task RunSimpleAsync(string[] args, bool hasCoverage)");
+            sb.AppendLine("        // Returns a non-zero exit code when any test failed, so the standalone");
+            sb.AppendLine("        // runner fails the build the same way the MTP host does.");
+            sb.AppendLine("        private static async global::System.Threading.Tasks.Task<int> RunSimpleAsync(string[] args, bool hasCoverage)");
             sb.AppendLine("        {");
             sb.AppendLine("            var reporter = new ConsoleReporter();");
             sb.AppendLine("            int passed = 0, failed = 0, skipped = 0;");
@@ -260,6 +294,10 @@ namespace Prova.Generators.Emission
             sb.AppendLine("                    if (!test.Properties.ContainsKey(prop.Key)) test.Properties[prop.Key] = prop.Value;");
             sb.AppendLine("                }");
             sb.AppendLine("            }");
+            sb.AppendLine("            ");
+            sb.AppendLine("            // Name filtering, applied before anything else so that the value of a");
+            sb.AppendLine("            // filter option is never also read as a bare keyword below.");
+            sb.AppendLine("            activeTests = global::Prova.TestFilter.Apply(activeTests, args, out args).ToList();");
             sb.AppendLine("            ");
             sb.AppendLine("            // CLI Filtering logic");
             sb.AppendLine("            var filterArgs = args.Where(a => a.StartsWith(\"--filter=\")).Select(a => a.Substring(\"--filter=\".Length)).ToList();");
@@ -301,8 +339,8 @@ namespace Prova.Generators.Emission
             sb.AppendLine("            }");
             sb.AppendLine();
             sb.AppendLine("            var tasks = new List<global::System.Threading.Tasks.Task>();");
-            string maxConcurrencyExpr = globalMaxParallel.HasValue 
-                ? (globalMaxParallel.Value == -1 ? "1000" : globalMaxParallel.Value.ToString(global::System.Globalization.CultureInfo.InvariantCulture)) 
+            string maxConcurrencyExpr = globalMaxParallel.HasValue
+                ? (globalMaxParallel.Value == -1 ? "1000" : globalMaxParallel.Value.ToString(global::System.Globalization.CultureInfo.InvariantCulture))
                 : "global::System.Environment.ProcessorCount";
 
             sb.AppendLine($"            int maxConcurrency = config.MaxParallel ?? {maxConcurrencyExpr};");
@@ -460,6 +498,8 @@ namespace Prova.Generators.Emission
             sb.AppendLine("            {");
             sb.AppendLine("                CoverageRegistry.EmitLcov(\"coverage.lcov\");");
             sb.AppendLine("            }");
+            sb.AppendLine();
+            sb.AppendLine("            return failed > 0 ? 1 : 0;");
             sb.AppendLine("        }");
             sb.AppendLine();
             sb.AppendLine("        /// <summary>");
@@ -501,145 +541,145 @@ namespace Prova.Generators.Emission
                         {
                             foreach (var variantName in namedVariants)
                             {
-                            string concreteClassName = cv.Length > 0 ? $"{RemoveGenerics(method.ClassName)}<{string.Join(", ", cv)}>" : method.ClassName;
-                            string concreteMethodName = mv.Length > 0 ? $"{method.MethodName}<{string.Join(", ", mv)}>" : method.MethodName;
-                            
-                            string variantSuffix = "";
-                            if (cv.Length > 0) variantSuffix += $"<{string.Join(", ", cv)}>";
-                            if (mv.Length > 0) variantSuffix += (variantSuffix.Length > 0 ? "." : "") + $"{method.MethodName}<{string.Join(", ", mv)}>";
-                            if (variantName != null) variantSuffix += $" [Variant: {variantName}]";
-                            if (variantSuffix.Length > 0 && variantName == null) variantSuffix = " [" + variantSuffix + "]";
+                                string concreteClassName = cv.Length > 0 ? $"{RemoveGenerics(method.ClassName)}<{string.Join(", ", cv)}>" : method.ClassName;
+                                string concreteMethodName = mv.Length > 0 ? $"{method.MethodName}<{string.Join(", ", mv)}>" : method.MethodName;
 
-                            // Generate Class-Level Data Loops if present
-                            bool hasClassData = method.ClassTestData.Count > 0 || method.ClassMemberData.Count > 0 || method.ClassClassData.Count > 0 || method.ClassClassDataSources.Count > 0 || method.ClassMethodDataSources.Count > 0 || method.ClassCustomDataGenerators.Count > 0 || method.ClassDIDataSources.Count > 0;
-                            if (hasClassData)
-                            {
-                                if (method.ClassTestData.Count > 0)
+                                string variantSuffix = "";
+                                if (cv.Length > 0) variantSuffix += $"<{string.Join(", ", cv)}>";
+                                if (mv.Length > 0) variantSuffix += (variantSuffix.Length > 0 ? "." : "") + $"{method.MethodName}<{string.Join(", ", mv)}>";
+                                if (variantName != null) variantSuffix += $" [Variant: {variantName}]";
+                                if (variantSuffix.Length > 0 && variantName == null) variantSuffix = " [" + variantSuffix + "]";
+
+                                // Generate Class-Level Data Loops if present
+                                bool hasClassData = method.ClassTestData.Count > 0 || method.ClassMemberData.Count > 0 || method.ClassClassData.Count > 0 || method.ClassClassDataSources.Count > 0 || method.ClassMethodDataSources.Count > 0 || method.ClassCustomDataGenerators.Count > 0 || method.ClassDIDataSources.Count > 0;
+                                if (hasClassData)
                                 {
-                                    foreach (var classRow in method.ClassTestData)
+                                    if (method.ClassTestData.Count > 0)
                                     {
-                                        string classRowStr = string.Join(", ", classRow);
-                                        EmitMethodExecution(sb, method, concreteClassName, concreteMethodName, variantSuffix, classRowStr, $"(ClassData_{probeCounter})", classFixtures, ref probeCounter, coverageMetadata, cv, mv, variantName);
+                                        foreach (var classRow in method.ClassTestData)
+                                        {
+                                            string classRowStr = string.Join(", ", classRow);
+                                            EmitMethodExecution(sb, method, concreteClassName, concreteMethodName, variantSuffix, classRowStr, $"(ClassData_{probeCounter})", classFixtures, ref probeCounter, coverageMetadata, cv, mv, variantName);
+                                        }
+                                    }
+
+                                    if (method.ClassMemberData.Count > 0)
+                                    {
+                                        foreach (var md in method.ClassMemberData)
+                                        {
+                                            sb.AppendLine($"            // ClassMemberData: {md.MemberName}");
+                                            string sourceExpr = md.MemberType != null ? md.MemberType + "." + md.MemberName : concreteClassName + "." + md.MemberName;
+                                            if (md.IsMethod) sourceExpr += "(" + string.Join(", ", md.Parameters) + ")";
+
+                                            sb.AppendLine($"            foreach (var classDataRow in (global::System.Collections.Generic.IEnumerable<object[]>)({sourceExpr}))");
+                                            sb.AppendLine("            {");
+                                            sb.AppendLine("                if (classDataRow != null)");
+                                            sb.AppendLine("                {");
+                                            sb.AppendLine("                    string __classRowDisplay = string.Join(\", \", classDataRow);");
+                                            EmitMethodExecution(sb, method, concreteClassName, concreteMethodName, variantSuffix, "classDataRow", "(Class:{__classRowDisplay})", classFixtures, ref probeCounter, coverageMetadata, cv, mv, variantName, isClassDataRow: true);
+                                            sb.AppendLine("                }");
+                                            sb.AppendLine("            }");
+                                        }
+                                    }
+
+                                    if (method.ClassClassData.Count > 0)
+                                    {
+                                        foreach (var cdType in method.ClassClassData)
+                                        {
+                                            sb.AppendLine($"            // ClassClassData: {cdType}");
+                                            sb.AppendLine($"            foreach (var classDataRow in (global::System.Collections.Generic.IEnumerable<object[]>)new {cdType}())");
+                                            sb.AppendLine("            {");
+                                            sb.AppendLine("                if (classDataRow != null)");
+                                            sb.AppendLine("                {");
+                                            sb.AppendLine("                    string __classRowDisplay = string.Join(\", \", classDataRow);");
+                                            EmitMethodExecution(sb, method, concreteClassName, concreteMethodName, variantSuffix, "classDataRow", "(Class:{__classRowDisplay})", classFixtures, ref probeCounter, coverageMetadata, cv, mv, variantName, isClassDataRow: true);
+                                            sb.AppendLine("                }");
+                                            sb.AppendLine("            }");
+                                        }
+                                    }
+
+                                    if (method.ClassClassDataSources.Count > 0)
+                                    {
+                                        foreach (var cdType in method.ClassClassDataSources)
+                                        {
+                                            sb.AppendLine($"            // ClassClassDataSource: {cdType}");
+                                            sb.AppendLine($"            foreach (var classDataRow in (global::System.Collections.Generic.IEnumerable<object[]>)TestRunnerExecutor.Services.Get<{cdType}>())");
+                                            sb.AppendLine("            {");
+                                            sb.AppendLine("                if (classDataRow != null)");
+                                            sb.AppendLine("                {");
+                                            sb.AppendLine("                    string __classRowDisplay = string.Join(\", \", classDataRow);");
+                                            EmitMethodExecution(sb, method, concreteClassName, concreteMethodName, variantSuffix, "classDataRow", "(Class:{__classRowDisplay})", classFixtures, ref probeCounter, coverageMetadata, cv, mv, variantName, isClassDataRow: true);
+                                            sb.AppendLine("                }");
+                                            sb.AppendLine("            }");
+                                        }
+                                    }
+
+                                    if (method.ClassMethodDataSources.Count > 0)
+                                    {
+                                        foreach (var md in method.ClassMethodDataSources)
+                                        {
+                                            sb.AppendLine($"            // ClassMethodDataSource: {md.MemberName}");
+                                            string sourceExpr = md.MemberType != null ? $"TestRunnerExecutor.Services.Get<{md.MemberType}>().{md.MemberName}" : $"TestRunnerExecutor.Services.Get<{concreteClassName}>().{md.MemberName}";
+                                            if (md.IsMethod) sourceExpr += "(" + string.Join(", ", md.Parameters) + ")";
+
+                                            sb.AppendLine($"            foreach (var classDataRow in (global::System.Collections.Generic.IEnumerable<object[]>)({sourceExpr}))");
+                                            sb.AppendLine("            {");
+                                            sb.AppendLine("                if (classDataRow != null)");
+                                            sb.AppendLine("                {");
+                                            sb.AppendLine("                    string __classRowDisplay = string.Join(\", \", classDataRow);");
+                                            EmitMethodExecution(sb, method, concreteClassName, concreteMethodName, variantSuffix, "classDataRow", "(Class:{__classRowDisplay})", classFixtures, ref probeCounter, coverageMetadata, cv, mv, variantName, isClassDataRow: true);
+                                            sb.AppendLine("                }");
+                                            sb.AppendLine("            }");
+                                        }
+                                    }
+
+                                    if (method.ClassDIDataSources.Count > 0)
+                                    {
+                                        foreach (var md in method.ClassDIDataSources)
+                                        {
+                                            sb.AppendLine($"            // ClassDIDataSource: {md.MemberType}");
+                                            string sourceExpr = string.IsNullOrEmpty(md.MemberName) ? $"TestRunnerExecutor.Services.Get<{md.MemberType}>()" : $"TestRunnerExecutor.Services.Get<{md.MemberType}>().{md.MemberName}";
+                                            if (md.IsMethod) sourceExpr += "()";
+
+                                            sb.AppendLine($"            foreach (var classDataRow in (global::System.Collections.Generic.IEnumerable<object[]>)({sourceExpr}))");
+                                            sb.AppendLine("            {");
+                                            sb.AppendLine("                if (classDataRow != null)");
+                                            sb.AppendLine("                {");
+                                            sb.AppendLine("                    string __classRowDisplay = string.Join(\", \", classDataRow);");
+                                            EmitMethodExecution(sb, method, concreteClassName, concreteMethodName, variantSuffix, "classDataRow", "(Class:{__classRowDisplay})", classFixtures, ref probeCounter, coverageMetadata, cv, mv, variantName, isClassDataRow: true);
+                                            sb.AppendLine("                }");
+                                            sb.AppendLine("            }");
+                                        }
+                                    }
+
+                                    if (method.ClassCustomDataGenerators.Count > 0)
+                                    {
+                                        foreach (var gen in method.ClassCustomDataGenerators)
+                                        {
+                                            sb.AppendLine($"            // ClassCustomDataGenerator: {gen.AttributeType}");
+                                            string initArgs = string.Join(", ", gen.Arguments);
+                                            sb.AppendLine($"            foreach (var classDataRow in ((DataSourceGeneratorAttribute)new {gen.AttributeType}({initArgs})).GetData())");
+                                            sb.AppendLine("            {");
+                                            sb.AppendLine("                if (classDataRow != null)");
+                                            sb.AppendLine("                {");
+                                            sb.AppendLine("                    string __classRowDisplay = string.Join(\", \", classDataRow);");
+                                            EmitMethodExecution(sb, method, concreteClassName, concreteMethodName, variantSuffix, "classDataRow", "(Class:{__classRowDisplay})", classFixtures, ref probeCounter, coverageMetadata, cv, mv, variantName, isClassDataRow: true);
+                                            sb.AppendLine("                }");
+                                            sb.AppendLine("            }");
+                                        }
                                     }
                                 }
-
-                                if (method.ClassMemberData.Count > 0)
+                                else
                                 {
-                                    foreach (var md in method.ClassMemberData)
-                                    {
-                                        sb.AppendLine($"            // ClassMemberData: {md.MemberName}");
-                                        string sourceExpr = md.MemberType != null ? md.MemberType + "." + md.MemberName : concreteClassName + "." + md.MemberName;
-                                        if (md.IsMethod) sourceExpr += "(" + string.Join(", ", md.Parameters) + ")";
-
-                                        sb.AppendLine($"            foreach (var classDataRow in (global::System.Collections.Generic.IEnumerable<object[]>)({sourceExpr}))");
-                                        sb.AppendLine("            {");
-                                        sb.AppendLine("                if (classDataRow != null)");
-                                        sb.AppendLine("                {");
-                                        sb.AppendLine("                    string __classRowDisplay = string.Join(\", \", classDataRow);");
-                                        EmitMethodExecution(sb, method, concreteClassName, concreteMethodName, variantSuffix, "classDataRow", "(Class:{__classRowDisplay})", classFixtures, ref probeCounter, coverageMetadata, cv, mv, variantName, isClassDataRow: true);
-                                        sb.AppendLine("                }");
-                                        sb.AppendLine("            }");
-                                    }
+                                    // No class data, just normal method execution (possibly with method theories)
+                                    EmitMethodExecution(sb, method, concreteClassName, concreteMethodName, variantSuffix, null, "", classFixtures, ref probeCounter, coverageMetadata, cv, mv, variantName);
                                 }
-
-                                if (method.ClassClassData.Count > 0)
-                                {
-                                    foreach (var cdType in method.ClassClassData)
-                                    {
-                                        sb.AppendLine($"            // ClassClassData: {cdType}");
-                                        sb.AppendLine($"            foreach (var classDataRow in (global::System.Collections.Generic.IEnumerable<object[]>)new {cdType}())");
-                                        sb.AppendLine("            {");
-                                        sb.AppendLine("                if (classDataRow != null)");
-                                        sb.AppendLine("                {");
-                                        sb.AppendLine("                    string __classRowDisplay = string.Join(\", \", classDataRow);");
-                                        EmitMethodExecution(sb, method, concreteClassName, concreteMethodName, variantSuffix, "classDataRow", "(Class:{__classRowDisplay})", classFixtures, ref probeCounter, coverageMetadata, cv, mv, variantName, isClassDataRow: true);
-                                        sb.AppendLine("                }");
-                                        sb.AppendLine("            }");
-                                    }
-                                }
-
-                                if (method.ClassClassDataSources.Count > 0)
-                                {
-                                    foreach (var cdType in method.ClassClassDataSources)
-                                    {
-                                        sb.AppendLine($"            // ClassClassDataSource: {cdType}");
-                                        sb.AppendLine($"            foreach (var classDataRow in (global::System.Collections.Generic.IEnumerable<object[]>)TestRunnerExecutor.Services.Get<{cdType}>())");
-                                        sb.AppendLine("            {");
-                                        sb.AppendLine("                if (classDataRow != null)");
-                                        sb.AppendLine("                {");
-                                        sb.AppendLine("                    string __classRowDisplay = string.Join(\", \", classDataRow);");
-                                        EmitMethodExecution(sb, method, concreteClassName, concreteMethodName, variantSuffix, "classDataRow", "(Class:{__classRowDisplay})", classFixtures, ref probeCounter, coverageMetadata, cv, mv, variantName, isClassDataRow: true);
-                                        sb.AppendLine("                }");
-                                        sb.AppendLine("            }");
-                                    }
-                                }
-
-                                if (method.ClassMethodDataSources.Count > 0)
-                                {
-                                    foreach (var md in method.ClassMethodDataSources)
-                                    {
-                                        sb.AppendLine($"            // ClassMethodDataSource: {md.MemberName}");
-                                        string sourceExpr = md.MemberType != null ? $"TestRunnerExecutor.Services.Get<{md.MemberType}>().{md.MemberName}" : $"TestRunnerExecutor.Services.Get<{concreteClassName}>().{md.MemberName}";
-                                        if (md.IsMethod) sourceExpr += "(" + string.Join(", ", md.Parameters) + ")";
-
-                                        sb.AppendLine($"            foreach (var classDataRow in (global::System.Collections.Generic.IEnumerable<object[]>)({sourceExpr}))");
-                                        sb.AppendLine("            {");
-                                        sb.AppendLine("                if (classDataRow != null)");
-                                        sb.AppendLine("                {");
-                                        sb.AppendLine("                    string __classRowDisplay = string.Join(\", \", classDataRow);");
-                                        EmitMethodExecution(sb, method, concreteClassName, concreteMethodName, variantSuffix, "classDataRow", "(Class:{__classRowDisplay})", classFixtures, ref probeCounter, coverageMetadata, cv, mv, variantName, isClassDataRow: true);
-                                        sb.AppendLine("                }");
-                                        sb.AppendLine("            }");
-                                    }
-                                }
-
-                                if (method.ClassDIDataSources.Count > 0)
-                                {
-                                    foreach (var md in method.ClassDIDataSources)
-                                    {
-                                        sb.AppendLine($"            // ClassDIDataSource: {md.MemberType}");
-                                        string sourceExpr = string.IsNullOrEmpty(md.MemberName) ? $"TestRunnerExecutor.Services.Get<{md.MemberType}>()" : $"TestRunnerExecutor.Services.Get<{md.MemberType}>().{md.MemberName}";
-                                        if (md.IsMethod) sourceExpr += "()";
-
-                                        sb.AppendLine($"            foreach (var classDataRow in (global::System.Collections.Generic.IEnumerable<object[]>)({sourceExpr}))");
-                                        sb.AppendLine("            {");
-                                        sb.AppendLine("                if (classDataRow != null)");
-                                        sb.AppendLine("                {");
-                                        sb.AppendLine("                    string __classRowDisplay = string.Join(\", \", classDataRow);");
-                                        EmitMethodExecution(sb, method, concreteClassName, concreteMethodName, variantSuffix, "classDataRow", "(Class:{__classRowDisplay})", classFixtures, ref probeCounter, coverageMetadata, cv, mv, variantName, isClassDataRow: true);
-                                        sb.AppendLine("                }");
-                                        sb.AppendLine("            }");
-                                    }
-                                }
-
-                                if (method.ClassCustomDataGenerators.Count > 0)
-                                {
-                                    foreach (var gen in method.ClassCustomDataGenerators)
-                                    {
-                                        sb.AppendLine($"            // ClassCustomDataGenerator: {gen.AttributeType}");
-                                        string initArgs = string.Join(", ", gen.Arguments);
-                                        sb.AppendLine($"            foreach (var classDataRow in ((DataSourceGeneratorAttribute)new {gen.AttributeType}({initArgs})).GetData())");
-                                        sb.AppendLine("            {");
-                                        sb.AppendLine("                if (classDataRow != null)");
-                                        sb.AppendLine("                {");
-                                        sb.AppendLine("                    string __classRowDisplay = string.Join(\", \", classDataRow);");
-                                        EmitMethodExecution(sb, method, concreteClassName, concreteMethodName, variantSuffix, "classDataRow", "(Class:{__classRowDisplay})", classFixtures, ref probeCounter, coverageMetadata, cv, mv, variantName, isClassDataRow: true);
-                                        sb.AppendLine("                }");
-                                        sb.AppendLine("            }");
-                                    }
-                                }
-                            }
-                            else
-                            {
-                                // No class data, just normal method execution (possibly with method theories)
-                                EmitMethodExecution(sb, method, concreteClassName, concreteMethodName, variantSuffix, null, "", classFixtures, ref probeCounter, coverageMetadata, cv, mv, variantName);
-                            }
                             }
                         }
                     }
                 }
             }
-            
+
             if (factories != null && factories.Count > 0)
             {
                 sb.AppendLine("            var builder = new Prova.DynamicTestBuilder();");
@@ -664,8 +704,8 @@ namespace Prova.Generators.Emission
             sb.AppendLine("             var properties = testInfo.Properties;");
             sb.AppendLine("             var description = testInfo.Description;");
             sb.AppendLine("             reporter.OnTestStarting(name, description);");
-             sb.AppendLine("             string lastOutput = \"\";");
-             sb.AppendLine("             string stdOut = \"\";"); // Captured output
+            sb.AppendLine("             string lastOutput = \"\";");
+            sb.AppendLine("             string stdOut = \"\";"); // Captured output
             sb.AppendLine();
             sb.AppendLine("             // Culture Switching");
             sb.AppendLine("             global::System.Globalization.CultureInfo? originalCulture = null;");
@@ -803,7 +843,7 @@ namespace Prova.Generators.Emission
                 // Combinatorial Execution (Matrix)
                 var paramVars = new List<string>();
                 var indent = "            ";
-                
+
                 // Nest loops
                 for (int i = 0; i < method.CombinatorialValues.Count; i++)
                 {
@@ -832,8 +872,15 @@ namespace Prova.Generators.Emission
                 }
                 var formattingArgs = string.Join(", ", formattingArgsList);
 
-                var displayArgs = string.Join(", ", paramVars.Select(v => "{" + v + "}")); // Interpolated string for display
-                
+                // Apply [ArgumentDisplayFormatter] to the default display name too. Previously the
+                // formatter was only honoured when an explicit [DisplayName] format string was
+                // present, so on a plain [Matrix] parameter the attribute silently did nothing.
+                var displayArgs = string.Join(", ", paramVars.Select((v, i) =>
+                {
+                    string? fmt = method.ParameterFormatters.Count > i ? method.ParameterFormatters[i] : null;
+                    return fmt != null ? "{new " + fmt + "().Format(" + v + ")}" : "{" + v + "}";
+                })); // Interpolated string for display
+
                 coverageMetadata.Add($"{concreteClassName}.{concreteMethodName}{variantSuffix}{classSuffix}(Matrix)");
                 coverageMetadata.Add($"{concreteClassName}.{concreteMethodName}{variantSuffix}{classSuffix}(Matrix)");
                 GenerateTestRegistration(sb, method, concreteClassName, concreteMethodName, args, formattingArgs, $"{variantSuffix}{classSuffix}({displayArgs})", classFixtures, probeId, classRowStr, isClassDataRow, variantName, cv, mv);
@@ -878,7 +925,7 @@ namespace Prova.Generators.Emission
                         sb.AppendLine("            {");
                         sb.AppendLine("                if (dataRow != null)");
                         sb.AppendLine("                {");
-                        
+
                         var castArgs = new List<string>();
                         var formattingArgsList = new List<string>();
 
@@ -889,7 +936,7 @@ namespace Prova.Generators.Emission
                                 paramType = paramType.Replace(method.ClassTypeParams[j], cv[j]);
                             for (int j = 0; j < method.MethodTypeParams.Count; j++)
                                 paramType = paramType.Replace(method.MethodTypeParams[j], mv[j]);
-                            
+
                             string castArg = $"({paramType})dataRow[{i}]";
                             castArgs.Add(castArg);
 
@@ -918,7 +965,7 @@ namespace Prova.Generators.Emission
                         sb.AppendLine("            {");
                         sb.AppendLine("                if (dataRow != null)");
                         sb.AppendLine("                {");
-                        
+
                         var castArgs = new List<string>();
                         var formattingArgsList = new List<string>();
 
@@ -958,7 +1005,7 @@ namespace Prova.Generators.Emission
                         sb.AppendLine("            {");
                         sb.AppendLine("                if (dataRow != null)");
                         sb.AppendLine("                {");
-                        
+
                         var castArgs = new List<string>();
                         var formattingArgsList = new List<string>();
 
@@ -1001,7 +1048,7 @@ namespace Prova.Generators.Emission
                         sb.AppendLine("            {");
                         sb.AppendLine("                if (dataRow != null)");
                         sb.AppendLine("                {");
-                        
+
                         var castArgs = new List<string>();
                         var formattingArgsList = new List<string>();
 
@@ -1012,7 +1059,7 @@ namespace Prova.Generators.Emission
                                 paramType = paramType.Replace(method.ClassTypeParams[j], cv[j]);
                             for (int j = 0; j < method.MethodTypeParams.Count; j++)
                                 paramType = paramType.Replace(method.MethodTypeParams[j], mv[j]);
-                            
+
                             string castArg = $"({paramType})dataRow[{i}]";
                             castArgs.Add(castArg);
 
@@ -1044,7 +1091,7 @@ namespace Prova.Generators.Emission
                         sb.AppendLine("            {");
                         sb.AppendLine("                if (dataRow != null)");
                         sb.AppendLine("                {");
-                        
+
                         var castArgs = new List<string>();
                         var formattingArgsList = new List<string>();
 
@@ -1055,7 +1102,7 @@ namespace Prova.Generators.Emission
                                 paramType = paramType.Replace(method.ClassTypeParams[j], cv[j]);
                             for (int j = 0; j < method.MethodTypeParams.Count; j++)
                                 paramType = paramType.Replace(method.MethodTypeParams[j], mv[j]);
-                            
+
                             string castArg = $"({paramType})dataRow[{i}]";
                             castArgs.Add(castArg);
 
@@ -1085,7 +1132,7 @@ namespace Prova.Generators.Emission
                         sb.AppendLine("            {");
                         sb.AppendLine("                if (dataRow != null)");
                         sb.AppendLine("                {");
-                        
+
                         var castArgs = new List<string>();
                         var formattingArgsList = new List<string>();
 
@@ -1096,7 +1143,7 @@ namespace Prova.Generators.Emission
                                 paramType = paramType.Replace(method.ClassTypeParams[j], cv[j]);
                             for (int j = 0; j < method.MethodTypeParams.Count; j++)
                                 paramType = paramType.Replace(method.MethodTypeParams[j], mv[j]);
-                            
+
                             string castArg = $"({paramType})dataRow[{i}]";
                             castArgs.Add(castArg);
 
@@ -1132,12 +1179,12 @@ namespace Prova.Generators.Emission
             string displayNameExpr;
             if (method.DisplayNameFormat != null)
             {
-                 var fArgs = formattingArgs ?? args;
-                 // If args are empty, just use the format string. Otherwise format it.
-                 if (string.IsNullOrWhiteSpace(fArgs))
-                     displayNameExpr = $"\"{method.DisplayNameFormat}\"";
-                 else
-                     displayNameExpr = $"string.Format(\"{method.DisplayNameFormat}\", {fArgs})";
+                var fArgs = formattingArgs ?? args;
+                // If args are empty, just use the format string. Otherwise format it.
+                if (string.IsNullOrWhiteSpace(fArgs))
+                    displayNameExpr = $"\"{method.DisplayNameFormat}\"";
+                else
+                    displayNameExpr = $"string.Format(\"{method.DisplayNameFormat}\", {fArgs})";
             }
             else
             {
@@ -1145,8 +1192,15 @@ namespace Prova.Generators.Emission
                 var escapedSuffix = displayNameSuffix.Replace("\"", "\\\"");
                 displayNameExpr = "$\"" + concreteClassName + "." + concreteMethodName + escapedSuffix + "\"";
             }
-            
+
+            // The structural name is always the default display name, whether or not the user
+            // supplied a [DisplayName]. It is what gives each registration a distinct identity;
+            // a custom display name may legitimately be identical across every data row.
+            var structuralSuffix = displayNameSuffix.Replace("\"", "\\\"");
+            var uniqueNameExpr = "$\"" + concreteClassName + "." + concreteMethodName + structuralSuffix + "\"";
+
             sb.AppendLine($"                DisplayName = {displayNameExpr},");
+            sb.AppendLine($"                UniqueName = {uniqueNameExpr},");
             sb.AppendLine($"                FullName = $\"{concreteClassName}.{concreteMethodName}\",");
             sb.AppendLine($"                ClassName = \"{concreteClassName}\",");
             sb.AppendLine($"                CoverageId = {probeId},");
@@ -1165,7 +1219,7 @@ namespace Prova.Generators.Emission
                 sb.AppendLine($"                ClassBefore = new Func<Task>[] {{ {string.Join(", ", method.ClassBefore.Select(h => h.IsAsync ? $"async () => await {concreteClassName}.{h.Name}()" : $"() => {{ {concreteClassName}.{h.Name}(); return Task.CompletedTask; }}"))} }},");
             if (method.ClassAfter.Count > 0)
                 sb.AppendLine($"                ClassAfter = new Func<Task>[] {{ {string.Join(", ", method.ClassAfter.Select(h => h.IsAsync ? $"async () => await {concreteClassName}.{h.Name}()" : $"() => {{ {concreteClassName}.{h.Name}(); return Task.CompletedTask; }}"))} }},");
-            
+
             if (classFixtures.Count > 0)
                 sb.AppendLine($"                ClassFixtures = new Func<Task>[] {{ {string.Join(", ", classFixtures.Select(f => $"async () => {{ var f = TestRunnerExecutor.Services.Get<{f}>(); if ((object)f is IAsyncLifetime al) await al.InitializeAsync(); }}"))} }},");
 
@@ -1191,7 +1245,7 @@ namespace Prova.Generators.Emission
             sb.AppendLine();
             if (method.UsesOutputHelper)
             {
-                 sb.AppendLine("                    var outputHelper = new Prova.TestOutputHelper();");
+                sb.AppendLine("                    var outputHelper = new Prova.TestOutputHelper();");
             }
 
             sb.AppendLine("                    try {");
@@ -1204,14 +1258,14 @@ namespace Prova.Generators.Emission
 
             if (method.IsStatic)
             {
-                 sb.AppendLine("                    try {");
-                  {
-                      if (method.ReturnsVoid)
-                          sb.AppendLine($"                        {concreteClassName}.{concreteMethodName}({args});");
-                      else
-                          sb.AppendLine($"                        await {concreteClassName}.{concreteMethodName}({args});");
-                  }
-                 sb.AppendLine("                    } finally { }");
+                sb.AppendLine("                    try {");
+                {
+                    if (method.ReturnsVoid)
+                        sb.AppendLine($"                        {concreteClassName}.{concreteMethodName}({args});");
+                    else
+                        sb.AppendLine($"                        await {concreteClassName}.{concreteMethodName}({args});");
+                }
+                sb.AppendLine("                    } finally { }");
             }
             else
             {
@@ -1220,7 +1274,7 @@ namespace Prova.Generators.Emission
                     var varName = $"fixture_{fixtureType.Replace(".", "_")}";
                     sb.AppendLine($"                    var {varName} = TestRunnerExecutor.Services.Get<{fixtureType}>();");
                 }
-                
+
                 var constructorArgs = new List<string>();
                 int classDataIdx = 0;
                 for (int i = 0; i < method.Dependencies.Count; i++)
@@ -1232,14 +1286,14 @@ namespace Prova.Generators.Emission
                     {
                         if (classRowStr != null)
                         {
-                             if (isClassDataRow)
-                                 constructorArgs.Add($"({paramType}){classRowStr}[{classDataIdx}]"); 
-                             else
-                                 constructorArgs.Add(classRowStr.Split(',')[classDataIdx].Trim());
+                            if (isClassDataRow)
+                                constructorArgs.Add($"({paramType}){classRowStr}[{classDataIdx}]");
+                            else
+                                constructorArgs.Add(classRowStr.Split(',')[classDataIdx].Trim());
                         }
                         else
                         {
-                             constructorArgs.Add("default"); 
+                            constructorArgs.Add("default");
                         }
                         classDataIdx++;
                     }
@@ -1263,18 +1317,18 @@ namespace Prova.Generators.Emission
                     sb.AppendLine($"                    instance = new {concreteClassName}({string.Join(", ", constructorArgs)});");
                 }
                 sb.AppendLine("                    try {");
-                
+
                 if (method.LifecycleBefore.Count > 0)
                 {
                     sb.AppendLine("                        // Lifecycle: Before");
-                    foreach (var hook in method.LifecycleBefore) 
+                    foreach (var hook in method.LifecycleBefore)
                     {
                         string executorType = hook.ExecutorType != null ? $"typeof({hook.ExecutorType})" : "null";
                         string hookAction = hook.IsAsync ? $"async () => await instance.{hook.Name}()" : $"() => {{ instance.{hook.Name}(); return global::System.Threading.Tasks.Task.CompletedTask; }}";
                         sb.AppendLine($"                        await TestRunnerExecutor.InvokeHookHelper({hookAction}, \"{hook.Name}\", {executorType});");
                     }
                 }
-                
+
                 if (method.ImplementsAsyncLifetime) sb.AppendLine("                        if ((object)instance is IAsyncLifetime asyncLife) await asyncLife.InitializeAsync();");
 
                 if (method.MaxAllocBytes.HasValue)
@@ -1283,9 +1337,9 @@ namespace Prova.Generators.Emission
                     sb.AppendLine("                        long startAlloc = global::System.GC.GetAllocatedBytesForCurrentThread();");
                 }
 
-                  {
-                      if (method.IsFsCheckProperty)
-                      {
+                {
+                    if (method.IsFsCheckProperty)
+                    {
                         var resolvedTypes = new global::System.Collections.Generic.List<string>();
                         for (int i = 0; i < method.ParameterTypes.Count; i++)
                         {
@@ -1298,28 +1352,28 @@ namespace Prova.Generators.Emission
                         var pVars = global::System.Linq.Enumerable.Range(0, resolvedTypes.Count).Select(k => $"p{k}").ToList();
                         var pDecl = "(" + string.Join(", ", pVars) + ")";
                         var pCall = string.Join(", ", pVars);
-                        
+
                         sb.AppendLine($"                    var fsCheckProp = global::FsCheck.Prop.ForAll<{typeArgs}>({pDecl} => {{");
-                         if (method.ReturnsVoid)
-                              sb.AppendLine($"                        instance.{concreteMethodName}({pCall});");
-                          else
-                              sb.AppendLine($"                        instance.{concreteMethodName}({pCall}).GetAwaiter().GetResult();");
+                        if (method.ReturnsVoid)
+                            sb.AppendLine($"                        instance.{concreteMethodName}({pCall});");
+                        else
+                            sb.AppendLine($"                        instance.{concreteMethodName}({pCall}).GetAwaiter().GetResult();");
                         sb.AppendLine("                    });");
-                        
+
                         sb.AppendLine("                    var fsConfig = new global::System.Collections.Generic.Dictionary<string, string>();");
-                         if (method.FsCheckConfig != null)
-                             foreach(var kvp in method.FsCheckConfig) sb.AppendLine($"                    fsConfig[\"{kvp.Key}\"] = \"{kvp.Value}\";");
+                        if (method.FsCheckConfig != null)
+                            foreach (var kvp in method.FsCheckConfig) sb.AppendLine($"                    fsConfig[\"{kvp.Key}\"] = \"{kvp.Value}\";");
 
                         sb.AppendLine("                    Prova.FsCheck.FsCheckRunner.Run(fsConfig, fsCheckProp);");
-                      }
-                      else
-                      {
-                          if (method.ReturnsVoid)
-                              sb.AppendLine($"                        instance.{concreteMethodName}({args});");
-                          else
-                              sb.AppendLine($"                        await instance.{concreteMethodName}({args});");
-                      }
-                  }
+                    }
+                    else
+                    {
+                        if (method.ReturnsVoid)
+                            sb.AppendLine($"                        instance.{concreteMethodName}({args});");
+                        else
+                            sb.AppendLine($"                        await instance.{concreteMethodName}({args});");
+                    }
+                }
 
                 if (method.MaxAllocBytes.HasValue)
                 {
@@ -1348,12 +1402,12 @@ namespace Prova.Generators.Emission
                 sb.AppendLine("                        if ((object)instance is global::System.IDisposable d) d.Dispose();");
                 sb.AppendLine("                    }");
             }
-                sb.AppendLine("                    } finally {");
-                sb.AppendLine("                        global::System.Globalization.CultureInfo.CurrentCulture = originalCulture;");
-                sb.AppendLine("                        global::System.Globalization.CultureInfo.CurrentUICulture = originalUICulture;");
-                sb.AppendLine("                    }");
-                sb.AppendLine($"                    return {(method.UsesOutputHelper ? "outputHelper.Output" : "null")};");
-                sb.AppendLine("                }");
+            sb.AppendLine("                    } finally {");
+            sb.AppendLine("                        global::System.Globalization.CultureInfo.CurrentCulture = originalCulture;");
+            sb.AppendLine("                        global::System.Globalization.CultureInfo.CurrentUICulture = originalUICulture;");
+            sb.AppendLine("                    }");
+            sb.AppendLine($"                    return {(method.UsesOutputHelper ? "outputHelper.Output" : "null")};");
+            sb.AppendLine("                }");
             sb.AppendLine("            });");
         }
         private static string RemoveGenerics(string name)

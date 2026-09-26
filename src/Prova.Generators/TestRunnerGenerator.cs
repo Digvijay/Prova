@@ -1,8 +1,8 @@
+using System.Linq;
+using System.Text;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
 using Microsoft.CodeAnalysis.Text;
-using System.Linq;
-using System.Text;
 using Prova.Generators.Analysis;
 using Prova.Generators.Emission;
 
@@ -49,11 +49,12 @@ namespace Prova.Generators
                 .Where(static m => m is not null)
                 .Collect();
 
-            var globalParallel = context.CompilationProvider.Select((c, _) => {
+            var globalParallel = context.CompilationProvider.Select((c, _) =>
+            {
                 var attributes = c.Assembly.GetAttributes();
                 var parallel = attributes.FirstOrDefault(ad => ad.AttributeClass?.Name == "ParallelAttribute" || ad.AttributeClass?.ToDisplayString() == "Prova.ParallelAttribute");
                 var sequential = attributes.FirstOrDefault(ad => ad.AttributeClass?.Name == "SequentialAttribute" || ad.AttributeClass?.ToDisplayString() == "Prova.SequentialAttribute");
-                
+
                 if (sequential != null) return (int?)1;
                 if (parallel != null)
                 {
@@ -68,27 +69,35 @@ namespace Prova.Generators
                 .Combine(assemblyHooks)
                 .Combine(globalHooks)
                 .Combine(globalParallel)
-                .Combine(testFactories);
+                .Combine(testFactories)
+                .Combine(context.CompilationProvider.Combine(context.AnalyzerConfigOptionsProvider.Select(static (options, _) =>
+                {
+                    return options.GlobalOptions.TryGetValue("build_property.ProvaDisablePlatformCoverage", out var value) &&
+                        (value == "true" || value == "True" || value == "1");
+                })).Select(static (pair, _) => PlatformExtensions.From(pair.Left, pair.Right)));
 
-            context.RegisterSourceOutput(combined, static (spc, source) => {
-                var tests = source.Left.Left.Left.Left.Left;
-                var configs = source.Left.Left.Left.Left.Right;
-                var hooks = source.Left.Left.Left.Right;
-                var globals = source.Left.Left.Right;
-                var globalMaxParallel = source.Left.Right;
-                var factories = source.Right.ToList();
+            context.RegisterSourceOutput(combined, static (spc, source) =>
+            {
+                var platform = source.Right;
+                var rest = source.Left;
+                var tests = rest.Left.Left.Left.Left.Left;
+                var configs = rest.Left.Left.Left.Left.Right;
+                var hooks = rest.Left.Left.Left.Right;
+                var globals = rest.Left.Left.Right;
+                var globalMaxParallel = rest.Left.Right;
+                var factories = rest.Right.ToList();
 
                 var configMethods = configs.ToList();
                 var beforeAssembly = hooks.Where(h => h?.HookType == "Before").Select(h => (h?.Method, h?.IsAsync ?? false, h?.ExecutorType)).ToList();
                 var afterAssembly = hooks.Where(h => h?.HookType == "After").Select(h => (h?.Method, h?.IsAsync ?? false, h?.ExecutorType)).ToList();
-                
+
                 // Global hooks
                 var beforeEveryTest = globals.Where(g => g?.HookType == "Before" && g?.Scope == 0).Select(g => (g?.Method, g?.IsAsync ?? false, g?.ExecutorType)).ToList();
                 var afterEveryTest = globals.Where(g => g?.HookType == "After" && g?.Scope == 0).Select(g => (g?.Method, g?.IsAsync ?? false, g?.ExecutorType)).ToList();
                 var beforeEveryClass = globals.Where(g => g?.HookType == "Before" && g?.Scope == 1).Select(g => (g?.Method, g?.IsAsync ?? false, g?.ExecutorType)).ToList();
                 var afterEveryClass = globals.Where(g => g?.HookType == "After" && g?.Scope == 1).Select(g => (g?.Method, g?.IsAsync ?? false, g?.ExecutorType)).ToList();
 
-                SourceEmitter.Execute(spc, tests, configMethods, beforeAssembly, afterAssembly, beforeEveryTest, afterEveryTest, beforeEveryClass, afterEveryClass, globalMaxParallel, factories);
+                SourceEmitter.Execute(spc, tests, configMethods, beforeAssembly, afterAssembly, beforeEveryTest, afterEveryTest, beforeEveryClass, afterEveryClass, globalMaxParallel, factories, platform);
             });
 
             // Automatic Entry Point: Emit Program.g.cs if no Main method is detected in user code
@@ -111,8 +120,22 @@ namespace Prova.Generators
             var hasEntryPoint = hasMainMethod.Combine(hasTopLevelStatements)
                 .Select(static (pair, _) => pair.Left || pair.Right);
 
-            context.RegisterSourceOutput(hasEntryPoint, static (spc, hasEntry) => {
-                if (!hasEntry)
+            // The entry point may only be emitted into a compilation that is actually
+            // executable. Emitting top-level statements into a class library produces
+            // CS8805 ("Program using top-level statements must be an executable"), which
+            // meant any class library that referenced Prova failed to compile. Only the
+            // presence of a user entry point was previously checked, not OutputKind.
+            var isExecutable = context.CompilationProvider
+                .Select(static (compilation, _) =>
+                    compilation.Options.OutputKind == OutputKind.ConsoleApplication ||
+                    compilation.Options.OutputKind == OutputKind.WindowsApplication);
+
+            var shouldEmitEntryPoint = hasEntryPoint.Combine(isExecutable)
+                .Select(static (pair, _) => !pair.Left && pair.Right);
+
+            context.RegisterSourceOutput(shouldEmitEntryPoint, static (spc, shouldEmit) =>
+            {
+                if (shouldEmit)
                 {
                     var programSb = new StringBuilder();
                     programSb.AppendLine("// <auto-generated />");
@@ -121,10 +144,11 @@ namespace Prova.Generators
                     programSb.AppendLine("// It makes test projects self-executing console apps by default.");
                     programSb.AppendLine("// UTF-8 output is forced to ensure emoji in [DisplayName] survives all shells.");
                     programSb.AppendLine("// To provide your own entry point, add a Program.cs with a Main method or top-level statements.");
+                    programSb.AppendLine("// The exit code is returned so a failing run fails the process, and therefore CI.");
                     programSb.AppendLine();
                     programSb.AppendLine("System.Console.OutputEncoding = System.Text.Encoding.UTF8;");
                     programSb.AppendLine("System.Console.InputEncoding = System.Text.Encoding.UTF8;");
-                    programSb.AppendLine("await Prova.TestRunnerExecutor.RunAllAsync(args);");
+                    programSb.AppendLine("return await Prova.TestRunnerExecutor.RunAllAsync(args);");
 
                     spc.AddSource("Program.g.cs", SourceText.From(programSb.ToString(), Encoding.UTF8));
                 }

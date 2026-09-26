@@ -27,7 +27,7 @@ namespace Prova.Demo
         [Fact]
         public async Task Test3_NoConflict()
         {
-             // This should run in parallel with the others potentially
+            // This should run in parallel with the others potentially
             Console.WriteLine($"[Test3] Start: {DateTime.Now:HH:mm:ss.fff}");
             await Task.Delay(500);
             Console.WriteLine($"[Test3] End: {DateTime.Now:HH:mm:ss.fff}");

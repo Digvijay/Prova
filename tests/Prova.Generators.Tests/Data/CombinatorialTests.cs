@@ -1,5 +1,4 @@
 using System;
-using Xunit;
 
 namespace Prova.Generators.Tests
 {
@@ -16,7 +15,7 @@ public class MatrixTests
     [Fact]
     public void Test1([Matrix(1, 2, 3)] int x) { }
 }";
-            
+
             // Verify loop generation
             GeneratorVerifier.VerifyContains(source, "foreach (var p0_x in new [] { 1, 2, 3 })");
             GeneratorVerifier.VerifyContains(source, "Test1(p0_x)");
@@ -33,7 +32,7 @@ public class MatrixTests
     [Fact]
     public void Test2([Matrix(1, 2)] int x, [Matrix(true, false)] bool y) { }
 }";
-            
+
             // Verify nested loops
             GeneratorVerifier.VerifyContains(source, "foreach (var p0_x in new [] { 1, 2 })");
             GeneratorVerifier.VerifyContains(source, "foreach (var p1_y in new [] { true, false })");
@@ -51,7 +50,7 @@ public class MatrixTests
     [Fact]
     public void Test3([Matrix(""a"", ""b"")] string s) { }
 }";
-            
+
             // Verify string escaping
             GeneratorVerifier.VerifyContains(source, "foreach (var p0_s in new [] { \"a\", \"b\" })");
             GeneratorVerifier.VerifyContains(source, "Test3(p0_s)");

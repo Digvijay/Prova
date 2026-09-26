@@ -37,7 +37,7 @@ namespace Prova
         {
             if (!_items.TryGetValue(key, out var value))
                 throw new KeyNotFoundException($"Key '{key}' not found in StateBag.");
-            
+
             return (T)value!;
         }
 

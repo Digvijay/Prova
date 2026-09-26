@@ -1,5 +1,5 @@
 using System.Threading.Tasks;
-using Xunit; // Use Xunit for the test definition itself
+// Test definitions use Prova's own [Fact]/[Theory], dogfooding the framework under test.
 
 namespace Prova.Generators.Tests
 {
@@ -28,7 +28,7 @@ public class MyTests
                 "long endAlloc = global::System.GC.GetAllocatedBytesForCurrentThread();",
                 "if (endAlloc - startAlloc > maxAlloc) throw new global::System.Exception($\"Memory allocation exceeded: {endAlloc - startAlloc} > {maxAlloc}\");"
             };
-            
+
             GeneratorVerifier.VerifyContains(source, expectedSnippets);
         }
     }

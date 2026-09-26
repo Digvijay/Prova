@@ -1,10 +1,13 @@
-using Xunit;
 using Prova.Generators.Tests;
 
 namespace Prova.Generators.Tests
 {
     public class DataSourceTests
     {
+        /// <summary>
+        /// Per docs/data-sources.md, [ClassDataSource] takes the provider type only, and the
+        /// provider must implement <c>IEnumerable&lt;object[]&gt;</c> so it can be resolved from DI.
+        /// </summary>
         [Fact]
         public void ClassDataSource_Generates_Loop()
         {
@@ -12,26 +15,26 @@ namespace Prova.Generators.Tests
 namespace Prova.Generators.Tests
 {
     using Prova;
+    using System.Collections;
     using System.Collections.Generic;
     
-    public class MyData
+    public class MyData : IEnumerable<object[]>
     {
-        public IEnumerable<object[]> GetData() => new[] { new object[] { 1 } };
+        public IEnumerator<object[]> GetEnumerator() { yield return new object[] { 1 }; }
+        IEnumerator IEnumerable.GetEnumerator() => GetEnumerator();
     }
     
-    [ClassDataSource(typeof(MyData), nameof(MyData.GetData))]
     public class MyTests
     {
-        public MyTests(int x) {}
-        
-        [Fact]
-        public void Test() {}
+        [Theory]
+        [ClassDataSource(typeof(MyData))]
+        public void Test(int x) {}
     }
 }";
 
-            // Verify data source loop around class instantiation
-            GeneratorVerifier.VerifyContains(source, "var dataSource = new MyData();");
-            GeneratorVerifier.VerifyContains(source, "foreach (var classDataRow in dataSource.GetData())");
+            // The provider is resolved from the container and enumerated as object[] rows.
+            GeneratorVerifier.VerifyContains(source, "TestRunnerExecutor.Services.Get<Prova.Generators.Tests.MyData>()");
+            GeneratorVerifier.VerifyContains(source, "foreach (var dataRow in");
         }
     }
 }

@@ -1,5 +1,4 @@
 using System;
-using Xunit;
 
 namespace Prova.Generators.Tests
 {
@@ -18,7 +17,7 @@ public class TimedClass
     [Timeout(500)]
     public void TestMethod() {}
 }";
-            
+
             // Method level (500) should win
             GeneratorVerifier.VerifyContains(source, "Timeout = 500,");
         }
@@ -35,7 +34,7 @@ public class TimedClass
     [Fact]
     public void TestMethod() {}
 }";
-            
+
             // Class level (1000) should be used
             GeneratorVerifier.VerifyContains(source, "Timeout = 1000,");
         }
@@ -53,7 +52,7 @@ public class RetryingClass
     [Retry(1)]
     public void TestMethod() {}
 }";
-            
+
             // Method level (1) should win
             GeneratorVerifier.VerifyContains(source, "RetryCount = 1,");
         }
@@ -70,7 +69,7 @@ public class HelperClass
     [Fact]
     public void TestMethod() {}
 }";
-            
+
             // Assembly default
             GeneratorVerifier.VerifyContains(source, "Timeout = 999,");
         }
@@ -88,7 +87,7 @@ public class HelperClass
     [Fact]
     public void TestMethod() {}
 }";
-            
+
             // Class override
             GeneratorVerifier.VerifyContains(source, "Timeout = 100,");
         }

@@ -15,6 +15,18 @@ namespace Prova
         /// <summary>Gets the full hierarchical name of the test (Namespace.Class.Method).</summary>
         public string? FullName { get; set; }
 
+        /// <summary>
+        /// Gets the structural identity of the test: the class, the method, and any data-row,
+        /// variant or generic arguments that distinguish this registration from its siblings.
+        /// </summary>
+        /// <remarks>
+        /// This is deliberately independent of <see cref="DisplayName"/>. A custom
+        /// <c>[DisplayName]</c> is a formatting choice and carries no uniqueness guarantee — a
+        /// format string with no placeholders produces the same display name for every row of a
+        /// <c>[Theory]</c> — so it must not be used as a test's identity.
+        /// </remarks>
+        public string? UniqueName { get; set; }
+
         /// <summary>Gets the name of the class containing the test.</summary>
         public string? ClassName { get; set; }
 

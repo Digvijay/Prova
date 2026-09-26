@@ -1,5 +1,5 @@
-using Prova;
 using System.Threading.Tasks;
+using Prova;
 
 namespace Prova.Demo
 {
@@ -37,7 +37,7 @@ namespace Prova.Demo
     {
         [Fact]
         public async Task Fast1() { await Task.Delay(100); }
-        
+
         [Fact]
         public async Task Fast2() { await Task.Delay(100); }
     }

@@ -1,5 +1,4 @@
 using Prova.Generators.Tests;
-using Xunit;
 
 namespace Prova.Generators.Tests
 {
@@ -25,7 +24,7 @@ namespace Prova.Demo
         public void Test1([Matrix(10, 255)] [ArgumentDisplayFormatter(typeof(HexFormatter))] int value) { }
     }
 }";
-            
+
             // Should contain new HexFormatter().Format(p0_value)
             // The method name parameter will be p0_value because it's a matrix
             GeneratorVerifier.VerifyContains(source, "new Prova.Demo.HexFormatter().Format(p0_value)");
@@ -35,7 +34,7 @@ namespace Prova.Demo
         [Fact]
         public void MemberData_With_Formatter_Generates_Format_Call()
         {
-             var source = @"
+            var source = @"
 using Prova;
 using System;
 using System.Collections.Generic;
@@ -60,9 +59,9 @@ namespace Prova.Demo
             // In MemberData block, we loop and cast.
             // We expect: new Prova.Demo.HexFormatter().Format((int)dataRow[0])
             GeneratorVerifier.VerifyContains(source, "new Prova.Demo.HexFormatter().Format((int)dataRow[0])");
-            
+
             // And verify it is used in string.Format
-            GeneratorVerifier.VerifyContains(source, "string.Format(\"Value is {0}\""); 
+            GeneratorVerifier.VerifyContains(source, "string.Format(\"Value is {0}\"");
             // The 2nd arg to string.Format is implied by the comma-separated list constructed from formattingArgsList
         }
     }

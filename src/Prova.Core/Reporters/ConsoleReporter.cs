@@ -12,14 +12,14 @@ namespace Prova.Reporters
         {
             if (!string.IsNullOrEmpty(description))
             {
-                 lock (_lock)
-                 {
-                     Console.ForegroundColor = ConsoleColor.Cyan;
-                     Console.WriteLine($"Starting: {testName}");
-                     Console.ForegroundColor = ConsoleColor.DarkGray;
-                     Console.WriteLine($"  \"{description}\"");
-                     Console.ResetColor();
-                 }
+                lock (_lock)
+                {
+                    Console.ForegroundColor = ConsoleColor.Cyan;
+                    Console.WriteLine($"Starting: {testName}");
+                    Console.ForegroundColor = ConsoleColor.DarkGray;
+                    Console.WriteLine($"  \"{description}\"");
+                    Console.ResetColor();
+                }
             }
         }
 
@@ -44,8 +44,8 @@ namespace Prova.Reporters
         /// <inheritdoc />
         public void OnTestFailure(string testName, Exception ex, string output)
         {
-             lock (_lock)
-             {
+            lock (_lock)
+            {
                 Console.ForegroundColor = ConsoleColor.Red;
                 Console.Write("✗ ");
                 Console.ForegroundColor = ConsoleColor.Red;
@@ -58,28 +58,28 @@ namespace Prova.Reporters
                     Console.WriteLine(output);
                 }
                 Console.ResetColor();
-             }
+            }
         }
 
         /// <inheritdoc />
         public void OnTestSkipped(string testName, string reason)
         {
-             lock (_lock)
-             {
+            lock (_lock)
+            {
                 Console.ForegroundColor = ConsoleColor.Yellow;
                 Console.Write("⚠ ");
                 Console.ResetColor();
                 Console.WriteLine($"{testName} (Skipped: {reason})");
-             }
+            }
         }
 
         /// <inheritdoc />
         public void OnComplete(int passed, int failed, int skipped, TimeSpan duration)
         {
-             lock (_lock)
-             {
+            lock (_lock)
+            {
                 Console.WriteLine();
-                
+
                 var color = failed > 0 ? ConsoleColor.Red : ConsoleColor.Green;
                 Console.ForegroundColor = color;
                 Console.WriteLine("═══════════════════════════════════════════════");
@@ -90,8 +90,8 @@ namespace Prova.Reporters
                 Console.WriteLine($"  Time:    {duration.TotalSeconds:F3}s");
                 Console.WriteLine("═══════════════════════════════════════════════");
                 Console.ResetColor();
-             }
-            
+            }
+
             if (failed > 0)
             {
                 Environment.ExitCode = 1;

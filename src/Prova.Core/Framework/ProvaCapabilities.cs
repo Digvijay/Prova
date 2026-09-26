@@ -1,6 +1,6 @@
 using System.Collections.Generic;
-using Microsoft.Testing.Platform.Capabilities.TestFramework;
 using Microsoft.Testing.Extensions.TrxReport.Abstractions;
+using Microsoft.Testing.Platform.Capabilities.TestFramework;
 
 namespace Prova
 {
@@ -10,14 +10,14 @@ namespace Prova
     public sealed class ProvaCapabilities : ITestFrameworkCapabilities
     {
         /// <inheritdoc />
-        public IReadOnlyCollection<ITestFrameworkCapability> Capabilities => new ITestFrameworkCapability[] 
-        { 
+        public IReadOnlyCollection<ITestFrameworkCapability> Capabilities => new ITestFrameworkCapability[]
+        {
             new ProvaTrxReportCapability(),
             new DiscoveryCapability()
         };
     }
 
-    internal sealed class ProvaTrxReportCapability : ITrxReportCapability 
+    internal sealed class ProvaTrxReportCapability : ITrxReportCapability
     {
         public bool IsSupported => true;
         public void Enable() { }

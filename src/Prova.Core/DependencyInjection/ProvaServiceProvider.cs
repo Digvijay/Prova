@@ -33,18 +33,18 @@ namespace Prova.Core
         public T Get<T>() where T : class
         {
             var type = typeof(T);
-            
+
             if (_singletons.TryGetValue(type, out var lazy))
             {
                 var instance = (T)lazy.Value;
                 return instance;
             }
-            
+
             if (_transients.TryGetValue(type, out var factory))
             {
                 return (T)factory();
             }
-            
+
             throw new InvalidOperationException($"No service registered for type '{type.FullName}'. Ensure it is registered in your [ConfigureServices] method.");
         }
 
@@ -62,7 +62,7 @@ namespace Prova.Core
             {
                 return lazy.Value;
             }
-            
+
             if (_transients.TryGetValue(serviceType, out var factory))
             {
                 return factory();

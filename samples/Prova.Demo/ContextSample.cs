@@ -1,6 +1,6 @@
-using Prova;
 using System;
 using System.Threading.Tasks;
+using Prova;
 
 namespace Prova.Demo
 {
@@ -12,16 +12,16 @@ namespace Prova.Demo
         public async Task TestWithContextInfo()
         {
             var context = TestContext.Current;
-            
+
             Console.WriteLine($"Running test: {context.DisplayName}");
             Console.WriteLine($"Description: {context.Properties.GetValueOrDefault("Description", "None")}");
             Console.WriteLine($"Priority: {context.Properties.GetValueOrDefault("Priority", "Unknown")}");
-            
+
             // Show that items can be used for state sharing
             context.Items["StartTime"] = DateTime.Now;
-            
+
             await Task.Delay(100);
-            
+
             if (context.Items.TryGetValue("StartTime", out var start))
             {
                 Console.WriteLine($"Test started at: {start}");
@@ -33,7 +33,7 @@ namespace Prova.Demo
         public async Task TestCancellationViaContext()
         {
             var ct = TestContext.Current.CancellationToken;
-            
+
             Console.WriteLine("Starting long operation...");
             try
             {

@@ -13,7 +13,7 @@ namespace Prova.Demo
         {
             var apartment = Thread.CurrentThread.GetApartmentState();
             Console.WriteLine($"[STA] Test running in: {apartment} (Thread ID: {Environment.CurrentManagedThreadId})");
-            
+
             if (global::System.OperatingSystem.IsWindows())
             {
                 Assert.Equal(ApartmentState.STA, apartment);

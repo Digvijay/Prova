@@ -1,5 +1,4 @@
 using Prova.Generators.Tests;
-using Xunit;
 
 namespace Prova.Generators.Tests
 {
@@ -48,7 +47,7 @@ namespace Prova.Demo
         [Fact]
         public void Timeout_Attribute_Generates_Timeout_Logic()
         {
-             var source = @"
+            var source = @"
 using Prova;
 using System;
 
@@ -62,14 +61,14 @@ namespace Prova.Demo
     }
 }";
             GeneratorVerifier.VerifyContains(source, "Timeout = 100");
-            GeneratorVerifier.VerifyContains(source, "Task.Delay(timeout.Value)");
+            GeneratorVerifier.VerifyContains(source, "global::System.Threading.Tasks.Task.Delay(timeout.Value, cts.Token)");
             GeneratorVerifier.VerifyContains(source, "throw new global::System.TimeoutException");
         }
 
         [Fact]
         public void Culture_Attribute_Generates_Switching_Logic()
         {
-             var source = @"
+            var source = @"
 using Prova;
 using System;
 

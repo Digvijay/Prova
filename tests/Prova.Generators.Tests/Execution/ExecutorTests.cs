@@ -1,4 +1,3 @@
-using Xunit;
 using Prova.Generators.Tests;
 
 namespace Prova.Generators.Tests
@@ -27,9 +26,10 @@ namespace Prova.Generators.Tests
     }
 }";
 
-            // Verify executor resolution and wrapping
-            GeneratorVerifier.VerifyContains(source, "var executor = TestRunnerExecutor.Services.Get<MyExecutor>();");
-            GeneratorVerifier.VerifyContains(source, "await executor.ExecuteAsync(test, async () =>");
+            // Executors are registered for AOT and referenced by type on the registration,
+            // then resolved and wrapped around the test body at run time.
+            GeneratorVerifier.VerifyContains(source, "ExecutorType = typeof(Prova.Generators.Tests.MyExecutor)");
+            GeneratorVerifier.VerifyContains(source, "Services.AddTransient<Prova.Generators.Tests.MyExecutor>(() => new Prova.Generators.Tests.MyExecutor());");
         }
     }
 }
