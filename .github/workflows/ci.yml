@@ -30,7 +30,7 @@ jobs:
           fetch-depth: 0
 
       - name: Setup .NET (8.0 LTS and 10.0)
-        uses: actions/setup-dotnet@v4
+        uses: actions/setup-dotnet@v6
         with:
           dotnet-version: |
             8.0.x
@@ -83,7 +83,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - uses: actions/setup-dotnet@v4
+      - uses: actions/setup-dotnet@v6
         with:
           dotnet-version: 10.0.x
       # Scoped to whitespace + style. The full `dotnet format` also runs analyzers, which
@@ -107,7 +107,7 @@ jobs:
           fetch-depth: 0
 
       - name: Setup .NET (8.0, 10.0 and 11.0 preview)
-        uses: actions/setup-dotnet@v4
+        uses: actions/setup-dotnet@v6
         with:
           dotnet-version: |
             8.0.x
