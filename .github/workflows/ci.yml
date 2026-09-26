@@ -145,6 +145,9 @@ jobs:
         env:
           INCLUDE_PREVIEW_TFM: 'true'
         run: |
+          # `set +e` only affects this step's own script; it lets the command below run
+          # to completion (rather than aborting the step immediately) so its output and
+          # exit code can be inspected before deciding whether to fail.
           set +e
           output=$(dotnet test Prova.sln --no-build --configuration Release 2>&1)
           status=$?
