@@ -94,6 +94,42 @@ elastic trivia away, and preserves the surrounding indentation when inserting `[
 
 **Tests:** `Fix_NUnitTestCase_ConvertsToTheoryInlineData` and `Fix_MSTest_FullMigration`.
 
+### 8b. Every documented `[Property]` configuration knob was silently discarded
+
+`FsCheckRunner.Run` accepted the configuration dictionary the generator built for it and then
+called `Check.QuickThrowOnFailure(property)`, which ignores it. All six knobs documented in
+`docs/integrations/fscheck.md` — `MaxTest`, `MaxFail`, `StartSize`, `EndSize`, `Verbose` and
+`QuietOnSuccess` — compiled, were emitted into the generated code, and had no effect.
+`[Property(MaxTest = 1000)]` ran exactly 100 cases, so a property advertised as covering ten
+times the input space did not.
+
+The existing emission tests could not catch this: they assert that the generator *populates*
+`fsConfig`, not that anything ever *reads* it. A defect on the far side of a correct handoff is
+invisible to tests that only check the handoff.
+
+The runner's own comment admitted the cause — "FsCheck 2.x configuration from C# is complex due
+to F# record types". FsCheck 3 replaces those records with a C#-friendly immutable `Config` and
+`With*` builders, so the fix and the long-deferred major upgrade are the same change.
+
+**Fixed.** Upgraded to FsCheck 3.4.0 and rewrote the runner to build a `Config` from the
+forwarded values and call `Check.One(config, property)`. Unparseable values fall back to the
+FsCheck default rather than throwing. `FsCheck.Prop` moved to `FsCheck.Fluent.Prop`, so the
+emitter and its emission test were updated with it.
+
+**Tests:** `tests/Prova.Generators.Tests/Runtime/FsCheckRunnerConfigTests.cs`. Three of its five
+tests fail against the old runner (86/89) and pass against the new one (89/89). End to end, the
+sample's `[Property(MaxTest = 1000)]` now reports "Ok, passed 1000 tests" instead of 100.
+
+### 8c. The generator-discovery CI gate hardcoded the test count
+
+`ci.yml` asserted the literal string `Discovered 84 tests in assembly`. The gate's purpose is to
+stop the "zero tests ran" defect from recurring, but pinning the number means every legitimate
+new test breaks CI and pressures the next contributor to edit the gate rather than trust it —
+the same drift as a hardcoded version string.
+
+**Fixed.** The gate now requires a discovery summary from both target frameworks, requires both
+counts to be non-zero, and requires them to agree, without pinning a value.
+
 ## Severity 3 — tests that existed but never executed
 
 ### 9. `Prova.Generators.Tests` defined 66 tests and executed 11
@@ -444,10 +480,11 @@ registering the platform extensions in this one process.
 
 **Fixed with a caveat.** `Prova.Generators.Tests` is deliberately not coverage-instrumented in CI.
 This is narrower than disabling coverage repository-wide, and it keeps the highest-value
-assertions — 84 generator tests on `net8.0` and 84 on `net10.0` — executing on Linux and Windows.
+assertions — every generator test on `net8.0` and `net10.0` — executing on Linux and Windows.
 It does mean this one test assembly no longer contributes coverage data. CI now also lists the
-generator tests after the coverage run and fails unless both target frameworks report 84 discovered
-tests, so the exclusion cannot silently turn into another "zero tests ran" defect.
+generator tests after the coverage run and fails unless both target frameworks report the same
+non-zero number of discovered tests, so the exclusion cannot silently turn into another
+"zero tests ran" defect.
 
 Not fixed here: the underlying Linux instrumentation crash in
 `Microsoft.Testing.Extensions.CodeCoverage` is not debugged inside the extension package, and the
@@ -465,11 +502,11 @@ every framework below was built and tested in one pass:
 
 | Framework | `Prova.Core.Tests` | `Prova.Generators.Tests` | `Prova.Analyzers.Tests` |
 | --- | --- | --- | --- |
-| net8.0 | 71 passed, 4 skipped | 84 passed | — |
-| net10.0 | 71 passed, 4 skipped | 84 passed | 13 passed |
-| net11.0 RC1 | 71 passed, 4 skipped | 84 passed | — |
+| net8.0 | 71 passed, 4 skipped | 89 passed | — |
+| net10.0 | 71 passed, 4 skipped | 89 passed | 13 passed |
+| net11.0 RC1 | 71 passed, 4 skipped | 89 passed | — |
 
-Solution-wide: **478 passed, 0 failed, 12 skipped, exit code 0**. The four skips per framework are
+Solution-wide: **493 passed, 0 failed, 12 skipped, exit code 0**. The four skips per framework are
 deliberate: three are tests written to fail, kept to confirm by hand that failures are reported,
 and one exercises skip reporting itself.
 

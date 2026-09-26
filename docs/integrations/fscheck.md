@@ -56,6 +56,9 @@ Supported parameters:
 - `Verbose`: Set to `true` to output every generated input (useful for debugging).
 - `QuietOnSuccess`: Suppress output on success.
 
+`Prova.FsCheck` requires FsCheck 3.x. Values that cannot be parsed are ignored and the FsCheck
+default is used, so a malformed attribute never fails the run for an unrelated reason.
+
 ## Failure Reporting
 
 When a property fails, Prova captures the precise input that caused the failure (and shrinking information) and reports it as a test failure.
