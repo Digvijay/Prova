@@ -17,7 +17,7 @@
     <!-- The framework-specific *.Testing.MSTest verifier packages are deprecated and bind to
          MSTest 3's Microsoft.VisualStudio.TestPlatform.TestFramework assembly, which MSTest 4
          no longer ships. Use the framework-agnostic packages with DefaultVerifier instead. -->
-    <PackageReference Include="Microsoft.CodeAnalysis.CSharp.Analyzer.Testing" Version="1.1.2" />
+    <PackageReference Include="Microsoft.CodeAnalysis.CSharp.Analyzer.Testing" Version="1.1.4" />
     <PackageReference Include="Microsoft.CodeAnalysis.CSharp.CodeFix.Testing" Version="1.1.2" />
   </ItemGroup>
 
