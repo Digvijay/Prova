@@ -12,8 +12,8 @@
 
   <ItemGroup>
     <PackageReference Include="MSTest" Version="4.4.1" />
-    <PackageReference Include="Microsoft.CodeAnalysis.CSharp" Version="4.8.0" />
-    <PackageReference Include="Microsoft.CodeAnalysis.CSharp.Workspaces" Version="4.8.0" />
+    <PackageReference Include="Microsoft.CodeAnalysis.CSharp" Version="5.9.0" />
+    <PackageReference Include="Microsoft.CodeAnalysis.CSharp.Workspaces" Version="5.9.0" />
     <!-- The framework-specific *.Testing.MSTest verifier packages are deprecated and bind to
          MSTest 3's Microsoft.VisualStudio.TestPlatform.TestFramework assembly, which MSTest 4
          no longer ships. Use the framework-agnostic packages with DefaultVerifier instead. -->
