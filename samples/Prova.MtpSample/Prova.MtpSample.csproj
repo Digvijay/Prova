@@ -14,7 +14,7 @@
   <ItemGroup>
     <ProjectReference Include="../../src/Prova.Core/Prova.Core.csproj" />
     <ProjectReference Include="../../src/Prova.Generators/Prova.Generators.csproj" OutputItemType="Analyzer" ReferenceOutputAssembly="false" />
-    <PackageReference Include="Microsoft.Testing.Extensions.TrxReport" Version="2.0.2" />
+    <PackageReference Include="Microsoft.Testing.Extensions.TrxReport" Version="2.4.1" />
   </ItemGroup>
 
 </Project>

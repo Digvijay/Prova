@@ -27,13 +27,13 @@
 
   <ItemGroup>
     <PackageReference Include="Microsoft.CodeAnalysis.CSharp.Workspaces" Version="5.9.0" />
-    <PackageReference Include="Microsoft.Testing.Extensions.TrxReport" Version="2.0.2" />
+    <PackageReference Include="Microsoft.Testing.Extensions.TrxReport" Version="2.4.1" />
   </ItemGroup>
 
   <ItemGroup>
     <ProjectReference Include="..\..\src\Prova.Generators\Prova.Generators.csproj" />
     <!-- Generates SelfRegisteredExtensions, through which Prova's entry point registers TRX. -->
-    <PackageReference Include="Microsoft.Testing.Platform.MSBuild" Version="2.0.2" />
+    <PackageReference Include="Microsoft.Testing.Platform.MSBuild" Version="2.4.1" />
     <!--
       Do not reference Microsoft.Testing.Extensions.CodeCoverage here. On Linux, its IL
       instrumentation crashes this generator-verification process after the tests pass because

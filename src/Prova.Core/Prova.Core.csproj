@@ -33,12 +33,12 @@
     <None Include="..\..\README.md" Pack="true" PackagePath="\" />
     <None Include="..\..\icon.png" Pack="true" PackagePath="\" />
     <PackageReference Include="Microsoft.Testing.Extensions.CodeCoverage" Version="18.11.2" />
-    <PackageReference Include="Microsoft.Testing.Platform" Version="2.4.0" />
-    <PackageReference Include="Microsoft.Testing.Extensions.TrxReport.Abstractions" Version="2.0.2" />
-    <PackageReference Include="Microsoft.Testing.Extensions.TrxReport" Version="2.0.2" />
-    <PackageReference Include="Microsoft.Testing.Platform.MSBuild" Version="2.0.2" />
-    <PackageReference Include="Microsoft.Testing.Extensions.CrashDump" Version="2.0.2" />
-    <PackageReference Include="Microsoft.Testing.Extensions.HangDump" Version="2.0.2" />
+    <PackageReference Include="Microsoft.Testing.Platform" Version="2.4.1" />
+    <PackageReference Include="Microsoft.Testing.Extensions.TrxReport.Abstractions" Version="2.4.1" />
+    <PackageReference Include="Microsoft.Testing.Extensions.TrxReport" Version="2.4.1" />
+    <PackageReference Include="Microsoft.Testing.Platform.MSBuild" Version="2.4.1" />
+    <PackageReference Include="Microsoft.Testing.Extensions.CrashDump" Version="2.4.1" />
+    <PackageReference Include="Microsoft.Testing.Extensions.HangDump" Version="2.4.1" />
     
     <!-- Analyzer Reference for IDE/Build -->
     <ProjectReference Include="..\Prova.Generators\Prova.Generators.csproj" OutputItemType="Analyzer" ReferenceOutputAssembly="false" />
