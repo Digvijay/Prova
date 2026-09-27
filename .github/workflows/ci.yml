@@ -25,7 +25,7 @@ jobs:
         os: [ ubuntu-latest, windows-latest ]
 
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
         with:
           fetch-depth: 0
 
@@ -55,11 +55,25 @@ jobs:
         run: |
           $output = dotnet test tests/Prova.Generators.Tests/Prova.Generators.Tests.csproj --no-build --configuration Release --list-tests 2>&1
           $text = $output | Out-String
-          $matches = [regex]::Matches($text, 'Discovered 84 tests in assembly').Count
-          if ($matches -ne 2) {
+          # Guards the "zero tests ran" defect: both target frameworks must report a
+          # discovery summary, both must be non-empty, and both must agree. The count is
+          # deliberately not hardcoded -- a pinned number turns every legitimate new test
+          # into a CI failure, which is the same drift that a hardcoded version string causes.
+          $counts = [regex]::Matches($text, 'Discovered (\d+) tests in assembly') |
+            ForEach-Object { [int]$_.Groups[1].Value }
+          if ($counts.Count -ne 2) {
             $text
-            throw "Expected Prova.Generators.Tests to discover 84 tests for both net8.0 and net10.0; found $matches matching discovery summaries."
+            throw "Expected a discovery summary for both net8.0 and net10.0; found $($counts.Count)."
           }
+          if ($counts[0] -eq 0 -or $counts[1] -eq 0) {
+            $text
+            throw "Prova.Generators.Tests discovered zero tests: $($counts -join ', ')."
+          }
+          if ($counts[0] -ne $counts[1]) {
+            $text
+            throw "net8.0 and net10.0 discovered different test counts: $($counts -join ', ')."
+          }
+          Write-Host "Discovered $($counts[0]) generator tests on both target frameworks."
 
       - name: Upload coverage
         uses: actions/upload-artifact@v7
@@ -82,7 +96,7 @@ jobs:
     name: Format check
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
       - uses: actions/setup-dotnet@v6
         with:
           dotnet-version: 10.0.x
@@ -103,7 +117,7 @@ jobs:
     continue-on-error: true
 
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
         with:
           fetch-depth: 0
 

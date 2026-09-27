@@ -1353,7 +1353,7 @@ namespace Prova.Generators.Emission
                         var pDecl = "(" + string.Join(", ", pVars) + ")";
                         var pCall = string.Join(", ", pVars);
 
-                        sb.AppendLine($"                    var fsCheckProp = global::FsCheck.Prop.ForAll<{typeArgs}>({pDecl} => {{");
+                        sb.AppendLine($"                    var fsCheckProp = global::FsCheck.Fluent.Prop.ForAll<{typeArgs}>({pDecl} => {{");
                         if (method.ReturnsVoid)
                             sb.AppendLine($"                        instance.{concreteMethodName}({pCall});");
                         else

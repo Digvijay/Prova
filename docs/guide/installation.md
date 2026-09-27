@@ -44,7 +44,7 @@ If you prefer editing the `.csproj` file manually, add the following reference:
 
 ```xml
 <ItemGroup>
-    <PackageReference Include="Prova" Version="0.3.0" />
+    <PackageReference Include="Prova" Version="0.6.0" />
     <PackageReference Include="Microsoft.Testing.Platform.MSBuild" Version="1.0.0" />
 </ItemGroup>
 ```

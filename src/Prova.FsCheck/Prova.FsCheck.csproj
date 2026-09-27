@@ -22,10 +22,12 @@
     <RepositoryType>git</RepositoryType>
     <PackageTags>test testing aot mtp fscheck pbt</PackageTags>
     <PackageIcon>icon.png</PackageIcon>
+    <PackageReadmeFile>README.md</PackageReadmeFile>
   </PropertyGroup>
 
   <ItemGroup>
     <None Include="..\..\icon.png" Pack="true" PackagePath="\" />
+    <None Include="README.md" Pack="true" PackagePath="\" />
   </ItemGroup>
 
   <ItemGroup>
@@ -33,7 +35,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <PackageReference Include="FsCheck" Version="2.16.0" />
+    <PackageReference Include="FsCheck" Version="3.4.0" />
   </ItemGroup>
 
 </Project>

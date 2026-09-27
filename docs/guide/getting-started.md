@@ -36,7 +36,7 @@ Enable **Native AOT** and ensure the output type is `Exe`.
     </PropertyGroup>
 
     <ItemGroup>
-        <PackageReference Include="Prova" Version="0.5.0" />
+        <PackageReference Include="Prova" Version="0.6.0" />
     </ItemGroup>
 
 </Project>

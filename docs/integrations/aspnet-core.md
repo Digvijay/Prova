@@ -9,7 +9,7 @@ Prova provides seamless integration with ASP.NET Core for functional and end-to-
 
    ```xml
    <ItemGroup>
-     <PackageReference Include="Prova.AspNetCore" Version="1.0.0" />
+     <PackageReference Include="Prova.AspNetCore" Version="0.6.0" />
      <PackageReference Include="Microsoft.AspNetCore.Mvc.Testing" Version="..." />
    </ItemGroup>
    ```

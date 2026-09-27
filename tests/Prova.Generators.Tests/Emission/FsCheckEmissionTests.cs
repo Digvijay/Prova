@@ -27,7 +27,7 @@ namespace TestProject
     }
 }";
 
-            GeneratorVerifier.VerifyContains(source, "global::FsCheck.Prop.ForAll<int, string>");
+            GeneratorVerifier.VerifyContains(source, "global::FsCheck.Fluent.Prop.ForAll<int, string>");
             GeneratorVerifier.VerifyContains(source, "Prova.FsCheck.FsCheckRunner.Run(fsConfig, fsCheckProp);");
         }
 
