@@ -97,8 +97,9 @@ jobs:
   preview:
     name: Preview .NET (net11.0)
     runs-on: ubuntu-latest
-    # Advisory. A preview SDK can regress for reasons outside this repository, so this leg
-    # reports breakage without blocking the merge queue.
+    # Advisory: keep the entire preview job non-blocking, not its individual steps.
+    # A failed preview test remains a failed step while stable build/test and format
+    # jobs still gate the workflow.
     continue-on-error: true
 
     steps:
@@ -128,32 +129,7 @@ jobs:
           INCLUDE_PREVIEW_TFM: 'true'
         run: dotnet build Prova.sln --no-restore --configuration Release
 
-      # The .NET 11 preview SDK's in-box Microsoft.Testing.Platform test driver can be newer
-      # than the latest published Microsoft.Testing.Platform NuGet package (the version every
-      # project here references), which breaks the driver/testhost handshake with a
-      # MissingMethodException on NamedPipeServer.GetPipeName ("Handshake failures" in the run
-      # summary). There is no newer package to bump to yet
-      # (https://www.nuget.org/packages/Microsoft.Testing.Platform lists 2.4.1 as latest).
-      # Only that specific, known incompatibility is swallowed below; any other test failure
-      # still fails this step. This is a string match on the current exception/log wording, so
-      # it can silently stop matching (or start over-matching) if a future SDK or tooling update
-      # changes that wording -- re-verify this pattern against the current failure whenever this
-      # step starts unexpectedly passing or failing. Remove the special-casing entirely once a
-      # Microsoft.Testing.Platform release compatible with the net11.0 preview SDK ships.
       - name: Test (including net11.0)
-        shell: bash
         env:
           INCLUDE_PREVIEW_TFM: 'true'
-        run: |
-          # `set +e` only affects this step's own script; it lets the command below run
-          # to completion (rather than aborting the step immediately) so its output and
-          # exit code can be inspected before deciding whether to fail.
-          set +e
-          output=$(dotnet test Prova.sln --no-build --configuration Release 2>&1)
-          status=$?
-          echo "$output"
-          if [ $status -ne 0 ] && echo "$output" | grep -q "Handshake failures" && echo "$output" | grep -q "NamedPipeServer.GetPipeName"; then
-            echo "::warning::Ignoring known net11.0 preview SDK / Microsoft.Testing.Platform handshake incompatibility (exit $status). See the comment above this step."
-            exit 0
-          fi
-          exit $status
+        run: dotnet test Prova.sln --no-build --configuration Release
