@@ -22,7 +22,7 @@
 
   <ItemGroup>
     <PackageReference Include="Aspire.Hosting.AppHost" Version="13.5.4" />
-    <PackageReference Include="Aspire.Hosting.Redis" Version="13.5.4" />
+    <PackageReference Include="Aspire.Hosting.Redis" Version="13.6.0" />
     <!-- ServiceDefaults is a shared library, not a resource the host launches (ASPIRE004). -->
     <ProjectReference Include="..\Prova.Aspire.Sample.ServiceDefaults\Prova.Aspire.Sample.ServiceDefaults.csproj" IsAspireProjectResource="false" />
   </ItemGroup>
